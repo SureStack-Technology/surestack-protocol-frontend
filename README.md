@@ -1,4 +1,6 @@
-# RISK Protocol - Frontend MVP
+# RISK Protocol - Frontend
+
+The RISK Protocol decentralized application (dApp) — user interface for Coverage Pools, Validators, and DAO Governance.
 
 A decentralized risk assessment and coverage network frontend built with Next.js 14, featuring real-time risk scores, coverage pools, and validator dashboards.
 
