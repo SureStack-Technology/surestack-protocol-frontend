@@ -31,3 +31,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# hardhat
+cache/
+artifacts/
+# deployments/
+deployment-info.json
+
+# environment
+.env
+.env.local
+
+# compiled ABIs (optional - can be regenerated)
+# consensus_abi.json
+# reward_abi.json
