@@ -1,7 +1,10 @@
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { getContract } from './blockchain.js';
+import dotenv from 'dotenv';
+import { getContract, getProvider } from './blockchain.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -69,22 +72,27 @@ export const ORACLE_INTEGRATION_ABI = loadABI('OracleIntegration') || loadABI('O
 
 /**
  * Contract addresses from environment or deployment info
+ * Priority: Environment variables > deployment-info.json > null
  */
 const deploymentInfo = loadDeploymentInfo();
 
 export const CONTRACT_ADDRESSES = {
-  SURESTACK_TOKEN: process.env.RISK_TOKEN_CONTRACT || deploymentInfo?.riskToken,
-  CONSENSUS_STAKING: process.env.CONSENSUS_CONTRACT || deploymentInfo?.staking,
-  REWARD_POOL: process.env.REWARD_POOL_CONTRACT || deploymentInfo?.rewardPool,
-  DAO_GOVERNANCE: process.env.DAO_CONTRACT || deploymentInfo?.dao,
+  SURESTACK_TOKEN: process.env.SURESTACK_TOKEN_ADDRESS || process.env.RISK_TOKEN_CONTRACT || deploymentInfo?.riskToken,
+  CONSENSUS_STAKING: process.env.CONSENSUS_STAKING_ADDRESS || process.env.CONSENSUS_CONTRACT || deploymentInfo?.staking,
+  REWARD_POOL: process.env.REWARD_POOL_ADDRESS || process.env.REWARD_POOL_CONTRACT || deploymentInfo?.rewardPool,
+  DAO_GOVERNANCE: process.env.DAO_GOVERNANCE_ADDRESS || process.env.DAO_CONTRACT || deploymentInfo?.dao,
   TIMELOCK: process.env.TIMELOCK_ADDRESS || deploymentInfo?.timelock,
-  ORACLE_INTEGRATION: process.env.ORACLE_INTEGRATION_CONTRACT || deploymentInfo?.oracleIntegration,
+  ORACLE_INTEGRATION: process.env.ORACLE_CONTRACT_ADDRESS || process.env.ORACLE_INTEGRATION_CONTRACT || deploymentInfo?.oracleIntegration,
+  CHAINLINK_ORACLE: process.env.CHAINLINK_ORACLE_ADDRESS || deploymentInfo?.chainlinkOracleAddress || '0x694AA1769357215DE4FAC081bf1f309aDC325306', // Sepolia ETH/USD
 };
 
 /**
  * Get contract instance
  */
 export function getSureStackTokenContract() {
+  if (!CONTRACT_ADDRESSES.SURESTACK_TOKEN) {
+    throw new Error('SureStackToken address not configured. Set SURESTACK_TOKEN_ADDRESS in .env or deploy contracts.');
+  }
   return getContract(CONTRACT_ADDRESSES.SURESTACK_TOKEN, SURESTACK_TOKEN_ABI);
 }
 
@@ -92,20 +100,84 @@ export function getSureStackTokenContract() {
 export const getRiskTokenContract = getSureStackTokenContract;
 
 export function getConsensusStakingContract() {
+  if (!CONTRACT_ADDRESSES.CONSENSUS_STAKING) {
+    throw new Error('ConsensusAndStaking address not configured.');
+  }
   return getContract(CONTRACT_ADDRESSES.CONSENSUS_STAKING, CONSENSUS_ABI);
 }
 
 export function getRewardPoolContract() {
+  if (!CONTRACT_ADDRESSES.REWARD_POOL) {
+    throw new Error('RewardPoolAndSlasher address not configured.');
+  }
   return getContract(CONTRACT_ADDRESSES.REWARD_POOL, REWARD_POOL_ABI);
 }
 
 export function getDAOGovernanceContract() {
+  if (!CONTRACT_ADDRESSES.DAO_GOVERNANCE) {
+    throw new Error('DAOGovernance address not configured.');
+  }
   return getContract(CONTRACT_ADDRESSES.DAO_GOVERNANCE, DAO_GOVERNANCE_ABI);
 }
 
 export function getOracleIntegrationContract() {
+  if (!CONTRACT_ADDRESSES.ORACLE_INTEGRATION) {
+    throw new Error('OracleIntegration address not configured.');
+  }
   return getContract(CONTRACT_ADDRESSES.ORACLE_INTEGRATION, ORACLE_INTEGRATION_ABI);
 }
+
+/**
+ * Export contracts object for direct access
+ * Provides clean contract instances ready to use
+ */
+export const contracts = {
+  get SureStackToken() {
+    try {
+      return getSureStackTokenContract();
+    } catch (error) {
+      console.warn('⚠️  SureStackToken not available:', error.message);
+      return null;
+    }
+  },
+  get OracleIntegration() {
+    try {
+      return getOracleIntegrationContract();
+    } catch (error) {
+      console.warn('⚠️  OracleIntegration not available:', error.message);
+      return null;
+    }
+  },
+  get ConsensusStaking() {
+    try {
+      return getConsensusStakingContract();
+    } catch (error) {
+      console.warn('⚠️  ConsensusStaking not available:', error.message);
+      return null;
+    }
+  },
+  get RewardPool() {
+    try {
+      return getRewardPoolContract();
+    } catch (error) {
+      console.warn('⚠️  RewardPool not available:', error.message);
+      return null;
+    }
+  },
+  get DAOGovernance() {
+    try {
+      return getDAOGovernanceContract();
+    } catch (error) {
+      console.warn('⚠️  DAOGovernance not available:', error.message);
+      return null;
+    }
+  },
+};
+
+/**
+ * Provider access
+ */
+export const provider = getProvider();
 
 /**
  * Validate all contract addresses are set
