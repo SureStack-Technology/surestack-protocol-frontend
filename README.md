@@ -1,114 +1,307 @@
-# SureStack Protocol — Frontend
+# SureStack Protocol — Smart Contracts
 
-Secure. Stack. Protect.
+Solidity / Hardhat implementation of SureStackToken (SST), Coverage Pools, Validator Registry, DAO Governance, and Oracle Integration.
 
-The SureStack Protocol decentralized application (dApp) — user interface for Coverage Pools, Validators, and DAO Governance.
+## 🧩 Overview
 
-A decentralized risk assessment and coverage network frontend built with Next.js 14, featuring real-time risk scores, coverage pools, and validator dashboards.
+The SureStack Protocol smart contracts form the decentralized backbone of the risk coverage and governance platform. Built with Solidity 0.8.20, these contracts enable validator consensus, token staking, reward distribution, on-chain governance, and Chainlink oracle price feeds.
 
-## 🚀 Features
-
-- **Dashboard**: Real-time protocol metrics and risk index visualization
-- **Coverage Pools**: Browse and purchase coverage from active risk pools
-- **Validator Dashboard**: Monitor validator performance and accuracy
-- **Governance**: Participate in protocol governance and vote on proposals
-
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Styling**: TailwindCSS + Custom Glassmorphism Design
-- **Charts**: Recharts
-- **Icons**: Lucide-react
-- **UI Components**: Radix UI primitives
-- **Font**: Inter
-
-## 🎨 Design System
-
-- **Theme**: Dark mode with glassmorphism effects
-- **Colors**: 
-  - Background: `#0B0C10`
-  - Text: `#E5E7EB`
-  - Accent: `#4F46E5`
-- **Components**: Rounded corners (`rounded-2xl`), subtle shadows, responsive design
-
-## 📁 Project Structure
+## 🧠 Architecture
 
 ```
-├── app/
-│   ├── layout.jsx          # Root layout with header and footer
-│   ├── page.jsx            # Dashboard page
-│   ├── coverage/page.jsx   # Coverage pools page
-│   ├── validators/page.jsx # Validator dashboard page
-│   ├── governance/page.jsx # Governance proposals page
-│   └── globals.css         # Global styles and TailwindCSS
-├── components/
-│   ├── Header.jsx          # Navigation header
-│   ├── StatCard.jsx        # Reusable stat display card
-│   ├── ChartCard.jsx       # Chart wrapper component
-│   └── Table.jsx           # Reusable table with modal support
-├── data/
-│   └── mockData.js         # Sample data for all pages
-└── package.json            # Dependencies and scripts
+┌─────────────────────────────────────────────────────────┐
+│              SureStack Protocol Contracts               │
+└─────────────────────────────────────────────────────────┘
+                            │
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ SureStackToken│   │   Consensus   │   │   Oracle      │
+│     (SST)     │   │  & Staking    │   │ Integration   │
+└──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+       │                  │                   │
+       │                  ▼                   │
+       │         ┌─────────────────┐          │
+       │         │  RewardPool     │          │
+       │         │  & Slasher      │          │
+       │         └─────────────────┘          │
+       │                                       │
+       └───────────────┬──────────────────────┘
+                       ▼
+              ┌─────────────────┐
+              │ DAO Governance  │
+              │ + Timelock      │
+              └─────────────────┘
 ```
 
-## 🚀 Getting Started
+### Contract Interactions
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+1. **SureStackToken (SST)** → Base token used across all contracts
+2. **ConsensusAndStaking** → Manages validators, staking, and consensus rounds
+3. **RewardPoolAndSlasher** → Distributes rewards and handles penalties
+4. **DAOGovernance** → On-chain governance with proposal voting
+5. **OracleIntegration** → Chainlink ETH/USD price feed integration
 
-2. **Start development server**:
-   ```bash
-   npm run dev
-   ```
+## ⚙️ Tech Stack
 
-3. **Open your browser**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
+- **Solidity**: 0.8.20
+- **Hardhat**: Development environment and testing framework
+- **OpenZeppelin**: Contracts library (ERC20Votes, Governor, Ownable)
+- **Chainlink**: Oracle price feeds (AggregatorV3Interface)
+- **Foundry**: Alternative testing framework (optional)
+- **Ethers.js**: Contract interaction library
 
-## 📱 Pages Overview
+## 📜 Contract Summary
 
-### Dashboard (`/`)
-- Protocol overview with key metrics
-- Risk index chart over time
-- Live protocol feed with recent activities
+### SureStackToken (SST)
 
-### Coverage Pools (`/coverage`)
-- Table of active coverage pools
-- Purchase coverage with modal confirmation
-- Pool details and premium calculations
+**File**: `contracts/SureStackToken.sol`
 
-### Validators (`/validators`)
-- Validator performance table
-- Accuracy distribution chart
-- Staking and rewards information
+- **Type**: ERC20Votes with Ownable
+- **Name**: "SureStack Token"
+- **Symbol**: "SST"
+- **Initial Supply**: 1,000,000,000 SST (1 billion tokens)
+- **Features**:
+  - Voting capabilities for governance
+  - Batch transfer functionality
+  - Mint and burn functions (owner-controlled)
 
-### Governance (`/governance`)
-- Active governance proposals
-- Voting interface
-- Proposal status tracking
+### ConsensusAndStaking
 
-## 🎯 Key Components
+**File**: `contracts/ConsensusAndStaking.sol`
 
-- **StatCard**: Displays metrics with icons and hover effects
-- **ChartCard**: Wrapper for Recharts with dark theme styling
-- **Table**: Responsive table with action buttons and modal support
-- **Header**: Navigation with active state highlighting
+- **Purpose**: Validator registration, staking, and consensus mechanism
+- **Key Features**:
+  - Validator profile management
+  - Token staking (minimum 1000 SST)
+  - Assessment submission and round settlement
+  - 7-day cooling-off period for unstaking
+  - Slashing based on score deviation
 
-## 🔧 Customization
+### RewardPoolAndSlasher
 
-The app uses mock data from `/data/mockData.js`. To integrate with real APIs:
+**File**: `contracts/RewardPoolAndSlasher.sol`
 
-1. Replace mock data imports with API calls
-2. Add loading states and error handling
-3. Implement real wallet connection logic
-4. Add authentication and user management
+- **Purpose**: Reward distribution and penalty management
+- **Key Features**:
+  - Separate pools for rewards and penalties
+  - Consensus contract authorization
+  - Penalty fund burning
+  - Reward distribution to validators
 
-## 🔗 Links
+### DAOGovernance
 
-- **Repository**: [surestack-protocol-frontend](https://github.com/SureStack-Technology/surestack-protocol-frontend)
+**File**: `contracts/DAOGovernance.sol`
+
+- **Purpose**: On-chain governance and proposal system
+- **Key Features**:
+  - Proposal creation and voting
+  - Timelock execution
+  - Quorum and voting period configuration
+  - Integration with SureStackToken for voting power
+
+### OracleIntegration
+
+**File**: `contracts/OracleIntegration.sol`
+
+- **Purpose**: Chainlink oracle price feed integration
+- **Key Features**:
+  - ETH/USD price feed (Sepolia: `0x694AA1769357215DE4FAC081bf1f309aDC325306`)
+  - Latest price retrieval
+  - Human-readable USD price formatting
+  - Price feed metadata
+
+## 🔗 Chainlink Integration
+
+### ETH/USD Price Feed
+
+**Network**: Sepolia Testnet  
+**Address**: `0x694AA1769357215DE4FAC081bf1f309aDC325306`
+
+**OracleReader Contract**:
+- `getLatestPrice()` - Returns price, decimals, roundId, updatedAt
+- `getLatestPriceUSD()` - Returns human-readable USD price
+- `getPriceFeedInfo()` - Returns feed description and version
+
+**Usage Example**:
+```solidity
+OracleReader oracle = OracleReader(0x...);
+uint256 priceUSD = oracle.getLatestPriceUSD();
+```
+
+## 🧪 Testing
+
+### Hardhat Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npx hardhat test test/core/SureStackToken.test.js
+
+# Generate coverage report
+npm run coverage
+
+# Gas reporting
+npm run gas
+```
+
+### Foundry Tests (Optional)
+
+```bash
+# Install Foundry (if not installed)
+curl -L https://foundry.paradigm.xyz | bash
+
+# Run Foundry tests
+forge test
+```
+
+### Test Structure
+
+```
+test/
+└── core/
+    ├── SureStackToken.test.js
+    ├── ConsensusAndStaking.test.js
+    ├── RewardPoolAndSlasher.test.js
+    └── DAOGovernance.test.js
+```
+
+## 🚀 Deployment
+
+### Localhost Development
+
+```bash
+# Start local Hardhat node
+npx hardhat node
+
+# Deploy contracts (in separate terminal)
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+### Sepolia Testnet
+
+```bash
+# Configure .env with Sepolia RPC and private key
+RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
+PRIVATE_KEY=your_private_key_here
+
+# Deploy to Sepolia
+npx hardhat run scripts/deploy.js --network sepolia
+
+# Validate deployment
+node scripts/validate-sepolia.js
+```
+
+### Deployment Order
+
+1. **SureStackToken** - Deploy first (needed by other contracts)
+2. **ConsensusAndStaking** - Requires token address
+3. **RewardPoolAndSlasher** - Requires token and consensus addresses
+4. **DAOGovernance** - Requires token and timelock addresses
+5. **OracleIntegration** - Requires Chainlink oracle address
+
+### Post-Deployment
+
+1. Update `deployment-info.json` with deployed addresses
+2. Update `.env` with contract addresses
+3. Verify contracts on Etherscan
+4. Test contract interactions via backend API
+
+## 📝 Project Structure
+
+```
+.
+├── contracts/
+│   ├── SureStackToken.sol
+│   ├── ConsensusAndStaking.sol
+│   ├── RewardPoolAndSlasher.sol
+│   ├── DAOGovernance.sol
+│   └── OracleIntegration.sol
+├── test/
+│   └── core/
+│       ├── SureStackToken.test.js
+│       ├── ConsensusAndStaking.test.js
+│       ├── RewardPoolAndSlasher.test.js
+│       └── DAOGovernance.test.js
+├── scripts/
+│   ├── deploy.js
+│   ├── validate-sepolia.js
+│   └── contract-examples.js
+├── artifacts/          # Compiled contracts
+├── cache/              # Hardhat cache
+├── hardhat.config.js
+├── package.json
+└── deployment-info.json
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create `.env` from `env.template`:
+
+```env
+# Wallet Configuration
+PRIVATE_KEY=your_private_key_here
+
+# RPC Configuration
+RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
+INFURA_API_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
+
+# Chainlink Oracle (Sepolia ETH/USD)
+CHAINLINK_ORACLE_ADDRESS=0x694AA1769357215DE4FAC081bf1f309aDC325306
+
+# Network Configuration
+HARDHAT_NETWORK=sepolia
+```
+
+### Hardhat Configuration
+
+The `hardhat.config.js` includes:
+- Solidity compiler settings (0.8.20)
+- Network configurations (localhost, sepolia)
+- Gas reporting (if enabled)
+- Coverage settings
+
+## 🧩 Contract Headers
+
+All contracts follow the standard header format:
+
+```solidity
+// SPDX-License-Identifier: MIT
+/// @title SureStack Protocol — Smart Contract Suite
+/// @dev Part of SureStack Technology ecosystem
+pragma solidity ^0.8.20;
+
+/**
+ * @title ContractName
+ * @dev Contract description and purpose
+ */
+```
+
+## 📊 Compilation
+
+```bash
+# Compile all contracts
+npx hardhat compile
+
+# Verify compilation success
+# Output: Compiled X Solidity files successfully
+```
+
+**Expected Output**:
+- `artifacts/contracts/SureStackToken.sol/SureStackToken.json`
+- `artifacts/contracts/ConsensusAndStaking.sol/ConsensusAndStaking.json`
+- `artifacts/contracts/RewardPoolAndSlasher.sol/RewardPoolAndSlasher.json`
+- `artifacts/contracts/DAOGovernance.sol/DAOGovernance.json`
+- `artifacts/contracts/OracleIntegration.sol/OracleReader.json`
+
+## 🔗 Related Repositories
+
+- **Frontend**: [surestack-protocol-frontend](https://github.com/SureStack-Technology/surestack-protocol-frontend)
 - **Backend API**: [surestack-protocol-backend](https://github.com/SureStack-Technology/surestack-protocol-backend)
-- **Smart Contracts**: [surestack-protocol-contracts](https://github.com/SureStack-Technology/surestack-protocol-contracts)
 
 ## 📄 License
 
