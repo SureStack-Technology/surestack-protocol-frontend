@@ -1,7 +1,7 @@
 {
   "name": "surestack-protocol-backend",
   "version": "1.0.0",
-  "description": "SureStack Protocol Backend API - Express.js server with Ethers.js blockchain integration",
+  "description": "Express backend for SureStack Protocol – risk analytics & oracle integration layer",
   "type": "module",
   "main": "src/server.js",
   "scripts": {

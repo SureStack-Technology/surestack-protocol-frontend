@@ -1,6 +1,6 @@
-# SureStack Protocol Backend API
+# SureStack Protocol — Backend API
 
-Express.js backend API for the SureStack Protocol system with Ethers.js blockchain integration.
+Backend API for SureStack Protocol — aggregates off-chain analytics, validator stats, and oracle data.
 
 ## 🌟 Features
 
@@ -290,5 +290,5 @@ This backend integrates with:
 
 ## 📄 License
 
-MIT
+© 2025 SureStack Technology — Zug, Switzerland.
 
