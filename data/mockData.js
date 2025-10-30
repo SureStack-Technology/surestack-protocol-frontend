@@ -19,9 +19,9 @@ export const coveragePools = [
 ];
 
 export const validators = [
-  { id: "Validator-101", accuracy: "98.4%", staked: "15,000 RISK", rewards: "2,340 RISK" },
-  { id: "Validator-142", accuracy: "95.7%", staked: "12,400 RISK", rewards: "1,890 RISK" },
-  { id: "Validator-203", accuracy: "97.1%", staked: "8,200 RISK", rewards: "1,430 RISK" },
+  { id: "Validator-101", accuracy: "98.4%", staked: "15,000 SST", rewards: "2,340 SST" },
+  { id: "Validator-142", accuracy: "95.7%", staked: "12,400 SST", rewards: "1,890 SST" },
+  { id: "Validator-203", accuracy: "97.1%", staked: "8,200 SST", rewards: "1,430 SST" },
 ];
 
 export const proposals = [

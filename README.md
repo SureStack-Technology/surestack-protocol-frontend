@@ -1,6 +1,10 @@
-# RISK Protocol - Frontend
+# SureStack Protocol — by SureStack Technology
 
-The RISK Protocol decentralized application (dApp) — user interface for Coverage Pools, Validators, and DAO Governance.
+Secure. Stack. Protect.
+
+Built for digital asset protection using decentralized risk modeling.
+
+The SureStack Protocol decentralized application (dApp) — user interface for Coverage Pools, Validators, and DAO Governance.
 
 A decentralized risk assessment and coverage network frontend built with Next.js 14, featuring real-time risk scores, coverage pools, and validator dashboards.
 
@@ -102,6 +106,12 @@ The app uses mock data from `/data/mockData.js`. To integrate with real APIs:
 3. Implement real wallet connection logic
 4. Add authentication and user management
 
+## 🔗 Links
+
+- **Repository**: [surestack-protocol-frontend](https://github.com/SureStack-Technology/surestack-protocol-frontend)
+- **Backend API**: [surestack-protocol-backend](https://github.com/SureStack-Technology/surestack-protocol-backend)
+- **Smart Contracts**: [surestack-protocol-contracts](https://github.com/SureStack-Technology/surestack-protocol-contracts)
+
 ## 📄 License
 
-© 2025 RISK Protocol – Zug Foundation.
+© 2025 SureStack Technology – SureStack Protocol.

@@ -1,4 +1,13 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/pools/route": "app/api/pools/route.js",
+  "/api/proposals/route": "app/api/proposals/route.js",
+  "/api/validators/route": "app/api/validators/route.js",
+  "/coverage/page": "app/coverage/page.js",
+  "/api/oracle/route": "app/api/oracle/route.js",
+  "/api/risk/route": "app/api/risk/route.js",
+  "/coverage/[name]/page": "app/coverage/[name]/page.js",
+  "/governance/page": "app/governance/page.js",
   "/page": "app/page.js",
-  "/api/risk/route": "app/api/risk/route.js"
+  "/validators/page": "app/validators/page.js"
 }

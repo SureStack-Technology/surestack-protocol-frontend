@@ -3,8 +3,8 @@ import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata = {
-  title: 'RISK Protocol - Decentralized Risk Assessment',
-  description: 'Decentralized risk assessment and coverage network for Web3',
+  title: 'SureStack Protocol — Secure. Stack. Protect.',
+  description: 'Built for digital asset protection using decentralized risk modeling.',
 };
 
 export default function RootLayout({ children }) {
@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
         <footer className="glassmorphism border-t border-white/10 mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <p className="text-center text-gray-400">
-              © 2025 RISK Protocol – Zug Foundation.
+              © 2025 SureStack Technology – SureStack Protocol.
             </p>
           </div>
         </footer>

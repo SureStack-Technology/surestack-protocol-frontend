@@ -1,9 +1,29 @@
 import { NextResponse } from 'next/server';
-import { proposals } from '../../../data/mockData';
+import { proposals as mockProposals } from '../../../data/mockData';
 
 export async function GET() {
-  // Simulate dynamic proposal data
-  const dynamicProposals = proposals.map(proposal => ({
+  try {
+    // Try to fetch from backend API
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const response = await fetch(`${backendUrl}/api/governance`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data.proposals) {
+        return NextResponse.json(data.data.proposals);
+      }
+    }
+  } catch (error) {
+    console.warn('Backend not available, using mock data:', error.message);
+  }
+
+  // Fallback to mock data
+  const dynamicProposals = mockProposals.map(proposal => ({
     ...proposal,
     // Occasionally add new proposals
     ...(Math.random() > 0.8 && {

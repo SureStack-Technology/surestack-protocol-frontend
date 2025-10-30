@@ -1,9 +1,29 @@
 import { NextResponse } from 'next/server';
-import { coveragePools } from '../../../data/mockData';
+import { coveragePools as mockPools } from '../../../data/mockData';
 
 export async function GET() {
-  // Simulate dynamic pool data
-  const dynamicPools = coveragePools.map(pool => ({
+  try {
+    // Try to fetch from backend API
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+    const response = await fetch(`${backendUrl}/api/coverage`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.data.pools) {
+        return NextResponse.json(data.data.pools);
+      }
+    }
+  } catch (error) {
+    console.warn('Backend not available, using mock data:', error.message);
+  }
+
+  // Fallback to mock data
+  const dynamicPools = mockPools.map(pool => ({
     ...pool,
     policies: pool.policies + Math.floor(Math.random() * 10),
     size: pool.size.replace(/[\d.]+/, (match) => {

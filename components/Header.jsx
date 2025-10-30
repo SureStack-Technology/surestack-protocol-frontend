@@ -26,7 +26,7 @@ export default function Header() {
       setIsConnected(true);
       setIsWalletOpen(true);
       toast.success('Wallet connected!', {
-        description: 'Your wallet has been successfully connected to RISK Protocol',
+        description: 'Your wallet has been successfully connected to SureStack Protocol',
       });
     }
   };
@@ -35,7 +35,7 @@ export default function Header() {
     setIsConnected(false);
     setIsWalletOpen(false);
     toast.info('Wallet disconnected', {
-      description: 'Your wallet has been disconnected from RISK Protocol',
+      description: 'Your wallet has been disconnected from SureStack Protocol',
     });
   };
 
@@ -46,7 +46,7 @@ export default function Header() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Shield className="h-8 w-8 text-accent" />
-              <span className="text-xl font-bold text-white">RISK Protocol</span>
+              <span className="text-xl font-bold text-white">SureStack Protocol</span>
             </div>
             
             <nav className="hidden md:flex space-x-8">

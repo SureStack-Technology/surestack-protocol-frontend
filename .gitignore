@@ -5,6 +5,7 @@
 
 # testing
 /coverage
+reports/coverage/
 
 # next.js
 /.next/
@@ -42,6 +43,15 @@ deployment-info.json
 .env
 .env.local
 
+# reports - keep structure but ignore detailed reports
+reports/*.txt
+reports/*.json
+reports/*.md
+!reports/README.md
+
 # compiled ABIs (optional - can be regenerated)
 # consensus_abi.json
 # reward_abi.json
+
+# test outputs
+test-output.txt

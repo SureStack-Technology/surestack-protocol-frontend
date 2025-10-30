@@ -1,4 +1,4 @@
-# RISK Protocol Smart Contract Validation Report
+# SureStack Protocol Smart Contract Validation Report
 
 **Date:** October 28, 2025  
 **Compiler:** Solidity ^0.8.20  
@@ -24,7 +24,7 @@ All 4 required contracts detected and compiled:
 
 | Contract | Status | Location |
 |----------|--------|----------|
-| RISKToken | ✅ Detected | `artifacts/contracts/RISKToken.sol/RISKToken.json` |
+| SureStackToken | ✅ Detected | `artifacts/contracts/SureStackToken.sol/SureStackToken.json` |
 | ConsensusAndStaking | ✅ Detected | `artifacts/contracts/ConsensusAndStaking.sol/ConsensusAndStaking.json` |
 | RewardPoolAndSlasher | ✅ Detected | `artifacts/contracts/RewardPoolAndSlasher.sol/RewardPoolAndSlasher.json` |
 | DAOGovernance | ✅ Detected | `artifacts/contracts/DAOGovernance.sol/DAOGovernance.json` |
@@ -35,7 +35,7 @@ All 4 required contracts detected and compiled:
 
 | Contract | Bytecode Size (deployed) | Status |
 |----------|--------------------------|--------|
-| RISKToken | 11,405 bytes | ✅ Under 24KB limit |
+| SureStackToken | 11,405 bytes | ✅ Under 24KB limit |
 | ConsensusAndStaking | 5,818 bytes | ✅ Under 24KB limit |
 | RewardPoolAndSlasher | 3,135 bytes | ✅ Under 24KB limit |
 | DAOGovernance | 19,884 bytes | ⚠️ Near limit (24KB) |
@@ -59,7 +59,7 @@ All 4 required contracts detected and compiled:
   - `@openzeppelin/contracts/governance/extensions/GovernorVotes.sol`
   - `@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol`
 
-- **RISKToken.sol:**
+- **SureStackToken.sol:**
   - `@openzeppelin/contracts/access/Ownable.sol`
   - `@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol`
   - `@openzeppelin/contracts/utils/cryptography/EIP712.sol`
@@ -90,7 +90,7 @@ No import errors detected.
 
 ### 📋 Deployment Requirements
 
-#### 1. **RISKToken**
+#### 1. **SureStackToken**
 ```
 Constructor: address initialOwner
 - initialOwner: Address of the initial owner (typically deployer)
@@ -99,21 +99,21 @@ Constructor: address initialOwner
 #### 2. **ConsensusAndStaking** 
 ```
 Constructor: 
-- _riskTokenAddress: Address of deployed RISKToken contract
+- _riskTokenAddress: Address of deployed SureStackToken contract
 - _sequencerAddress: Address authorized to initiate round settlement
 ```
 
 #### 3. **RewardPoolAndSlasher**
 ```
 Constructor:
-- _riskTokenAddress: Address of deployed RISKToken contract  
+- _riskTokenAddress: Address of deployed SureStackToken contract  
 - _consensusContractAddress: Address of deployed ConsensusAndStaking contract
 ```
 
 #### 4. **DAOGovernance**
 ```
 Constructor:
-- _token: Address of deployed RISKToken contract (contract type)
+- _token: Address of deployed SureStackToken contract (contract type)
 - _timelock: Address of deployed TimelockController contract (contract type)
 ```
 
@@ -123,7 +123,7 @@ Constructor:
 
 ### Recommended Deployment Order:
 
-1. **Deploy RISKToken**
+1. **Deploy SureStackToken**
    - Input: `deployerAddress` (initial owner)
    - Save: `riskTokenAddress`
 
@@ -148,7 +148,7 @@ Constructor:
 ## 🔗 Manual Linking Required
 
 ### Addresses you'll need to link:
-- ❌ **RISKToken** → No linking required (first contract)
+- ❌ **SureStackToken** → No linking required (first contract)
 - ✅ **ConsensusAndStaking** → Requires: `riskTokenAddress`, `sequencerAddress`
 - ✅ **RewardPoolAndSlasher** → Requires: `riskTokenAddress`, `consensusAddress`
 - ✅ **DAOGovernance** → Requires: `riskTokenAddress`, `timelockAddress`
@@ -159,7 +159,7 @@ Constructor:
 
 ### Post-Deployment Setup:
 1. Grant DAOGovernance proposal rights in TimelockController
-2. Transfer ownership of RISKToken if needed
+2. Transfer ownership of SureStackToken if needed
 3. Fund RewardPool with initial reward tokens
 4. Set sequencer address permissions
 

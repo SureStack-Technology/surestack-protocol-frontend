@@ -1,5 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
+require("hardhat-gas-reporter");
+require("solidity-coverage");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -24,6 +26,18 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    enabled: true,
+    currency: 'USD',
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+    outputFile: 'reports/gas-report.txt',
+    noColors: true,
+  },
+  coverage: {
+    outputDirectory: 'reports/coverage',
+    include: ['contracts/**/*.sol'],
+    exclude: ['contracts/test/', 'contracts/interfaces/'],
   },
   paths: {
     sources: "./contracts",

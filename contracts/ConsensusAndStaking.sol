@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+/// @title SureStack Protocol — Smart Contract Suite
+/// @dev Part of SureStack Technology ecosystem
 pragma solidity ^0.8.20;
 
 /**

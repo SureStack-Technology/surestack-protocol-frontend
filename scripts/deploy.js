@@ -1,28 +1,28 @@
 const { ethers } = require("hardhat");
 
 /**
- * @dev Deploy RISK Protocol contracts in correct order
- * 1. RISKToken
+ * @dev Deploy SureStack Protocol contracts in correct order
+ * 1. SureStackToken
  * 2. ConsensusAndStaking
  * 3. RewardPoolAndSlasher
  * 4. DAOGovernance (with TimelockController)
  */
 async function main() {
-  console.log("🚀 Starting RISK Protocol deployment...\n");
+  console.log("🚀 Starting SureStack Protocol deployment...\n");
   
   const [deployer] = await ethers.getSigners();
   console.log("📝 Deploying contracts with account:", deployer.address);
   console.log("💰 Account balance:", (await deployer.provider.getBalance(deployer.address)).toString(), "\n");
   
   // ======================
-  // 1. Deploy RISKToken
+  // 1. Deploy SureStackToken
   // ======================
-  console.log("1️⃣  Deploying RISKToken...");
-  const RISKToken = await ethers.getContractFactory("RISKToken");
-  const riskToken = await RISKToken.deploy(deployer.address);
+  console.log("1️⃣  Deploying SureStackToken (SST)...");
+  const SureStackTokenFactory = await ethers.getContractFactory("SureStackToken");
+  const riskToken = await SureStackTokenFactory.deploy(deployer.address);
   await riskToken.waitForDeployment();
   const riskTokenAddress = await riskToken.getAddress();
-  console.log("✅ RISKToken deployed to:", riskTokenAddress);
+  console.log("✅ SureStackToken (SST) deployed to:", riskTokenAddress);
   
   // ======================
   // 2. Deploy ConsensusAndStaking
@@ -73,17 +73,35 @@ async function main() {
   console.log("✅ DAOGovernance deployed to:", daoAddress);
   
   // ======================
+  // 6. Deploy OracleIntegration
+  // ======================
+  console.log("\n6️⃣  Deploying OracleIntegration...");
+  const networkName = process.env.HARDHAT_NETWORK || "localhost";
+  const chainlinkOracleAddress = process.env.CHAINLINK_ORACLE_ADDRESS || 
+    (networkName === "sepolia" 
+      ? "0x694AA1769357215DE4FAC081bf1f309aDC325306" 
+      : "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"); // Mainnet fallback
+  
+  const OracleReader = await ethers.getContractFactory("OracleReader");
+  const oracleIntegration = await OracleReader.deploy(chainlinkOracleAddress);
+  await oracleIntegration.waitForDeployment();
+  const oracleAddress = await oracleIntegration.getAddress();
+  console.log("✅ OracleIntegration deployed to:", oracleAddress);
+  console.log("   Chainlink Feed:", chainlinkOracleAddress);
+  
+  // ======================
   // Deployment Summary
   // ======================
   console.log("\n" + "=".repeat(60));
-  console.log("🎉 RISK Protocol Deployment Complete!");
+  console.log("🎉 SureStack Protocol Deployment Complete!");
   console.log("=".repeat(60));
   console.log("\n📋 Contract Addresses:\n");
-  console.log("RISKToken:             ", riskTokenAddress);
+  console.log("SureStackToken (SST):  ", riskTokenAddress);
   console.log("ConsensusAndStaking:   ", stakingAddress);
   console.log("RewardPoolAndSlasher: ", rewardPoolAddress);
   console.log("TimelockController:    ", timelockAddress);
   console.log("DAOGovernance:        ", daoAddress);
+  console.log("OracleIntegration:    ", oracleAddress);
   console.log("\n" + "=".repeat(60));
   
   // Save deployment info for verification
@@ -95,6 +113,8 @@ async function main() {
       rewardPool: rewardPoolAddress,
       timelock: timelockAddress,
       dao: daoAddress,
+      oracleIntegration: oracleAddress,
+      chainlinkOracleAddress: chainlinkOracleAddress,
       deployer: deployer.address,
       timestamp: new Date().toISOString(),
     },

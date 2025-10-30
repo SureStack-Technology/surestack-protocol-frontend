@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+/// @title SureStack Protocol — Smart Contract Suite
+/// @dev Part of SureStack Technology ecosystem
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/governance/Governor.sol";
@@ -9,7 +11,7 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFractio
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 import "@openzeppelin/contracts/governance/TimelockController.sol";
 import "@openzeppelin/contracts/governance/IGovernor.sol";
-import "./RISKToken.sol";
+import "./SureStackToken.sol";
 
 /**
  * @title DAOGovernance
@@ -26,14 +28,14 @@ contract DAOGovernance is
 {
     
     constructor(
-        RISKToken _token,
+        SureStackToken _token,
         TimelockController _timelock
     )
-        Governor("RISK Protocol DAO")
+        Governor("SureStack Protocol DAO")
         GovernorSettings(
             1, // 1 block voting delay
             45818, // ~1 week voting period (12 sec blocks)
-            100_000e18 // 100k RISK proposal threshold
+            100_000e18 // 100k SST proposal threshold
         )
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4) // 4% quorum
