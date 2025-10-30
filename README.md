@@ -1,8 +1,6 @@
-# SureStack Protocol — by SureStack Technology
+# SureStack Protocol — Frontend
 
 Secure. Stack. Protect.
-
-Built for digital asset protection using decentralized risk modeling.
 
 The SureStack Protocol decentralized application (dApp) — user interface for Coverage Pools, Validators, and DAO Governance.
 
@@ -114,4 +112,4 @@ The app uses mock data from `/data/mockData.js`. To integrate with real APIs:
 
 ## 📄 License
 
-© 2025 SureStack Technology – SureStack Protocol.
+© 2025 SureStack Technology — Zug, Switzerland.

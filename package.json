@@ -1,7 +1,9 @@
 {
-  "name": "surestack-protocol",
+  "name": "surestack-protocol-frontend",
   "version": "0.1.0",
   "private": true,
+  "description": "Frontend dApp for SureStack Protocol – decentralized risk coverage and governance network",
+  "author": "SureStack Technology",
   "repository": {
     "type": "git",
     "url": "https://github.com/SureStack-Technology/surestack-protocol-frontend.git"
