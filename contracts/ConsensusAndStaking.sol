@@ -18,7 +18,7 @@ interface IRISKToken {
 /**
  * @title ConsensusAndStaking
  * @notice Manages validator profiles, token staking, assessment submissions, and the final round settlement process.
- * This contract is the core economic security layer of the RISK Protocol.
+ * This contract is the core economic security layer of the SureStack Protocol.
  */
 contract ConsensusAndStaking {
 

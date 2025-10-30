@@ -15,7 +15,7 @@ import "./SureStackToken.sol";
 
 /**
  * @title DAOGovernance
- * @dev DAO governance contract for RISK Protocol
+ * @dev DAO governance contract for SureStack Protocol
  * Handles proposals, voting, and execution with timelock
  */
 contract DAOGovernance is 

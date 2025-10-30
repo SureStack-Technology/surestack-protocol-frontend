@@ -5,7 +5,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title OracleIntegration
- * @notice Simplified Chainlink oracle integration for RISK Protocol
+ * @notice Simplified Chainlink oracle integration for SureStack Protocol
  * Provides ETH/USD price feed functionality
  */
 interface AggregatorV3Interface {

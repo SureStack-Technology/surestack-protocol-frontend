@@ -9,7 +9,7 @@ const fs = require("fs");
 const SEPOLIA_RPC = process.env.INFURA_API_URL || "https://sepolia.infura.io/v3/YOUR_API_KEY";
 
 async function validateContracts() {
-  console.log("\n🔍 RISK Protocol - Sepolia Contract Validation\n");
+  console.log("\n🔍 SureStack Protocol - Sepolia Contract Validation\n");
   console.log("=" .repeat(60));
   
   // Connect to Sepolia
