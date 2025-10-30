@@ -1,94 +1,142 @@
 # SureStack Protocol — Backend API
 
-Backend API for SureStack Protocol — aggregates off-chain analytics, validator stats, and oracle data.
+Backend API for SureStack Protocol — aggregates off-chain analytics, validator stats, and oracle data for the dApp.
 
-## 🌟 Features
+## 🧩 Overview
 
-- **Blockchain Integration**: Connect to SureStack Protocol smart contracts using Ethers.js v6
-- **RESTful API**: Express.js server with JSON responses
-- **Smart Contract Interaction**: Real-time on-chain data fetching from deployed contracts
-- **CORS Enabled**: Configured for frontend integration
-- **ESM Modules**: Modern ES module syntax
+The SureStack Protocol backend serves as the middleware layer between the frontend dApp and on-chain smart contracts. It provides RESTful APIs for accessing validator data, coverage pools, governance proposals, and real-time Chainlink oracle price feeds.
 
-## 🚀 Quick Start
+## ⚙️ Tech Stack
 
-### 1. Install Dependencies
+- **Runtime**: Node.js 20+
+- **Framework**: Express.js 4.18+
+- **Blockchain**: Ethers.js v6
+- **Environment**: ESM (ES Modules)
+- **Validation**: dotenv for configuration
+
+## 🧠 Architecture
+
+```
+┌─────────────────┐
+│  Frontend dApp  │
+│  (Next.js 14)   │
+└────────┬────────┘
+         │ HTTP/REST
+         ▼
+┌─────────────────┐
+│  Backend API    │
+│  (Express.js)   │
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+┌─────────┐ ┌──────────────────┐
+│ Smart   │ │  Chainlink        │
+│ Contracts│ │  Oracle Feeds    │
+│ (Sepolia)│ │  (ETH/USD)       │
+└─────────┘ └──────────────────┘
+```
+
+### Core Components
+
+- **Blockchain Provider** (`src/config/blockchain.js`): Ethers.js provider initialization
+- **Contract Loader** (`src/config/contracts.js`): ABI loading and contract instance creation
+- **Services** (`src/services/`): Business logic for validators, coverage, governance, oracle
+- **Routes** (`src/routes/`): Express.js API endpoint handlers
+- **Server** (`src/server.js`): Main Express application setup
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 20+ and npm
+- Infura or Alchemy API key (for Sepolia testnet)
+- Deployed SureStack Protocol contracts (or use localhost for development)
+
+### Installation
 
 ```bash
 cd backend
 npm install
 ```
 
-### 2. Configure Environment
+### Configuration
 
-Create a `.env` file from the example:
+Create a `.env` file from the template:
 
 ```bash
-cp env.template .env
+cp ../env.template .env
 ```
 
-Edit `.env` and add your configuration:
+Edit `.env` with your configuration:
 
 ```env
 # Server Configuration
-PORT=5000
+PORT=5001
 NODE_ENV=development
 
 # Blockchain Configuration (Sepolia Testnet)
+RPC_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
+# OR
 INFURA_API_URL=https://sepolia.infura.io/v3/YOUR_INFURA_PROJECT_ID
 
-# Contract Addresses
-RISK_TOKEN_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
-CONSENSUS_STAKING_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
-REWARD_POOL_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
-DAO_GOVERNANCE_ADDRESS=0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9
-TIMELOCK_ADDRESS=0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
+# Optional: For write operations
+PRIVATE_KEY=your_private_key_here
 
-# CORS
+# Contract Addresses (from deployment-info.json or after deployment)
+SURESTACK_TOKEN_ADDRESS=0x...
+CONSENSUS_STAKING_ADDRESS=0x...
+REWARD_POOL_ADDRESS=0x...
+DAO_GOVERNANCE_ADDRESS=0x...
+ORACLE_CONTRACT_ADDRESS=0x...
+
+# Chainlink Oracle Address (Sepolia ETH/USD)
+CHAINLINK_ORACLE_ADDRESS=0x694AA1769357215DE4FAC081bf1f309aDC325306
+
+# CORS Configuration
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
 
-### 3. Start the Server
+### Start Server
 
 ```bash
+# Production mode
 npm start
-```
 
-For development with auto-reload:
-
-```bash
+# Development mode (with auto-reload)
 npm run dev
 ```
 
-## 📡 API Endpoints
+Server will start on `http://localhost:5001` (or PORT from .env).
 
-### Health Check
+## 🧪 API Endpoints Summary
 
-```bash
-GET /health
-```
+### Health & Status
 
-Returns server status and uptime.
+- `GET /health` - Server health check
+- `GET /api/status` - API status and version
+- `GET /` - API information and available endpoints
 
 ### Validators API
 
-```bash
-# Get all validators
-GET /api/validators
-
-# Get validator statistics
-GET /api/validators/stats
-
-# Get specific validator details
-GET /api/validators/:address
-```
+- `GET /api/validators` - List all validators with stats
+- `GET /api/validators/stats` - Validator statistics summary
+- `GET /api/validators/:address` - Specific validator details
 
 **Example Response:**
 ```json
 {
   "success": true,
   "data": {
-    "validators": [...],
+    "validators": [
+      {
+        "address": "0x...",
+        "stakedAmount": "1000000000000000000000",
+        "accuracyScore": 95,
+        "totalRewards": "50000000000000000000",
+        "isActive": true
+      }
+    ],
     "currentRoundId": "123",
     "totalActive": 10
   }
@@ -97,84 +145,33 @@ GET /api/validators/:address
 
 ### Coverage API
 
-```bash
-# Get all coverage pools
-GET /api/coverage
-
-# Get coverage statistics
-GET /api/coverage/stats
-
-# Get specific pool details
-GET /api/coverage/:poolId
-```
-
-**Example Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "pools": [
-      {
-        "id": 1,
-        "name": "DeFi Lending Pool",
-        "riskLevel": "Low",
-        "coverageAmount": "1000000",
-        "premium": "2.5"
-      }
-    ],
-    "totalPools": 3
-  }
-}
-```
+- `GET /api/coverage` - List all coverage pools
+- `GET /api/coverage/stats` - Coverage statistics
+- `GET /api/coverage/:poolId` - Specific pool details
 
 ### Governance API
 
-```bash
-# Get all proposals
-GET /api/governance
+- `GET /api/governance` - List all governance proposals
+- `GET /api/governance/stats` - Governance statistics
+- `GET /api/governance/:proposalId` - Specific proposal details
 
-# Get governance statistics
-GET /api/governance/stats
+### Oracle API
 
-# Get specific proposal details
-GET /api/governance/:proposalId
-```
+- `GET /api/oracle` - Full oracle data (price, roundId, updatedAt, decimals)
+- `GET /api/oracle/price` - Simplified price response with refresh timestamp
 
 **Example Response:**
 ```json
 {
   "success": true,
   "data": {
-    "proposals": [...],
-    "votingPeriod": "45818",
-    "votingDelay": "1",
-    "quorum": "4%"
+    "price": 2847.52,
+    "roundId": "18446744073709551617",
+    "updatedAt": "2025-10-31T00:00:00.000Z",
+    "decimals": 8,
+    "refreshAt": "2025-10-31T00:00:30.000Z"
   }
 }
-```
-
-## 🏗️ Project Structure
-
-```
-backend/
-├── src/
-│   ├── config/
-│   │   ├── blockchain.js       # Ethers.js provider setup
-│   │   └── contracts.js        # Contract ABIs and addresses
-│   ├── services/
-│   │   ├── validatorService.js # Validator data fetching
-│   │   ├── coverageService.js  # Coverage pool data
-│   │   └── governanceService.js # DAO governance data
-│   ├── routes/
-│   │   ├── validators.js       # Validator API routes
-│   │   ├── coverage.js         # Coverage API routes
-│   │   └── governance.js       # Governance API routes
-│   └── server.js               # Express app setup
-├── scripts/
-│   └── start.js                # Server start script
-├── .env.example                # Environment template
-├── package.json
-└── README.md
 ```
 
 ## 🔗 Smart Contract Integration
@@ -182,47 +179,54 @@ backend/
 The backend connects to SureStack Protocol smart contracts:
 
 1. **SureStackToken (SST)** - ERC20Votes token for governance and staking
-2. **ConsensusAndStaking** - Validator registration and consensus
-3. **RewardPoolAndSlasher** - Reward distribution and penalties
-4. **DAOGovernance** - On-chain governance and proposals
+2. **ConsensusAndStaking** - Validator registration and consensus mechanism
+3. **RewardPoolAndSlasher** - Reward distribution and penalty management
+4. **DAOGovernance** - On-chain governance and proposal system
+5. **OracleIntegration** - Chainlink oracle price feed integration
+
+### Contract Loading
 
 Contract ABIs are automatically loaded from:
-- `consensus_abi.json`
-- `reward_abi.json`
-- Contract artifacts (for SureStackToken and DAOGovernance)
+- `artifacts/contracts/` (Hardhat compilation artifacts)
+- `deployment-info.json` (contract addresses)
+
+### Direct Contract Access
+
+```javascript
+import { contracts, provider } from './config/contracts.js';
+
+// Access contracts directly
+const token = contracts.SureStackToken;
+const totalSupply = await token.totalSupply();
+
+const oracle = contracts.OracleIntegration;
+const price = await oracle.getLatestPriceUSD();
+```
 
 ## 🔧 Configuration
 
-### Blockchain Provider
-
-The backend uses Ethers.js v6 to connect to Ethereum networks:
-
-```javascript
-// From INFURA_API_URL in .env
-const provider = new ethers.JsonRpcProvider(process.env.INFURA_API_URL);
-```
-
-### Contract ABIs
-
-ABIs are loaded from JSON files in the project root:
-- `../consensus_abi.json`
-- `../reward_abi.json`
-- Contract artifacts for compiled contracts
-
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `PORT` | Server port | No (default: 5000) |
-| `NODE_ENV` | Environment | No |
-| `INFURA_API_URL` | RPC endpoint | Yes |
-| `RISK_TOKEN_ADDRESS` | Token contract (SureStackToken/SST) | Yes |
-| `CONSENSUS_STAKING_ADDRESS` | Staking contract | Yes |
-| `REWARD_POOL_ADDRESS` | Reward contract | Yes |
-| `DAO_GOVERNANCE_ADDRESS` | DAO contract | Yes |
-| `TIMELOCK_ADDRESS` | Timelock contract | Yes |
-| `PRIVATE_KEY` | For write ops | No |
-| `ALLOWED_ORIGINS` | CORS origins | No |
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `PORT` | Server port | No | `5000` |
+| `NODE_ENV` | Environment mode | No | `development` |
+| `RPC_URL` | Ethereum RPC endpoint | Yes | - |
+| `INFURA_API_URL` | Infura RPC (alternative) | No | - |
+| `PRIVATE_KEY` | Wallet private key (for writes) | No | - |
+| `SURESTACK_TOKEN_ADDRESS` | Token contract address | Yes | - |
+| `CONSENSUS_STAKING_ADDRESS` | Consensus contract address | Yes | - |
+| `REWARD_POOL_ADDRESS` | Reward pool contract address | Yes | - |
+| `DAO_GOVERNANCE_ADDRESS` | DAO contract address | Yes | - |
+| `ORACLE_CONTRACT_ADDRESS` | Oracle integration contract | Yes | - |
+| `CHAINLINK_ORACLE_ADDRESS` | Chainlink price feed address | Yes | `0x694AA1769357215DE4FAC081bf1f309aDC325306` |
+| `ALLOWED_ORIGINS` | CORS allowed origins | No | `http://localhost:3000` |
+
+### Contract Address Priority
+
+1. Environment variables (`.env`)
+2. `deployment-info.json` (auto-generated after deployment)
+3. Default values (for Chainlink oracle only)
 
 ## 🧪 Testing
 
@@ -230,16 +234,22 @@ Test the API endpoints using curl:
 
 ```bash
 # Health check
-curl http://localhost:5000/health
+curl http://localhost:5001/health
+
+# API status
+curl http://localhost:5001/api/status
 
 # Get validators
-curl http://localhost:5000/api/validators
+curl http://localhost:5001/api/validators
 
 # Get coverage pools
-curl http://localhost:5000/api/coverage
+curl http://localhost:5001/api/coverage
 
 # Get governance proposals
-curl http://localhost:5000/api/governance
+curl http://localhost:5001/api/governance
+
+# Get oracle price
+curl http://localhost:5001/api/oracle/price
 ```
 
 ## 🚢 Deployment
@@ -256,7 +266,7 @@ npm run dev
 NODE_ENV=production npm start
 ```
 
-### Docker (optional)
+### Docker (Optional)
 
 ```dockerfile
 FROM node:20-alpine
@@ -264,31 +274,41 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --production
 COPY . .
-EXPOSE 5000
+EXPOSE 5001
 CMD ["npm", "start"]
 ```
 
-## 📝 Notes
+## 📝 Project Structure
 
-- Contract addresses are loaded from `.env` file
-- ABIs are loaded from project root JSON files
-- Services use mock data for coverage pools until on-chain implementation
-- Validator list requires event tracking in production
-- Proposals require event tracking for full governance support
+```
+backend/
+├── src/
+│   ├── config/
+│   │   ├── blockchain.js       # Ethers.js provider setup
+│   │   └── contracts.js        # Contract ABIs and instances
+│   ├── services/
+│   │   ├── validatorService.js # Validator data fetching
+│   │   ├── coverageService.js  # Coverage pool data
+│   │   ├── governanceService.js # DAO governance data
+│   │   └── oracleService.js    # Chainlink oracle integration
+│   ├── routes/
+│   │   ├── validators.js       # Validator API routes
+│   │   ├── coverage.js         # Coverage API routes
+│   │   ├── governance.js      # Governance API routes
+│   │   └── oracle.js           # Oracle API routes
+│   └── server.js               # Express app setup
+├── scripts/
+│   └── start.js                # Server start script
+├── package.json
+├── README.md
+└── SETUP.md
+```
 
-## 🤝 Integration
+## 🔗 Related Repositories
 
-This backend integrates with:
-- **Frontend**: [surestack-protocol-frontend](https://github.com/SureStack-Technology/surestack-protocol-frontend)
-- **Contracts**: [surestack-protocol-contracts](https://github.com/SureStack-Technology/surestack-protocol-contracts)
-
-## 🔗 Links
-
-- **Repository**: [surestack-protocol-backend](https://github.com/SureStack-Technology/surestack-protocol-backend)
 - **Frontend**: [surestack-protocol-frontend](https://github.com/SureStack-Technology/surestack-protocol-frontend)
 - **Smart Contracts**: [surestack-protocol-contracts](https://github.com/SureStack-Technology/surestack-protocol-contracts)
 
 ## 📄 License
 
 © 2025 SureStack Technology — Zug, Switzerland.
-
