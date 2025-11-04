@@ -14,7 +14,18 @@ const __dirname = dirname(__filename);
  */
 function loadABI(contractName) {
   try {
-    // Try loading from root directory first (for consensus_abi.json, reward_abi.json)
+    // 1️⃣ First, try backend/contracts/abi directory
+    const backendAbiPath = join(__dirname, '..', 'contracts', 'abi', `${contractName}.json`);
+    try {
+      const backendAbiData = JSON.parse(readFileSync(backendAbiPath, 'utf-8'));
+      if (Array.isArray(backendAbiData)) return backendAbiData;
+      if (backendAbiData.abi) return backendAbiData.abi;
+      return backendAbiData;
+    } catch (e) {
+      // Continue to other paths
+    }
+
+    // 2️⃣ Try root-level ABI
     const rootAbiPath = join(__dirname, '../../..', `${contractName.toLowerCase()}_abi.json`);
     try {
       const abiData = JSON.parse(readFileSync(rootAbiPath, 'utf-8'));
@@ -22,19 +33,32 @@ function loadABI(contractName) {
       if (abiData.abi) return abiData.abi;
       return abiData;
     } catch (e) {
-      // If not found, try loading from artifacts
+      // 3️⃣ Fallback: artifacts/contracts
       try {
-        const artifactPath = join(__dirname, '../../..', 'artifacts/contracts', `${contractName}.sol`, `${contractName}.json`);
+        const artifactPath = join(
+          __dirname,
+          '../../..',
+          'artifacts/contracts',
+          `${contractName}.sol`,
+          `${contractName}.json`
+        );
         const artifactData = JSON.parse(readFileSync(artifactPath, 'utf-8'));
         return artifactData.abi || [];
       } catch (e2) {
-        // Fallback: support cases where file name != contract name
+        // 4️⃣ Fallback mapping
         const fileNameMap = {
           RISKToken: 'SureStackToken',
+          OracleReader: 'OracleIntegration',
         };
         const altFile = fileNameMap[contractName];
         if (altFile) {
-          const altPath = join(__dirname, '../../..', 'artifacts/contracts', `${altFile}.sol`, `${contractName}.json`);
+          const altPath = join(
+            __dirname,
+            '../../..',
+            'artifacts/contracts',
+            `${altFile}.sol`,
+            `${contractName}.json`
+          );
           const altData = JSON.parse(readFileSync(altPath, 'utf-8'));
           return altData.abi || [];
         }
@@ -48,7 +72,7 @@ function loadABI(contractName) {
 }
 
 /**
- * Load deployment info to get contract addresses
+ * Load deployment info
  */
 function loadDeploymentInfo() {
   try {
@@ -68,83 +92,94 @@ export const SURESTACK_TOKEN_ABI = loadABI('SureStackToken');
 export const CONSENSUS_ABI = loadABI('ConsensusAndStaking');
 export const REWARD_POOL_ABI = loadABI('RewardPoolAndSlasher');
 export const DAO_GOVERNANCE_ABI = loadABI('DAOGovernance');
-export const ORACLE_INTEGRATION_ABI = loadABI('OracleIntegration') || loadABI('OracleReader');
+export const ORACLE_READER_ABI = loadABI('OracleReader');
 
 /**
- * Contract addresses from environment or deployment info
- * Priority: Environment variables > deployment-info.json > null
+ * Contract addresses
  */
 const deploymentInfo = loadDeploymentInfo();
 
 export const CONTRACT_ADDRESSES = {
-  SURESTACK_TOKEN: process.env.SURESTACK_TOKEN_ADDRESS || process.env.RISK_TOKEN_CONTRACT || deploymentInfo?.riskToken,
-  CONSENSUS_STAKING: process.env.CONSENSUS_STAKING_ADDRESS || process.env.CONSENSUS_CONTRACT || deploymentInfo?.staking,
-  REWARD_POOL: process.env.REWARD_POOL_ADDRESS || process.env.REWARD_POOL_CONTRACT || deploymentInfo?.rewardPool,
-  DAO_GOVERNANCE: process.env.DAO_GOVERNANCE_ADDRESS || process.env.DAO_CONTRACT || deploymentInfo?.dao,
+  SURESTACK_TOKEN:
+    process.env.SURESTACK_TOKEN_ADDRESS ||
+    process.env.RISK_TOKEN_CONTRACT ||
+    deploymentInfo?.riskToken,
+  CONSENSUS_STAKING:
+    process.env.CONSENSUS_STAKING_ADDRESS ||
+    process.env.CONSENSUS_CONTRACT ||
+    deploymentInfo?.staking,
+  REWARD_POOL:
+    process.env.REWARD_POOL_ADDRESS ||
+    process.env.REWARD_POOL_CONTRACT ||
+    deploymentInfo?.rewardPool,
+  DAO_GOVERNANCE:
+    process.env.DAO_GOVERNANCE_ADDRESS ||
+    process.env.DAO_CONTRACT ||
+    deploymentInfo?.dao,
   TIMELOCK: process.env.TIMELOCK_ADDRESS || deploymentInfo?.timelock,
-  ORACLE_INTEGRATION: process.env.ORACLE_CONTRACT_ADDRESS || process.env.ORACLE_INTEGRATION_CONTRACT || deploymentInfo?.oracleIntegration,
-  CHAINLINK_ORACLE: process.env.CHAINLINK_ORACLE_ADDRESS || deploymentInfo?.chainlinkOracleAddress || '0x694AA1769357215DE4FAC081bf1f309aDC325306', // Sepolia ETH/USD
+  ORACLE_READER:
+    process.env.ORACLE_CONTRACT_ADDRESS ||
+    process.env.ORACLE_INTEGRATION_CONTRACT ||
+    deploymentInfo?.oracleIntegration,
+  CHAINLINK_ORACLE:
+    process.env.CHAINLINK_ORACLE_ADDRESS ||
+    deploymentInfo?.chainlinkOracleAddress ||
+    '0x694AA1769357215DE4FAC081bf1f309aDC325306', // Sepolia ETH/USD
 };
 
 /**
- * Get contract instance
+ * Contract getters
  */
 export function getSureStackTokenContract() {
-  if (!CONTRACT_ADDRESSES.SURESTACK_TOKEN) {
-    throw new Error('SureStackToken address not configured. Set SURESTACK_TOKEN_ADDRESS in .env or deploy contracts.');
-  }
+  if (!CONTRACT_ADDRESSES.SURESTACK_TOKEN)
+    throw new Error('SureStackToken address not configured.');
   return getContract(CONTRACT_ADDRESSES.SURESTACK_TOKEN, SURESTACK_TOKEN_ABI);
 }
 
-// Backward-compatible alias (can be removed later)
+// ✅ Legacy alias for backward compatibility
 export const getRiskTokenContract = getSureStackTokenContract;
 
 export function getConsensusStakingContract() {
-  if (!CONTRACT_ADDRESSES.CONSENSUS_STAKING) {
+  if (!CONTRACT_ADDRESSES.CONSENSUS_STAKING)
     throw new Error('ConsensusAndStaking address not configured.');
-  }
   return getContract(CONTRACT_ADDRESSES.CONSENSUS_STAKING, CONSENSUS_ABI);
 }
 
 export function getRewardPoolContract() {
-  if (!CONTRACT_ADDRESSES.REWARD_POOL) {
+  if (!CONTRACT_ADDRESSES.REWARD_POOL)
     throw new Error('RewardPoolAndSlasher address not configured.');
-  }
   return getContract(CONTRACT_ADDRESSES.REWARD_POOL, REWARD_POOL_ABI);
 }
 
 export function getDAOGovernanceContract() {
-  if (!CONTRACT_ADDRESSES.DAO_GOVERNANCE) {
+  if (!CONTRACT_ADDRESSES.DAO_GOVERNANCE)
     throw new Error('DAOGovernance address not configured.');
-  }
   return getContract(CONTRACT_ADDRESSES.DAO_GOVERNANCE, DAO_GOVERNANCE_ABI);
 }
 
-export function getOracleIntegrationContract() {
-  if (!CONTRACT_ADDRESSES.ORACLE_INTEGRATION) {
-    throw new Error('OracleIntegration address not configured.');
-  }
-  return getContract(CONTRACT_ADDRESSES.ORACLE_INTEGRATION, ORACLE_INTEGRATION_ABI);
+export function getOracleReaderContract() {
+  if (!CONTRACT_ADDRESSES.ORACLE_READER)
+    throw new Error('OracleReader address not configured.');
+  return getContract(CONTRACT_ADDRESSES.ORACLE_READER, ORACLE_READER_ABI);
 }
 
 /**
- * Export contracts object for direct access
- * Provides clean contract instances ready to use
+ * Export contracts
  */
 export const contracts = {
   get SureStackToken() {
     try {
       return getSureStackTokenContract();
     } catch (error) {
-      console.warn('⚠️  SureStackToken not available:', error.message);
+      console.warn('⚠️ SureStackToken not available:', error.message);
       return null;
     }
   },
-  get OracleIntegration() {
+  get OracleReader() {
     try {
-      return getOracleIntegrationContract();
+      return getOracleReaderContract();
     } catch (error) {
-      console.warn('⚠️  OracleIntegration not available:', error.message);
+      console.warn('⚠️ OracleReader not available:', error.message);
       return null;
     }
   },
@@ -152,7 +187,7 @@ export const contracts = {
     try {
       return getConsensusStakingContract();
     } catch (error) {
-      console.warn('⚠️  ConsensusStaking not available:', error.message);
+      console.warn('⚠️ ConsensusStaking not available:', error.message);
       return null;
     }
   },
@@ -160,7 +195,7 @@ export const contracts = {
     try {
       return getRewardPoolContract();
     } catch (error) {
-      console.warn('⚠️  RewardPool not available:', error.message);
+      console.warn('⚠️ RewardPool not available:', error.message);
       return null;
     }
   },
@@ -168,33 +203,25 @@ export const contracts = {
     try {
       return getDAOGovernanceContract();
     } catch (error) {
-      console.warn('⚠️  DAOGovernance not available:', error.message);
+      console.warn('⚠️ DAOGovernance not available:', error.message);
       return null;
     }
   },
 };
 
 /**
- * Provider access
+ * Provider access + validation
  */
 export const provider = getProvider();
 
-/**
- * Validate all contract addresses are set
- */
 export function validateContractAddresses() {
-  const missing = [];
-  
-  for (const [name, address] of Object.entries(CONTRACT_ADDRESSES)) {
-    if (!address) {
-      missing.push(name);
-    }
-  }
-  
+  const missing = Object.entries(CONTRACT_ADDRESSES)
+    .filter(([_, address]) => !address)
+    .map(([name]) => name);
+
   if (missing.length > 0) {
-    console.warn('⚠️  Missing contract addresses:', missing.join(', '));
+    console.warn('⚠️ Missing contract addresses:', missing.join(', '));
     return false;
   }
-  
   return true;
 }

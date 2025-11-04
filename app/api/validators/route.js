@@ -26,7 +26,7 @@ export async function GET() {
   const dynamicValidators = mockValidators.map(validator => ({
     ...validator,
     accuracy: (parseFloat(validator.accuracy) + (Math.random() - 0.5) * 0.5).toFixed(1) + '%',
-    rewards: `${(parseInt(validator.rewards.replace(/[^\d]/g, '')) + Math.floor(Math.random() * 50)).toLocaleString()} RISK`,
+    rewards: `${(parseInt(validator.rewards.replace(/[^\d]/g, '')) + Math.floor(Math.random() * 50)).toLocaleString()} SST`,
   }));
   
   return NextResponse.json(dynamicValidators);

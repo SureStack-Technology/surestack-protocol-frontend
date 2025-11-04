@@ -54,4 +54,4 @@ reports/*.md
 # reward_abi.json
 
 # test outputs
-test-output.txt
+test-output.txt.next/

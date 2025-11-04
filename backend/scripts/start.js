@@ -1,25 +1,22 @@
 #!/usr/bin/env node
-
 /**
- * Start script for SureStack Protocol Backend
- * Loads environment variables and starts the server
+ * SureStack Protocol — Backend Start Script
+ * Loads environment and launches Express server
  */
 
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { start } from '../src/server.js';
 
-// Get the directory name
+// Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from .env file
+// Load .env before launching
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
-console.log('🚀 Starting SureStack Protocol Backend...');
-console.log('📁 Environment loaded from:', join(__dirname, '..', '.env'));
+console.log('🚀 Launching SureStack Protocol Backend...');
+console.log('📁 Using environment file:', join(__dirname, '..', '.env'));
 
-// Import and start the server
-import '../src/server.js';
-
+// Directly run server (auto-starts inside server.js)
+import('../src/server.js');
