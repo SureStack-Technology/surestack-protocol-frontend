@@ -1,0 +1,149 @@
+@import '@fontsource/orbitron/400.css';
+@import '@fontsource/orbitron/500.css';
+@import '@fontsource/orbitron/600.css';
+@import '@fontsource/orbitron/700.css';
+@import '@fontsource/orbitron/900.css';
+@import '@fontsource/rajdhani/300.css';
+@import '@fontsource/rajdhani/400.css';
+@import '@fontsource/rajdhani/500.css';
+@import '@fontsource/rajdhani/600.css';
+@import '@fontsource/rajdhani/700.css';
+@import '@fontsource/inter/300.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-cyan: #00fff0;
+  --primary-blue: #0657b4;
+  --primary-magenta: #ff4bd8;
+  --primary-gradient: linear-gradient(90deg, #00c9ff, #005bea);
+  --navy-bg: #061122;
+  --void-bg: #0A0C11;
+  --glow-cyan: rgba(0, 255, 240, 0.42);
+  --glow-blue: rgba(6, 87, 180, 0.38);
+  --glow-magenta: rgba(255, 75, 216, 0.35);
+  --surface-cyan-soft: rgba(6, 87, 180, 0.22);
+  --surface-cyan-hover: rgba(6, 87, 180, 0.32);
+  --surface-magenta-soft: rgba(255, 0, 224, 0.16);
+
+  --bg-root: var(--void-bg);
+  --bg-panel: rgba(14, 25, 46, 0.6);
+  --fg-text: #E6F3FF;
+  --accent-cyan: var(--primary-cyan);
+  --accent-magenta: var(--primary-magenta);
+  --accent-blue: var(--primary-blue);
+  --glass-border: var(--glow-cyan);
+  --glass-shadow: 0 0 12px var(--glow-blue);
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--bg-root) !important;
+  color: var(--fg-text) !important;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+  background: var(--bg-root) !important;
+  color: var(--fg-text) !important;
+}
+
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: rgba(6, 17, 34, 0.85);
+}
+
+body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--glow-blue), var(--glow-magenta));
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--glow-cyan);
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary-cyan), var(--primary-magenta));
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 16%, var(--glow-magenta), transparent 55%),
+    radial-gradient(circle at 78% 22%, var(--glow-cyan), transparent 55%),
+    linear-gradient(180deg, rgba(6, 17, 34, 0.94), rgba(10, 12, 17, 0.98));
+  pointer-events: none;
+  z-index: 0;
+}
+
+
+@layer base {
+  * {
+    @apply border-transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--accent-cyan);
+    text-shadow:
+      0 0 14px var(--glow-cyan),
+      0 0 28px var(--glow-magenta);
+  }
+
+  .subheading {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background-image: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+  }
+
+  .neon-text {
+    color: var(--accent-cyan);
+    text-shadow:
+      0 0 16px var(--glow-cyan),
+      0 0 28px var(--glow-blue);
+  }
+
+  .neon-soft {
+    color: rgba(210, 246, 255, 0.85);
+    text-shadow:
+      0 0 12px var(--glow-cyan),
+      0 0 20px var(--glow-blue);
+  }
+
+  .holo-glow {
+    box-shadow: 0 0 22px var(--glow-blue);
+  }
+}

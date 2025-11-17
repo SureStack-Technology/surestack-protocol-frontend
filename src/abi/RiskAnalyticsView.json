@@ -1,0 +1,263 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        { "internalType": "address", "name": "_policyManager", "type": "address" },
+        { "internalType": "address", "name": "_staking", "type": "address" },
+        { "internalType": "address", "name": "_rewardPool", "type": "address" },
+        { "internalType": "address", "name": "_oracleReader", "type": "address" },
+        { "internalType": "address", "name": "_governance", "type": "address" },
+        { "internalType": "address", "name": "_sstToken", "type": "address" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "computeVolatilityImpact",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "sigma30", "type": "uint256" },
+            { "internalType": "uint256", "name": "effectiveVolatility", "type": "uint256" },
+            { "internalType": "int256", "name": "latestPrice", "type": "int256" },
+            { "internalType": "uint256", "name": "latestTimestamp", "type": "uint256" }
+          ],
+          "internalType": "struct RiskAnalyticsView.VolatilityImpact",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllPolicies",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "id", "type": "uint256" },
+            { "internalType": "address", "name": "owner", "type": "address" },
+            { "internalType": "uint256", "name": "coverageUSD", "type": "uint256" },
+            { "internalType": "uint256", "name": "premiumSST", "type": "uint256" },
+            { "internalType": "uint8", "name": "coveragePercent", "type": "uint8" },
+            { "internalType": "uint256", "name": "createdAt", "type": "uint256" },
+            { "internalType": "bool", "name": "active", "type": "bool" }
+          ],
+          "internalType": "struct RiskAnalyticsView.PolicyRecord[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "maxProposals", "type": "uint256" }
+      ],
+      "name": "getGovernanceSummary",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "proposalCount", "type": "uint256" },
+            { "internalType": "uint256", "name": "quorumRequirement", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalVotingPower", "type": "uint256" },
+            {
+              "components": [
+                { "internalType": "uint256", "name": "id", "type": "uint256" },
+                { "internalType": "address", "name": "proposer", "type": "address" },
+                { "internalType": "uint256", "name": "startBlock", "type": "uint256" },
+                { "internalType": "uint256", "name": "endBlock", "type": "uint256" },
+                { "internalType": "uint256", "name": "forVotes", "type": "uint256" },
+                { "internalType": "uint256", "name": "againstVotes", "type": "uint256" },
+                { "internalType": "uint256", "name": "abstainVotes", "type": "uint256" },
+                { "internalType": "bool", "name": "executed", "type": "bool" },
+                { "internalType": "bool", "name": "canceled", "type": "bool" }
+              ],
+              "internalType": "struct IGovernanceView.ProposalSummary[]",
+              "name": "latestProposals",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct RiskAnalyticsView.GovernanceSummary",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getGlobalSummary",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "totalCoverageUSD", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalPremiumsSST", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalStakedSST", "type": "uint256" },
+            { "internalType": "uint256", "name": "daoTreasurySST", "type": "uint256" },
+            { "internalType": "uint256", "name": "activePolicies", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalPolicies", "type": "uint256" },
+            { "internalType": "uint256", "name": "averagePremiumBps", "type": "uint256" },
+            { "internalType": "int256", "name": "latestEthPrice", "type": "int256" },
+            { "internalType": "uint256", "name": "latestEthUpdatedAt", "type": "uint256" },
+            { "internalType": "bool", "name": "oracleValid", "type": "bool" }
+          ],
+          "internalType": "struct RiskAnalyticsView.GlobalSummary",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint256", "name": "policyId", "type": "uint256" }
+      ],
+      "name": "getPolicyRecord",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "id", "type": "uint256" },
+            { "internalType": "address", "name": "owner", "type": "address" },
+            { "internalType": "uint256", "name": "coverageUSD", "type": "uint256" },
+            { "internalType": "uint256", "name": "premiumSST", "type": "uint256" },
+            { "internalType": "uint8", "name": "coveragePercent", "type": "uint8" },
+            { "internalType": "uint256", "name": "createdAt", "type": "uint256" },
+            { "internalType": "bool", "name": "active", "type": "bool" }
+          ],
+          "internalType": "struct RiskAnalyticsView.PolicyRecord",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint8", "name": "riskType", "type": "uint8" }
+      ],
+      "name": "getRiskLineSummary",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint8", "name": "riskType", "type": "uint8" },
+            { "internalType": "uint256", "name": "coverageUSD", "type": "uint256" },
+            { "internalType": "uint256", "name": "premiumBps", "type": "uint256" },
+            { "internalType": "uint256", "name": "activeValidators", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalRewardsSST", "type": "uint256" },
+            { "internalType": "uint256", "name": "policyCount", "type": "uint256" }
+          ],
+          "internalType": "struct RiskAnalyticsView.RiskLineSummary",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "uint8[]", "name": "riskTypes", "type": "uint8[]" }
+      ],
+      "name": "getRiskLineSummaries",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint8", "name": "riskType", "type": "uint8" },
+            { "internalType": "uint256", "name": "coverageUSD", "type": "uint256" },
+            { "internalType": "uint256", "name": "premiumBps", "type": "uint256" },
+            { "internalType": "uint256", "name": "activeValidators", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalRewardsSST", "type": "uint256" },
+            { "internalType": "uint256", "name": "policyCount", "type": "uint256" }
+          ],
+          "internalType": "struct RiskAnalyticsView.RiskLineSummary[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getValidatorSummary",
+      "outputs": [
+        {
+          "components": [
+            { "internalType": "uint256", "name": "totalValidators", "type": "uint256" },
+            { "internalType": "uint256", "name": "activeValidators", "type": "uint256" },
+            { "internalType": "uint256", "name": "totalStakedSST", "type": "uint256" },
+            { "internalType": "uint256", "name": "rewardPoolBalance", "type": "uint256" },
+            { "internalType": "uint256", "name": "penaltyPoolBalance", "type": "uint256" }
+          ],
+          "internalType": "struct RiskAnalyticsView.ValidatorSummary",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "governance",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "oracleReader",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "policyManager",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardPool",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "staking",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "sstToken",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}
+

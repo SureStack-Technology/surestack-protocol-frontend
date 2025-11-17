@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@shared/*": ["src/shared/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*": ["src/shared/hooks/*"],
+      "@utils/*": ["shared/utils/*"],
+      "@shared-utils/*": ["shared/utils/*"],
+      "@config/*": ["src/config/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@abis/*": ["src/abis/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}
+

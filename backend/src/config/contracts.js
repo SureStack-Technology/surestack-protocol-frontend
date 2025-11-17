@@ -49,6 +49,7 @@ function loadABI(contractName) {
         const fileNameMap = {
           RISKToken: 'SureStackToken',
           OracleReader: 'OracleIntegration',
+          ConsensusAndStaking: 'ConsensusAndStakingV2', // Legacy mapping
         };
         const altFile = fileNameMap[contractName];
         if (altFile) {
@@ -89,7 +90,7 @@ function loadDeploymentInfo() {
  * Contract ABIs
  */
 export const SURESTACK_TOKEN_ABI = loadABI('SureStackToken');
-export const CONSENSUS_ABI = loadABI('ConsensusAndStaking');
+export const CONSENSUS_ABI = loadABI('ConsensusAndStakingV2');
 export const REWARD_POOL_ABI = loadABI('RewardPoolAndSlasher');
 export const DAO_GOVERNANCE_ABI = loadABI('DAOGovernance');
 export const ORACLE_READER_ABI = loadABI('OracleReader');
@@ -141,7 +142,7 @@ export const getRiskTokenContract = getSureStackTokenContract;
 
 export function getConsensusStakingContract() {
   if (!CONTRACT_ADDRESSES.CONSENSUS_STAKING)
-    throw new Error('ConsensusAndStaking address not configured.');
+    throw new Error('ConsensusAndStakingV2 address not configured.');
   return getContract(CONTRACT_ADDRESSES.CONSENSUS_STAKING, CONSENSUS_ABI);
 }
 

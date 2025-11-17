@@ -1,0 +1,17 @@
+{
+  "protocolFees": 30000,
+  "accuracyFactor": 0.95,
+  "totalStaked": 70000,
+  "apyMonthly": 0.40714285714285714,
+  "apyAnnual": 4.885714285714286,
+  "baseAPY": 0.40714285714285714,
+  "effectiveYield": 0.3867857142857143,
+  "formula": "APY = (ProtocolFees × AccuracyFactor) / TotalStaked",
+  "timestamp": "2025-11-06T22:10:20.995Z",
+  "metadata": {
+    "protocolFeesUnit": "SST",
+    "accuracyFactorUnit": "decimal (0-1)",
+    "totalStakedUnit": "SST",
+    "apyUnit": "decimal (multiply by 100 for percentage)"
+  }
+}

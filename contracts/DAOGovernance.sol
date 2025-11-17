@@ -26,6 +26,18 @@ contract DAOGovernance is
     GovernorVotesQuorumFraction,
     GovernorTimelockControl
 {
+
+    struct ProposalSummary {
+        uint256 id;
+        address proposer;
+        uint256 startBlock;
+        uint256 endBlock;
+        uint256 forVotes;
+        uint256 againstVotes;
+        uint256 abstainVotes;
+        bool executed;
+        bool canceled;
+    }
     
     constructor(
         SureStackToken _token,
@@ -90,6 +102,37 @@ contract DAOGovernance is
 
     function state(uint256 proposalId) public view override(Governor, GovernorTimelockControl) returns (ProposalState) {
         return super.state(proposalId);
+    }
+
+    /**
+     * @notice Returns lightweight metadata about a proposal
+     */
+    function getProposalSummary(uint256 proposalId) external view returns (ProposalSummary memory summary) {
+        summary.id = proposalId;
+        summary.proposer = proposalProposer(proposalId);
+        summary.startBlock = proposalSnapshot(proposalId);
+        summary.endBlock = proposalDeadline(proposalId);
+
+        (summary.againstVotes, summary.forVotes, summary.abstainVotes) = proposalVotes(proposalId);
+
+        ProposalState proposalState = state(proposalId);
+        summary.executed = proposalState == ProposalState.Executed;
+        summary.canceled = proposalState == ProposalState.Canceled;
+    }
+
+    /**
+     * @notice Returns the total number of proposals created by this governor
+     * @dev The current implementation does not retain a running total and returns 0 as a placeholder.
+     */
+    function getProposalCount() external pure returns (uint256) {
+        return 0;
+    }
+
+    /**
+     * @notice Returns a window of the latest proposals (not tracked in current implementation)
+     */
+    function getLatestProposals(uint256 /* maxCount */) external pure returns (ProposalSummary[] memory) {
+        return new ProposalSummary[](0);
     }
 }
 
