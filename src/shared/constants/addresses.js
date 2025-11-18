@@ -1,0 +1,17 @@
+export const ADDR = {
+  SST: import.meta.env.VITE_SURE_STACK_TOKEN_ADDRESS,
+  DAO: import.meta.env.VITE_DAO_GOVERNANCE_ADDRESS,
+  STAKING: import.meta.env.VITE_CONSENSUS_STAKING_V2_ADDRESS,
+  REWARD_POOL: import.meta.env.VITE_REWARD_POOL_ADDRESS,
+  ORACLE_V1: import.meta.env.VITE_ORACLE_READER_ADDRESS,
+  ORACLE_V2: import.meta.env.VITE_ORACLE_READER_V2_ADDRESS,
+  POLICY_MANAGER: import.meta.env.VITE_POLICY_MANAGER_ADDRESS,
+  TIMELOCK: import.meta.env.VITE_TIMELOCK_ADDRESS ?? '',
+}
+
+
+
+
+
+
+

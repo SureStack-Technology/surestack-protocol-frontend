@@ -1,93 +1,109 @@
-import { getConsensusStakingContract, getRewardPoolContract } from '../config/contracts.js';
+import { getConsensusStakingContract } from '../config/contracts.js';
 import { ethers } from 'ethers';
 
 /**
- * Validator Service
- * Fetches validator data from ConsensusAndStaking contract
+ * Normalize address consistently
  */
+const normalizeAddress = (address) => {
+  try {
+    return ethers.getAddress(String(address));
+  } catch {
+    return String(address);
+  }
+};
 
 /**
- * Get all validators with their profiles
- * TODO: In production, fetch from Staked events
+ * Load validator list by scanning Staked events
+ */
+export async function loadValidatorList() {
+  try {
+    const contract = getConsensusStakingContract();
+    const provider = contract.runner?.provider;
+
+    const filter = contract.filters.Staked?.();
+    if (!provider || !filter) return [];
+
+    const events = await contract.queryFilter(filter, 0, 'latest');
+
+    const validatorAddresses = [
+      ...new Set(events.map((e) => normalizeAddress(e.args.user))),
+    ];
+
+    return validatorAddresses;
+  } catch (error) {
+    console.error("Error loading validator list:", error);
+    return [];
+  }
+}
+
+/**
+ * Fetch all validator profiles
  */
 export async function getAllValidators() {
   try {
     const contract = getConsensusStakingContract();
-    
-    // Get current round to access validator submissions
-    const currentRoundId = await contract.currentRoundId();
-    
-    // Query events to find all validators who have staked
-    const provider = contract.runner.provider;
-    const filter = contract.filters.Staked();
-    const events = await contract.queryFilter(filter, 0, 'latest');
-    
-    // Get unique validator addresses
-    const validatorAddresses = [...new Set(events.map(e => e.args.validator))];
-    
-    // Fetch profiles for all validators
-    const validators = await Promise.all(
-      validatorAddresses.map(async (address) => {
-        try {
-          const profile = await contract.validatorProfiles(address);
-          return {
-            address,
-            stakedAmount: ethers.formatEther(profile.stakedAmount || 0),
-            accuracy: profile.accuracyScore ? (profile.accuracyScore / 100).toFixed(1) + '%' : '0%',
-            rewards: ethers.formatEther(profile.totalRewards || 0),
-            isActive: profile.isActive || false,
-            status: profile.isActive ? 'Active' : 'Inactive',
-          };
-        } catch (err) {
-          console.error(`Error fetching profile for ${address}:`, err.message);
-          return null;
-        }
-      })
-    );
-    
-    // Filter out null results
-    const validValidators = validators.filter(v => v !== null);
-    
+    const validatorAddresses = await loadValidatorList();
+
+    const validators = [];
+
+    for (const addr of validatorAddresses) {
+      try {
+        const profile = await contract.validators(addr);
+
+        const staked = profile.stakedAmount || 0n;
+        const rewards = profile.accumulatedRewards || 0n;
+
+        validators.push({
+          address: addr,
+          stakedAmount: ethers.formatEther(staked),
+          accumulatedRewards: ethers.formatEther(rewards),
+          cooldownEnd: profile.cooldownEnd?.toString() || "0",
+          isActive: staked > 0n,
+          status: staked > 0n ? "Active" : "Inactive",
+        });
+      } catch (err) {
+        console.warn(`Error loading profile for ${addr}:`, err.message);
+      }
+    }
+
     return {
       success: true,
       data: {
-        validators: validValidators,
-        currentRoundId: currentRoundId.toString(),
-        totalActive: validValidators.filter(v => v.isActive).length,
-      },
+        validators,
+        totalActive: validators.filter(v => v.isActive).length,
+        stakePool: validators.reduce((sum, v) => sum + Number(v.stakedAmount), 0),
+      }
     };
   } catch (error) {
-    console.error('Error fetching validators:', error);
+    console.error("Error fetching validators:", error);
     return {
       success: false,
       error: error.message,
-      data: { validators: [], totalActive: 0 },
+      data: { validators: [], totalActive: 0, stakePool: 0 },
     };
   }
 }
 
 /**
- * Get specific validator details
+ * Validator details endpoint
  */
 export async function getValidatorDetails(address) {
   try {
     const contract = getConsensusStakingContract();
-    
-    const profile = await contract.validatorProfiles(address);
-    
+    const profile = await contract.validators(address);
+
     return {
       success: true,
       data: {
         address,
-        stakedAmount: ethers.formatEther(profile.stakedAmount || 0),
-        accuracyScore: profile.accuracyScore?.toString() || '0',
-        totalRewards: ethers.formatEther(profile.totalRewards || 0),
-        isActive: profile.isActive || false,
-        unstakeLockoutEnd: profile.unstakeLockoutEnd?.toString() || '0',
-      },
+        stakedAmount: ethers.formatEther(profile.stakedAmount || 0n),
+        accumulatedRewards: ethers.formatEther(profile.accumulatedRewards || 0n),
+        cooldownEnd: profile.cooldownEnd?.toString() || "0",
+        isActive: (profile.stakedAmount || 0n) > 0n,
+      }
     };
   } catch (error) {
-    console.error('Error fetching validator details:', error);
+    console.error("Error fetching validator details:", error);
     return {
       success: false,
       error: error.message,
@@ -97,29 +113,21 @@ export async function getValidatorDetails(address) {
 }
 
 /**
- * Get validator staking statistics
+ * Validator statistics (V2 only exposes minStakeAmount)
  */
 export async function getValidatorStats() {
   try {
     const contract = getConsensusStakingContract();
-    
-    // Get contract constants
-    const minStake = await contract.MIN_STAKE_AMOUNT();
-    const coolingPeriod = await contract.COOLING_OFF_PERIOD();
-    const slashingThreshold = await contract.SLASHING_THRESHOLD();
-    const currentRound = await contract.currentRoundId();
-    
+    const minStake = await contract.minStakeAmount();
+
     return {
       success: true,
       data: {
         minimumStake: ethers.formatEther(minStake),
-        coolingOffPeriod: coolingPeriod.toString(),
-        slashingThreshold: slashingThreshold.toString(),
-        currentRoundId: currentRound.toString(),
-      },
+      }
     };
   } catch (error) {
-    console.error('Error fetching validator stats:', error);
+    console.error("Error fetching validator stats:", error);
     return {
       success: false,
       error: error.message,
@@ -128,3 +136,26 @@ export async function getValidatorStats() {
   }
 }
 
+/**
+ * Active validator list
+ */
+export async function getActiveValidators() {
+  try {
+    const contract = getConsensusStakingContract();
+    const addresses = await loadValidatorList();
+
+    const active = [];
+
+    for (const addr of addresses) {
+      const profile = await contract.validators(addr);
+      if ((profile.stakedAmount || 0n) > 0n) {
+        active.push(addr);
+      }
+    }
+
+    return { active, count: active.length };
+  } catch (error) {
+    console.error("Error fetching active validators:", error);
+    return { active: [], count: 0 };
+  }
+}

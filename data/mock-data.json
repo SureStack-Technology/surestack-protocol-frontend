@@ -1,0 +1,87 @@
+{
+  "riskPools": [
+    {
+      "id": "main-pool",
+      "name": "Stablecoin Depeg",
+      "totalStaked": 4500000,
+      "rewards": 120000,
+      "validators": 54,
+      "avgPremium": 2.5
+    },
+    {
+      "id": "oracle-pool",
+      "name": "Oracle Failure",
+      "totalStaked": 2400000,
+      "rewards": 80000,
+      "validators": 38,
+      "avgPremium": 3.2
+    },
+    {
+      "id": "exchange-pool",
+      "name": "Exchange Downtime",
+      "totalStaked": 1900000,
+      "rewards": 50000,
+      "validators": 25,
+      "avgPremium": 2.8
+    }
+  ],
+  "proposals": [
+    {
+      "id": "1",
+      "description": "Adjust Premium Rate +5%",
+      "forVotes": 512000,
+      "againstVotes": 120000,
+      "abstainVotes": 10000,
+      "state": 1,
+      "timestamp": 1704067200000,
+      "proposer": "0x1234567890123456789012345678901234567890",
+      "txHash": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef"
+    },
+    {
+      "id": "2",
+      "description": "Increase Validator Incentives",
+      "forVotes": 340000,
+      "againstVotes": 210000,
+      "abstainVotes": 5000,
+      "state": 4,
+      "timestamp": 1703980800000,
+      "proposer": "0x2345678901234567890123456789012345678901",
+      "txHash": "0xbcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"
+    },
+    {
+      "id": "3",
+      "description": "Allocate Reserve Pool Funds",
+      "forVotes": 280000,
+      "againstVotes": 90000,
+      "abstainVotes": 2000,
+      "state": 7,
+      "timestamp": 1703894400000,
+      "proposer": "0x3456789012345678901234567890123456789012",
+      "txHash": "0xcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    }
+  ],
+  "governanceParams": {
+    "votingDelay": 1,
+    "votingPeriod": 45818,
+    "proposalThreshold": 100000,
+    "quorum": 40000000,
+    "quorumDenominator": 4
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

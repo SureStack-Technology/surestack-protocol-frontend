@@ -85,7 +85,7 @@ PRIVATE_KEY=your_private_key_here
 
 # Contract Addresses (from deployment-info.json or after deployment)
 SURESTACK_TOKEN_ADDRESS=0x...
-CONSENSUS_STAKING_ADDRESS=0x...
+CONSENSUS_STAKING_ADDRESS=0x...  # ConsensusAndStakingV2 address
 REWARD_POOL_ADDRESS=0x...
 DAO_GOVERNANCE_ADDRESS=0x...
 ORACLE_CONTRACT_ADDRESS=0x...
@@ -179,7 +179,7 @@ Server will start on `http://localhost:5001` (or PORT from .env).
 The backend connects to SureStack Protocol smart contracts:
 
 1. **SureStackToken (SST)** - ERC20Votes token for governance and staking
-2. **ConsensusAndStaking** - Validator registration and consensus mechanism
+2. **ConsensusAndStakingV2** - Validator registration and consensus mechanism (V2 with RewardPool integration)
 3. **RewardPoolAndSlasher** - Reward distribution and penalty management
 4. **DAOGovernance** - On-chain governance and proposal system
 5. **OracleIntegration** - Chainlink oracle price feed integration
@@ -301,7 +301,7 @@ backend/
 │   └── start.js                # Server start script
 ├── package.json
 ├── README.md
-└── SETUP.md
+└── (legacy setup guide now archived at `docs/archive/backend_SETUP.md`)
 ```
 
 ## 🔗 Related Repositories

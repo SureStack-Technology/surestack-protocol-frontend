@@ -1,0 +1,106 @@
+{
+  "protocol": {
+    "totalCoverageUSD": 425800,
+    "activePolicies": 7,
+    "avgPremiumPct": 0.71,
+    "premiumBufferSST": 8302.8,
+    "treasurySST": 19000,
+    "totalStakedSST": 65000
+  },
+  "validators": {
+    "total": 3,
+    "active": 3,
+    "inactive": 0,
+    "totalStaked": 65000,
+    "totalRewards": 250.83,
+    "validators": [
+      {
+        "address": "0x28794234f388",
+        "stake": 25000,
+        "status": "active",
+        "rewards": 120.5,
+        "performance": [75, 78, 80, 76, 82],
+        "consensusScore": 79,
+        "tier": null,
+        "accuracy": 0.82
+      },
+      {
+        "address": "0xadDF536A1234",
+        "stake": 15000,
+        "status": "active",
+        "rewards": 50.1,
+        "performance": [60, 63, 64, 65, 67],
+        "consensusScore": 66,
+        "tier": null,
+        "accuracy": 0.68
+      },
+      {
+        "address": "0x327DBbd45678",
+        "stake": 25000,
+        "status": "active",
+        "rewards": 80.23,
+        "performance": [88, 90, 87, 89, 91],
+        "consensusScore": 90,
+        "tier": null,
+        "accuracy": 0.91
+      }
+    ],
+    "validatorSummary": {
+      "totalValidators": 3,
+      "activeValidators": 3,
+      "inactiveValidators": 0,
+      "totalStaked": 65000,
+      "totalRewards": 250.83
+    }
+  },
+  "governance": {
+    "votingPower": 0,
+    "threshold": 100000,
+    "quorum": 50000,
+    "proposalCount": 0,
+    "active": []
+  },
+  "riskPools": {
+    "pools": [
+      {
+        "name": "Stablecoin Depeg",
+        "coverageUSD": 150000,
+        "premiumRate": 0.35,
+        "validators": 54,
+        "rewards": 0
+      },
+      {
+        "name": "Oracle Failure",
+        "coverageUSD": 140000,
+        "premiumRate": 0.33,
+        "validators": 38,
+        "rewards": 0
+      },
+      {
+        "name": "Exchange Downtime",
+        "coverageUSD": 135800,
+        "premiumRate": 0.31,
+        "validators": 25,
+        "rewards": 0
+      }
+    ]
+  },
+  "claims": {
+    "totalClaims": 0,
+    "processedClaims": 0,
+    "recentClaims7d": 0,
+    "reviewedClaims": 0,
+    "list": []
+  },
+  "stress": {
+    "currentPrice": 3064.9,
+    "vol24h": 3.2,
+    "vol7d": 7.1,
+    "riskScore": 62
+  },
+  "oracle": {
+    "ethPrice": 3064.9,
+    "trend": [3000, 3140, 3210, 3290, 3110, 3030, 3064]
+  }
+}
+

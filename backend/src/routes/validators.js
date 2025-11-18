@@ -3,6 +3,7 @@ import {
   getAllValidators,
   getValidatorDetails,
   getValidatorStats,
+  getActiveValidators,
 } from '../services/validatorService.js';
 
 const router = express.Router();
@@ -38,6 +39,16 @@ router.get('/stats', async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+});
+
+router.get('/active', async (req, res) => {
+  try {
+    const result = await getActiveValidators();
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'validator-scan-failed' });
   }
 });
 

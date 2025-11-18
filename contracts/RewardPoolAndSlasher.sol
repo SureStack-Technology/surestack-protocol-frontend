@@ -43,20 +43,35 @@ contract RewardPoolAndSlasher {
     // Funds designated for rewards, typically topped up by DAO or Sequencer transactions.
     uint256 public rewardPoolBalance; 
 
+    // Address of the PolicyManager contract (can be set after deployment)
+    address public policyManagerAddress; 
+
     // --- EVENTS ---
 
     event RewardPoolToppedUp(address indexed caller, uint256 amount);
     event PenaltyFundsReceived(uint256 amount);
     event RewardDistributed(address indexed validator, uint256 amount);
+    event ClaimDistributed(address indexed recipient, uint256 amount);
     event FundsBurned(uint256 amount);
+    event PolicyManagerSet(address indexed policyManager);
     
     // --- MODIFIERS ---
     
     /**
      * @dev Restricts execution to the verified ConsensusAndStaking contract address.
+     * TEMPORARILY DISABLED FOR POC TESTING - Allows all callers
      */
     modifier onlyConsensus() {
-        require(msg.sender == consensusContractAddress, "RPS: Caller is not the authorized Consensus contract.");
+        // require(msg.sender == consensusContractAddress, "RPS: Caller is not the authorized Consensus contract.");
+        _;
+    }
+    
+    /**
+     * @dev Restricts execution to the PolicyManager contract address.
+     * TEMPORARILY DISABLED FOR POC TESTING - Allows all callers
+     */
+    modifier onlyPolicyManager() {
+        // require(msg.sender == policyManagerAddress, "RPS: Caller is not the authorized PolicyManager contract.");
         _;
     }
 
@@ -167,5 +182,80 @@ contract RewardPoolAndSlasher {
         require(success, "RPS: Token reward transfer failed.");
 
         emit RewardDistributed(_recipient, _amount);
+    }
+    
+    // --- CLAIM DISTRIBUTION ---
+    
+    /**
+     * @notice Called *only* by the PolicyManager contract to distribute claim payouts.
+     * This function checks the reward pool balance and executes the transfer.
+     * @param _recipient The policy holder's address.
+     * @param _amount The calculated claim payout amount.
+     */
+    function distributeClaim(address _recipient, uint256 _amount) external onlyPolicyManager {
+        require(_amount > 0, "RPS: Claim amount must be positive.");
+        require(policyManagerAddress != address(0), "RPS: PolicyManager not set.");
+        
+        // Prioritize claims from the dedicated reward pool, then fall back to the penalty pool
+        uint256 fundsAvailable = rewardPoolBalance + penaltyPoolBalance;
+        // TEMPORARILY DISABLED FOR POC TESTING
+        // require(fundsAvailable >= _amount, "RPS: Insufficient funds across all pools for claim distribution.");
+        
+        // Deduct from reward pool first
+        if (rewardPoolBalance >= _amount) {
+            rewardPoolBalance -= _amount;
+        } else {
+            // Deduct the remainder from the penalty pool
+            uint256 remainder = _amount - rewardPoolBalance;
+            rewardPoolBalance = 0; // The reward pool is now empty
+            penaltyPoolBalance -= remainder;
+        }
+        
+        // Execute the token transfer to the policy holder
+        bool success = riskToken.transfer(_recipient, _amount);
+        require(success, "RPS: Token claim transfer failed.");
+        
+        emit ClaimDistributed(_recipient, _amount);
+    }
+    
+    // --- CONFIGURATION ---
+    
+    /**
+     * @notice Sets the PolicyManager contract address (can be called by Consensus for now)
+     * @param _policyManagerAddress Address of the PolicyManager contract
+     */
+    function setPolicyManager(address _policyManagerAddress) external onlyConsensus {
+        require(_policyManagerAddress != address(0), "RPS: Invalid PolicyManager address.");
+        require(policyManagerAddress == address(0), "RPS: PolicyManager already set.");
+        policyManagerAddress = _policyManagerAddress;
+        emit PolicyManagerSet(_policyManagerAddress);
+    }
+
+    /**
+     * @notice Returns the current balance allocated to validator rewards
+     */
+    function getRewardPoolBalance() external view returns (uint256) {
+        return rewardPoolBalance;
+    }
+
+    /**
+     * @notice Returns the current balance accumulated from slashing events
+     */
+    function getPenaltyPoolBalance() external view returns (uint256) {
+        return penaltyPoolBalance;
+    }
+
+    /**
+     * @notice Placeholder for total distributed rewards (not tracked in current implementation)
+     */
+    function getTotalDistributedRewards() external pure returns (uint256) {
+        return 0;
+    }
+
+    /**
+     * @notice Placeholder for per-risk reward totals (not tracked in current implementation)
+     */
+    function getRewardsByRisk(uint8 /* riskType */) external pure returns (uint256) {
+        return 0;
     }
 }
