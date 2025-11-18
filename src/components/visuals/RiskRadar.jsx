@@ -4,6 +4,10 @@ import { useEthUsdFeed } from "@shared/hooks/useEthUsdFeed";
 import { useChainlinkOracle } from "@shared/hooks/useChainlinkOracle";
 import { motion } from "framer-motion";
 
+const LOW_RISK_COLOR = "#FFD600";
+const MEDIUM_RISK_COLOR = "#FF8C00";
+const HIGH_RISK_COLOR = "#D32F2F";
+
 export default function RiskRadar({ simulatedRiskScore, simulatedPrice }) {
   const { price } = useEthUsdFeed();
   const oracle = useChainlinkOracle();
@@ -29,17 +33,20 @@ export default function RiskRadar({ simulatedRiskScore, simulatedPrice }) {
       setRiskScore(Math.round(risk));
     }
 
-    const heat = Array.from({ length: 24 }, (_, i) => ({
-      value: 30 + Math.sin(i / 2) * 20 + Math.random() * 10,
-      fill: i < 8 ? '#00f5ff' : i < 16 ? '#ffb800' : '#ff2d55',
-    }));
+    const heat = Array.from({ length: 24 }, (_, i) => {
+      const value = 30 + Math.sin(i / 2) * 20 + Math.random() * 10;
+      return {
+        value,
+        fill: i < 8 ? LOW_RISK_COLOR : i < 16 ? MEDIUM_RISK_COLOR : HIGH_RISK_COLOR,
+      };
+    });
     setHeatData(heat);
   }, [oracle?.volatility, price]);
 
   const getRiskColor = (score) => {
-    if (score >= 70) return '#ff2d55';
-    if (score >= 40) return '#ffb800';
-    return '#00f5ff';
+    if (score >= 70) return HIGH_RISK_COLOR;
+    if (score >= 40) return MEDIUM_RISK_COLOR;
+    return LOW_RISK_COLOR;
   };
 
   const radarData = [
@@ -90,8 +97,9 @@ export default function RiskRadar({ simulatedRiskScore, simulatedPrice }) {
                 key={displayRiskScore}
                 initial={{ scale: 1.2 }}
                 animate={{ scale: 1 }}
-                className={`text-4xl font-heading font-bold ${displayRiskScore >= 70 ? 'text-risk' : displayRiskScore >= 40 ? 'text-warning' : 'text-safe'}`}
+                className="text-4xl font-heading font-bold"
                 style={{
+                  color: getRiskColor(displayRiskScore),
                   textShadow: `0 0 20px ${getRiskColor(displayRiskScore)}`,
                 }}
               >
@@ -131,10 +139,11 @@ export default function RiskRadar({ simulatedRiskScore, simulatedPrice }) {
             {Array.from({ length: 8 }).map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-risk rounded-full"
+                className="absolute w-1 h-1 rounded-full"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
+                  background: getRiskColor(displayRiskScore),
                   boxShadow: `0 0 10px ${getRiskColor(displayRiskScore)}`,
                 }}
                 animate={{

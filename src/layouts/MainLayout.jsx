@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Wallet, Activity, FileText, BarChart3, Menu, X } from 'lucide-react'
+import { Wallet, Activity, BarChart3, Menu, X, Package as PackageIcon } from 'lucide-react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context.jsx'
 import { formatAddress } from '../utils/formatters.js'
@@ -25,7 +25,7 @@ export default function MainLayout() {
 
   const navItems = [
     { label: 'Dashboard', icon: Activity, to: '/' },
-    { label: 'Policies', icon: FileText, to: '/policies' },
+    { label: 'Policies', icon: PackageIcon, to: '/policies' },
     { label: 'Claims', icon: Wallet, to: '/claims' },
     { label: 'Billing', icon: BarChart3, to: '/billing' },
   ]

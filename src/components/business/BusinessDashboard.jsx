@@ -70,6 +70,57 @@ export default function BusinessDashboard() {
     )
   }
 
+  const showOracleWarning = oracle?.ethPrice == null || Number(oracle?.ethPrice ?? 0) === 0
+
+  const skeletonCard = (
+    <div className="glass-panel p-4 h-32 animate-pulse bg-white/5 border border-white/10" />
+  )
+
+  if (loading) {
+    return (
+      <section className="min-h-screen text-white space-y-6 pt-4 animate-fade-in">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 pt-4 pb-6">
+          <div className="space-y-4 flex-1">
+            <div className="h-8 w-64 bg-white/10 animate-pulse rounded" />
+            <div className="h-2 w-24 bg-primary-cyan/20 animate-pulse rounded" />
+            <div className="h-16 bg-white/5 animate-pulse rounded" />
+            <div className="h-6 w-48 bg-white/10 animate-pulse rounded" />
+          </div>
+          <div className="w-full max-w-[560px] lg:max-w-[600px] xl:max-w-[680px] max-h-[340px] bg-white/5 animate-pulse rounded-2xl border border-white/10" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          {skeletonCard}
+          {skeletonCard}
+          {skeletonCard}
+          {skeletonCard}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {skeletonCard}
+              {skeletonCard}
+              {skeletonCard}
+              {skeletonCard}
+            </div>
+            <div className="glass-panel h-64 animate-pulse bg-white/5 border border-white/10" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {skeletonCard}
+              {skeletonCard}
+              {skeletonCard}
+              {skeletonCard}
+            </div>
+          </div>
+          <div className="lg:col-span-4 space-y-4">
+            <div className="glass-panel h-72 animate-pulse bg-white/5 border border-white/10" />
+            <div className="glass-panel h-48 animate-pulse bg-white/5 border border-white/10" />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   const statusLabel = error ? 'Degraded' : 'Operational'
   const statusSubtitle = error?.message ?? 'All systems nominal'
 
@@ -101,12 +152,20 @@ export default function BusinessDashboard() {
               <TokenIcon className="h-7 w-7 drop-shadow-[0_0_18px_rgba(0,255,240,0.45)]" />
               <span>Backed by SureStack SST Liquidity Network</span>
             </div>
-            <Link
-              to="/business/vaf"
-              className="btn-brand inline-flex items-center gap-2 px-4 py-2 text-sm w-fit"
-            >
-              Explore VAF &amp; Volatility Module
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/business/adjustments"
+                className="btn-brand inline-flex items-center gap-2 px-4 py-2 text-sm w-fit"
+              >
+                Explore Adjustments Module
+              </Link>
+              <Link
+                to="/business/enterprise"
+                className="btn-cyber inline-flex items-center gap-2 px-4 py-2 text-sm w-fit"
+              >
+                Enterprise Solutions
+              </Link>
+            </div>
           </div>
           <img
             src="/assets/banner/enterprise-banner.png"
@@ -120,6 +179,12 @@ export default function BusinessDashboard() {
           />
         </div>
       </motion.div>
+
+      {showOracleWarning && (
+        <div className="glass-card border border-amber-500/40 bg-amber-500/10 text-amber-100 px-4 py-3 text-sm">
+          Oracle feed inactive — using mock data.
+        </div>
+      )}
 
       <SimulationPanel />
 

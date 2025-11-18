@@ -15,6 +15,8 @@ export default function BusinessValidatorsPage() {
 
   const protocol = analytics?.protocol ?? {}
   const validatorStats = analytics?.validators ?? {}
+  const oraclePrice = analytics?.oracle?.ethPrice
+  const showOracleWarning = oraclePrice == null || Number(oraclePrice ?? 0) === 0
 
   const analyticsTotals = useMemo(() => ({
     totalCoverageUSD: protocol.totalCoverageUSD ?? 0,
@@ -45,6 +47,7 @@ export default function BusinessValidatorsPage() {
 
   const isFrozen = hasLoadedOnceRef.current
   const tableLoading = !isFrozen && (loading || !Array.isArray(consensusValidators))
+  const metricsSkeleton = analyticsLoading && !isFrozen
 
   const [displayValidators, setDisplayValidators] = useState([])
 
@@ -127,6 +130,12 @@ export default function BusinessValidatorsPage() {
         </p>
       </motion.header>
 
+      {showOracleWarning && (
+        <div className="glass-card p-4 border border-amber-500/40 bg-amber-500/10 text-amber-100 text-sm">
+          Oracle feed inactive — using mock data.
+        </div>
+      )}
+
       {analyticsError && (
         <div className="glass-card p-4 border border-amber-400/30 bg-amber-500/10 text-amber-100 text-sm">
           Analytics temporarily unavailable. Showing cached validator metrics.
@@ -148,28 +157,44 @@ export default function BusinessValidatorsPage() {
         <div className="glass-panel p-4">
           <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Total Coverage</p>
           <p className="text-2xl font-heading text-white">
-            {analyticsLoading ? '…' : `$${formatNumber(analyticsTotals.totalCoverageUSD, 0)}`}
+            {metricsSkeleton ? (
+              <span className="inline-block h-6 w-28 rounded bg-white/10 animate-pulse" />
+            ) : (
+              `$${formatNumber(analyticsTotals.totalCoverageUSD, 0)}`
+            )}
           </p>
           <p className="text-xs text-slate-400 mt-1">USD policies across all validators</p>
         </div>
         <div className="glass-panel p-4">
           <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Total Validators</p>
           <p className="text-2xl font-heading text-white">
-            {analyticsLoading ? '…' : analyticsTotals.validatorCount.toLocaleString()}
+            {metricsSkeleton ? (
+              <span className="inline-block h-6 w-16 rounded bg-white/10 animate-pulse" />
+            ) : (
+              analyticsTotals.validatorCount.toLocaleString()
+            )}
           </p>
           <p className="text-xs text-slate-400 mt-1">Registered validator addresses</p>
         </div>
         <div className="glass-panel p-4">
           <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Total Staked</p>
           <p className="text-2xl font-heading text-white">
-            {analyticsLoading ? '…' : renderSSTAmount(analyticsTotals.totalStakedSST)}
+            {metricsSkeleton ? (
+              <span className="inline-block h-6 w-24 rounded bg-white/10 animate-pulse" />
+            ) : (
+              renderSSTAmount(analyticsTotals.totalStakedSST)
+            )}
           </p>
           <p className="text-xs text-slate-400 mt-1">Validator capital currently locked</p>
         </div>
         <div className="glass-panel p-4">
           <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Rewards Distributed</p>
           <p className="text-2xl font-heading text-white">
-            {analyticsLoading ? '…' : renderSSTAmount(analyticsTotals.totalRewardsDistributed)}
+            {metricsSkeleton ? (
+              <span className="inline-block h-6 w-24 rounded bg-white/10 animate-pulse" />
+            ) : (
+              renderSSTAmount(analyticsTotals.totalRewardsDistributed)
+            )}
           </p>
           <p className="text-xs text-slate-400 mt-1">Total validator rewards issued</p>
         </div>
@@ -178,15 +203,21 @@ export default function BusinessValidatorsPage() {
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
         <div className="glass-card p-4">
           <p className="text-slate-400 text-sm">Tier 1 Validators</p>
-          <p className="text-xl font-semibold">{tierCounts.T1}</p>
+          <p className="text-xl font-semibold">
+            {metricsSkeleton ? <span className="inline-block h-5 w-12 rounded bg-white/10 animate-pulse" /> : tierCounts.T1}
+          </p>
         </div>
         <div className="glass-card p-4">
           <p className="text-slate-400 text-sm">Tier 2 Validators</p>
-          <p className="text-xl font-semibold">{tierCounts.T2}</p>
+          <p className="text-xl font-semibold">
+            {metricsSkeleton ? <span className="inline-block h-5 w-12 rounded bg-white/10 animate-pulse" /> : tierCounts.T2}
+          </p>
         </div>
         <div className="glass-card p-4">
           <p className="text-slate-400 text-sm">Tier 3 Validators</p>
-          <p className="text-xl font-semibold">{tierCounts.T3}</p>
+          <p className="text-xl font-semibold">
+            {metricsSkeleton ? <span className="inline-block h-5 w-12 rounded bg-white/10 animate-pulse" /> : tierCounts.T3}
+          </p>
         </div>
       </section>
 

@@ -6,11 +6,11 @@ import { SimulationProvider } from '@contexts/SimulationContext'
 import MainLayout from '@/layouts/MainLayout'
 import BusinessLayout from '@components/BusinessLayout'
 import Dashboard from '@components/Dashboard'
-import PolicyPanel from '@components/PolicyPanel'
 import ClaimPanel from '@components/ClaimPanel'
 import BusinessDashboard from '@components/business/BusinessDashboard'
 import VAFModulePage from './business-app/pages/vaf/index.jsx'
 import Billing from './pages/Billing.jsx'
+import UserPoliciesPage from './user-app/pages/Policies.jsx'
 import BusinessPoliciesPage from './business-app/pages/policies/index.jsx'
 import BusinessClaimsPage from './business-app/pages/claims/index.jsx'
 import BusinessGovernanceIndexPage from './business-app/pages/governance/BusinessGovernanceIndexPage.jsx'
@@ -22,6 +22,7 @@ import BusinessAuditPage from './business-app/pages/audit/index.jsx'
 import BusinessValidatorsPage from './business-app/pages/validators/index.jsx'
 import RiskPoolsPage from './business-app/pages/risk-pools/index.jsx'
 import UnderwritingPanel from '@components/business/UnderwritingPanel'
+import EnterpriseCTA from './business-app/pages/enterprise/index.jsx'
 
 // 🧠 Diagnostic system imports
 import { ErrorBoundary } from './diagnostics/ErrorBoundary'
@@ -32,13 +33,13 @@ import HealthCheck from './pages/HealthCheck'
 
 // Wrap critical components with tracing
 const TDashboard = withTrace(Dashboard, 'Dashboard')
-const TPolicyPanel = withTrace(PolicyPanel, 'PolicyPanel')
 const TClaimPanel = withTrace(ClaimPanel, 'ClaimPanel')
 const TBusinessDashboard = withTrace(BusinessDashboard, 'BusinessDashboard')
 const TUnderwritingPanel = withTrace(UnderwritingPanel, 'UnderwritingPanel')
 const TBusinessValidatorsPage = withTrace(BusinessValidatorsPage, 'BusinessValidatorsPage')
-const TVAFModulePage = withTrace(VAFModulePage, 'BusinessVAFModule')
+const TAdjustmentsPage = withTrace(VAFModulePage, 'BusinessAdjustments')
 const TBilling = withTrace(Billing, 'Billing')
+const TUserPoliciesPage = withTrace(UserPoliciesPage, 'UserPoliciesPage')
 const TBusinessPolicies = withTrace(BusinessPoliciesPage, 'BusinessPolicies')
 const TBusinessClaims = withTrace(BusinessClaimsPage, 'BusinessClaims')
 const TBusinessRiskPoolsPage = withTrace(RiskPoolsPage, 'BusinessRiskPoolsPage')
@@ -48,6 +49,7 @@ const TBusinessGovernanceCreateProposalPage = withTrace(BusinessGovernanceCreate
 const TBusinessGovernanceProposalDetailPage = withTrace(BusinessGovernanceProposalDetailPage, 'BusinessGovernanceProposalDetailPage')
 const TBusinessStressTestPage = withTrace(BusinessStressTestPage, 'BusinessStressTestPage')
 const TBusinessAuditPage = withTrace(BusinessAuditPage, 'BusinessAuditPage')
+const TBusinessEnterprisePage = withTrace(EnterpriseCTA, 'BusinessEnterprisePage')
 
 function AppContent() {
   console.log('[BOOT] AppContent render START')
@@ -199,13 +201,14 @@ function AppContent() {
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<TDashboard />} />
-          <Route path="policies" element={<TPolicyPanel />} />
+          <Route path="policies" element={<TUserPoliciesPage />} />
           <Route path="claims" element={<TClaimPanel />} />
           <Route path="billing" element={<TBilling />} />
         </Route>
 
         <Route path="/business" element={<BusinessLayout />}>
           <Route index element={<TBusinessDashboard />} />
+          <Route path="enterprise" element={<TBusinessEnterprisePage />} />
           <Route path="policies" element={<TBusinessPolicies />} />
           <Route path="claims" element={<TBusinessClaims />} />
           <Route path="validators" element={<TBusinessValidatorsPage />} />
@@ -214,7 +217,7 @@ function AppContent() {
           <Route path="governance/proposals" element={<TBusinessGovernanceProposalsPage />} />
           <Route path="governance/proposals/create" element={<TBusinessGovernanceCreateProposalPage />} />
           <Route path="governance/proposals/:proposalId" element={<TBusinessGovernanceProposalDetailPage />} />
-          <Route path="vaf" element={<TVAFModulePage />} />
+          <Route path="adjustments" element={<TAdjustmentsPage />} />
           <Route path="stress-test" element={<TBusinessStressTestPage />} />
           <Route path="audit" element={<TBusinessAuditPage />} />
           <Route path="underwriting" element={<TUnderwritingPanel />} />

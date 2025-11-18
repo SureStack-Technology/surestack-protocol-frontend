@@ -7,10 +7,10 @@ import {
   Layers,
   Landmark,
   ListChecks,
-  FilePlus2,
   TrendingDown,
   FileCheck,
   FlaskConical,
+  Package as PackageIcon,
 } from 'lucide-react'
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useEffect, useRef } from 'react'
@@ -77,10 +77,10 @@ export default function BusinessLayout() {
     { label: 'Underwriting', icon: TrendingDown, to: '/business/underwriting', roles: ['Admin', 'Underwriter'] },
     { label: 'Governance', icon: Landmark, to: '/business/governance', roles: ['Admin', 'Reinsurer', 'Auditor', 'DAO Member'] },
     { label: 'Proposals', icon: ListChecks, to: '/business/governance/proposals', roles: ['Admin', 'Reinsurer', 'Auditor', 'DAO Member'], indent: 1 },
-    { label: 'Create Proposal', icon: FilePlus2, to: '/business/governance/proposals/create', roles: ['Admin', 'Reinsurer', 'Auditor', 'DAO Member'], indent: 1 },
-    { label: 'VAF & Volatility', icon: FlaskConical, to: '/business/vaf', roles: ['Admin', 'Underwriter', 'Reinsurer', 'Auditor'] },
+  { label: 'Adjustments', icon: FlaskConical, to: '/business/adjustments', roles: ['Admin', 'Underwriter', 'Reinsurer', 'Auditor'] },
     { label: 'Stress Tests', icon: TrendingDown, to: '/business/stress-test', roles: ['Admin', 'Underwriter', 'Reinsurer'] },
     { label: 'Audit Trail', icon: FileCheck, to: '/business/audit', roles: ['Admin', 'Auditor'] },
+  { label: 'Enterprise Solutions', icon: PackageIcon, to: '/business/enterprise', roles: ['Admin', 'Underwriter', 'Reinsurer', 'Auditor', 'DAO Member', 'Guest'] },
   ]
 
   // Filter nav items based on role

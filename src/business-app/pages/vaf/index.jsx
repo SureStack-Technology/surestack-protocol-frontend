@@ -5,6 +5,7 @@ import VAFSimulationPanel from "../../components/VAFSimulationPanel.jsx";
 import VAFAllocationBreakdown from "../../components/VAFAllocationBreakdown.jsx";
 import VolatilityCharts from "../../components/VolatilityCharts.jsx";
 import TierRulesCard from "../../components/TierRulesCard.jsx";
+import RevenueExplainer from "@/user-app/components/RevenueExplainer.jsx";
 import EnterpriseBadge from "@/components/ui/EnterpriseBadge.jsx";
 import {
   calculateVAFMetrics,
@@ -103,14 +104,14 @@ export default function VAFModulePage() {
         className="glass-card p-4 space-y-2"
       >
         <h1 className="text-3xl font-heading text-[var(--primary-cyan)] flex items-center">
-          Volatility Adjustment Fee & Risk Engine
+          Adjustments & Risk Engine
           <EnterpriseBadge />
         </h1>
         <div className="w-20 h-1 bg-primary-cyan/40 rounded-full animate-pulse" />
         <p className="text-sm text-[color:rgba(200,228,255,0.72)] max-w-3xl">
-          The VAF safeguards the SureStack treasury by proportionally adjusting premiums during
-          periods of extreme market volatility. Underwriters can inspect volatility trends, stress
-          test scenarios, and examine actuarial allocations in one unified console.
+          Adjustments safeguard the SureStack treasury by proportionally tuning premiums during
+          periods of extreme market volatility. Inspect volatility trends, stress test scenarios, and
+          examine actuarial allocations in one unified console.
         </p>
       </motion.header>
 
@@ -148,16 +149,55 @@ export default function VAFModulePage() {
           <p className="text-xs text-slate-400 mt-1">Weekly volatility signal</p>
         </div>
         <div className="glass-panel p-4">
-          <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Coverage Backing VAF</p>
+          <p className="text-sm text-[color:rgba(200,228,255,0.72)] mb-1">Coverage Backing Adjustments</p>
           <p className="text-2xl font-heading text-white">
             {analyticsLoading ? "…" : `$${formatNumber(analyticsSummary.totalCoverageUSD, 0)}`}
           </p>
-          <p className="text-xs text-slate-400 mt-1">USD capacity subject to VAF</p>
+          <p className="text-xs text-slate-400 mt-1">USD capacity subject to adjustment buffers</p>
         </div>
       </motion.div>
 
       <VolatilityCharts history={stats.history} sigmaBase={stats.sigmaBase} />
       <TierRulesCard />
+      <section className="glass-card p-6 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-heading text-white uppercase tracking-[0.24em]">
+            Liquidity &amp; Adjustment Engine
+          </h2>
+          <p className="text-sm text-[color:rgba(200,228,255,0.72)]">
+            Adjustments activate only during high volatility to stabilise payouts. When markets normalise the adjustment automatically
+            returns to zero. We monitor these buffers continuously to keep underwriting solvent without overcharging policy holders.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass-panel p-4 rounded-lg border border-white/10 space-y-3">
+            <h3 className="text-lg font-heading text-white">Adjustment Overview</h3>
+            <p className="text-sm text-white/70">
+              Adjustment tiers scale with 30-day volatility. When sigma levels breach thresholds we proportionally lift fees, and
+              once volatility cools the engine retracts back to zero automatically.
+            </p>
+            <ul className="space-y-2 text-white/70 text-sm">
+              <li>• 60% funds direct liquidity for payouts</li>
+              <li>• 20% secures reinsurance &amp; counterparty buffers</li>
+              <li>• 20% invests in underwriting intelligence &amp; ops</li>
+            </ul>
+          </div>
+          <RevenueExplainer />
+        </div>
+        <div className="glass-panel p-4 rounded-lg border border-white/10 space-y-2">
+          <h3 className="text-lg font-heading text-white">Need bespoke coverage?</h3>
+          <p className="text-sm text-white/70">
+            Institutional desks with unique risk exposures can engage our enterprise team for custom adjustment schedules, premium
+            ladders, and liquidity commitments aligned to regulatory needs.
+          </p>
+          <a
+            href="mailto:pilot@surestack.tech"
+            className="btn-outline inline-flex items-center gap-2 w-fit text-sm"
+          >
+            Contact pilot@surestack.tech
+          </a>
+        </div>
+      </section>
       <VAFAnalytics
         portfolioValue={stats.portfolioValue}
         metrics={stats.metrics}
