@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from "react-router-dom"
 import { motion } from 'framer-motion'
 
 const isTestMode = true // Toggle via configuration in production
@@ -8,22 +9,22 @@ const policyCategories = [
   {
     id: 'market-volatility',
     title: 'Market Volatility Protection',
-    description: 'Stabilises losses triggered by rapid price swings and liquidation cascades.',
+    description: 'Stabilises portfolio losses during rapid price swings, liquidation cascades, or unexpected market reversals.',
   },
   {
     id: 'theft',
     title: 'Theft Protection',
-    description: 'Protects against unauthorized withdrawals, custody compromises, and insider incidents.',
+    description: 'Covers unauthorized withdrawals, compromised custody wallets, and operational security failures.',
   },
   {
     id: 'hacks-scams',
     title: 'Hacks & Scams Protection',
-    description: 'Covers wallet drains, malicious approvals, and compromised smart contracts.',
+    description: 'Protects against phishing, malicious approvals, wallet drains, and protocol-level exploits.',
   },
   {
     id: 'global-shock',
     title: 'Global Shock Protection',
-    description: 'Designed for macro events, regulatory shocks, and coordinated social manipulation.',
+    description: 'Shield against extreme macro events, systemic failures, exchange outages, and coordinated market manipulation.',
   },
 ]
 
@@ -49,6 +50,7 @@ const coverageRates = [
 ]
 
 export default function UserPoliciesPage() {
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [portfolioValue, setPortfolioValue] = useState('7500')
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -116,10 +118,10 @@ export default function UserPoliciesPage() {
             }}
             className="input-field w-40 bg-white/5 border border-white/20 text-white text-sm"
           />
-          <span className="text-white/40">
-            Minimum requirement: ${minPortfolio.toLocaleString()} USD
-          </span>
         </div>
+        <p className="text-xs text-yellow-500 mt-1">
+          🔥 Limited-time offer: Minimum only $5,000 USD.
+        </p>
         {error && (
           <div className="glass-card border border-rose-500/50 bg-rose-500/10 text-rose-100 px-4 py-3 text-sm">
             {error}
@@ -156,6 +158,13 @@ export default function UserPoliciesPage() {
 
       {step === 2 && (
         <section className="space-y-6">
+          <button
+            type="button"
+            onClick={() => (window.location.href = '/policies')}
+            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-3"
+          >
+            ← Back to Retail Policies
+          </button>
           <div className="glass-card p-6 rounded-xl border border-cyan-300/30">
             <p className="text-xs uppercase tracking-[0.28em] text-white/60 mb-2">Selected Category</p>
             <h2 className="text-2xl font-heading text-white">

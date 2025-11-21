@@ -30,6 +30,7 @@ const TNeuroGridBackground = withTrace(NeuroGridBackground, 'NeuroGridBackground
 
 export default function BusinessLayout() {
   const { pathname } = useLocation()
+  const isBusinessDashboard = pathname === '/business'
   const {
     account,
     isConnected,
@@ -159,14 +160,9 @@ export default function BusinessLayout() {
           >
             <div className="flex items-center gap-3">
               <Logo className="h-10" />
-              <div>
-                <h2 className="text-lg font-heading text-[var(--primary-cyan)] uppercase tracking-[0.35em]">
-                  Enterprise Control Centre
-                </h2>
-                <p className="text-xs text-[color:rgba(200,228,255,0.75)]">
-                  Insurance partner portal for professional operators
-                </p>
-              </div>
+              <span className="text-xs text-[color:rgba(200,228,255,0.75)] uppercase tracking-[0.35em]">
+                SureStack Institutional Suite
+              </span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono uppercase tracking-[0.25em] text-[color:rgba(200,228,255,0.6)]">
@@ -200,8 +196,18 @@ export default function BusinessLayout() {
               )}
             </div>
           </header>
-          <div className="flex-1 overflow-y-auto">
-            <Outlet />
+          <div
+            className={`flex-1 overflow-y-auto ${
+              isBusinessDashboard ? 'px-0 pt-6 pb-10' : 'px-4 pt-6 pb-10'
+            }`}
+          >
+            {isBusinessDashboard ? (
+              <div className="w-full mt-6 space-y-6">
+                <Outlet />
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </div>
         </main>
       </div>

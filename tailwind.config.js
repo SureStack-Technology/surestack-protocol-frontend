@@ -5,6 +5,15 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
     "./shared/**/*.{js,jsx,ts,tsx}",
   ],
+  safelist: [
+    "bg-gradient-to-r",
+    "from-slate-900",
+    "via-slate-800",
+    "to-slate-900",
+    "border",
+    "border-slate-700",
+    "shadow-xl",
+  ],
   theme: {
     extend: {
       colors: {

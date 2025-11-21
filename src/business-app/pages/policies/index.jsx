@@ -80,6 +80,13 @@ export default function BusinessPoliciesPage() {
       className="space-y-6"
     >
       <header className="glass-card p-6 space-y-4">
+        <button
+          type="button"
+          onClick={() => (window.location.href = '/business/policies')}
+          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mb-4"
+        >
+          ← Back to Policies
+        </button>
         <div className="flex items-center gap-3">
           <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-[0.35em] bg-white/10 border border-white/15 text-white/60">
             SME Policy Builder
