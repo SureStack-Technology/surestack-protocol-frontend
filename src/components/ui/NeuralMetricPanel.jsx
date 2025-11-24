@@ -31,3 +31,6 @@ export default function NeuralMetricPanel({ label, value, change }) {
 
 
 
+
+
+
