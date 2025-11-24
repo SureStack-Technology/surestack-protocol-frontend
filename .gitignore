@@ -1,57 +1,85 @@
-# dependencies
+
+# -------------------------
+# Dependencies
+# -------------------------
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
+# -------------------------
+# Testing
+# -------------------------
 /coverage
 reports/coverage/
 
-# next.js
+# -------------------------
+# Next.js (legacy dirs)
+# -------------------------
 /.next/
 /out/
 
-# production
+# -------------------------
+# Production Build Output
+# -------------------------
 /build
+/dist
 
-# misc
+# -------------------------
+# Misc
+# -------------------------
 .DS_Store
 *.pem
 
-# debug
+# -------------------------
+# Debug Logs
+# -------------------------
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# local env files
+# -------------------------
+# Local Environment Files
+# -------------------------
+.env
+.env.local
 .env*.local
 
-# vercel
+# -------------------------
+# Vercel
+# -------------------------
 .vercel
 
-# typescript
+# -------------------------
+# TypeScript
+# -------------------------
 *.tsbuildinfo
 next-env.d.ts
 
-# hardhat
+# -------------------------
+# Hardhat
+# -------------------------
 cache/
 artifacts/
-# deployments/
+/deployments
 deployment-info.json
 
-# environment
-.env
-.env.local
-
-# reports - keep structure but ignore detailed reports
+# -------------------------
+# Reports
+# (ignore all auto-generated reports except the README)
+# -------------------------
 reports/*.txt
 reports/*.json
 reports/*.md
 !reports/README.md
 
-# compiled ABIs (optional - can be regenerated)
+# -------------------------
+# Compiled ABIs (optional)
+# Uncomment if ABIs can be regenerated
 # consensus_abi.json
 # reward_abi.json
 
-# test outputs
-test-output.txt.next/
+# -------------------------
+# Test Outputs
+# -------------------------
+test-output.txt
