@@ -20,7 +20,7 @@ import NeuroGridBackground from '@components/visuals/NeuroGridBackground'
 import CanvasBackground from '@components/visuals/CanvasBackground'
 import DataFlowOverlay from '@components/visuals/DataFlowOverlay'
 import RiskTicker from '@components/ui/RiskTicker'
-import { prefetchBusinessAll, loadBusinessCache } from '@shared/prefetchBusiness'
+import { prefetchBusinessAll } from '@shared/prefetchBusiness'
 import { useBusinessRole } from '@shared/hooks/useBusinessRole'
 import { withTrace } from '../diagnostics/withTrace'
 import Logo from '@/components/ui/Logo.jsx'
@@ -48,7 +48,6 @@ export default function BusinessLayout() {
 
     const runPrefetch = async () => {
       try {
-        await loadBusinessCache?.()
         await prefetchBusinessAll?.()
       } catch (err) {
         if (err?.code === -32005) {
