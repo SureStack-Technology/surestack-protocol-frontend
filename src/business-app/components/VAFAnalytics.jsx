@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import TokenIcon from "@components/ui/TokenIcon.jsx";
 import { SIGMA_BASE_DEFAULT } from "@shared/risk-engine/volatility/VAFEngine.js";
 
 const metricCardClasses =
@@ -38,8 +37,7 @@ export default function VAFAnalytics({
     tier: { rate: 0, label: "Baseline" },
     simpleVAF: 0,
     actuarialVAF: 0,
-    allocation: { pool: 0, reinsurance: 0, revenue: 0 },
-  }
+  };
 
   if (!metrics && !safeMetrics) {
     return (
@@ -49,21 +47,7 @@ export default function VAFAnalytics({
     );
   }
 
-  const {
-    sigma30,
-    effectiveVolatility,
-    tier,
-    simpleVAF,
-    actuarialVAF,
-    allocation,
-  } = safeMetrics;
-
-  const renderSSTValue = (amount) => (
-    <span className="inline-flex items-center gap-2">
-      <TokenIcon className="h-5 w-5" />
-      <span>{amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} SST</span>
-    </span>
-  );
+  const { sigma30, effectiveVolatility, tier, simpleVAF, actuarialVAF } = safeMetrics;
 
   const renderCurrency = (amount) =>
     `$${Number(amount || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
@@ -117,29 +101,6 @@ export default function VAFAnalytics({
           description="Adjusted using actuarial formula."
           accent="var(--primary-blue)"
         />
-      </div>
-
-      <div className="glass-card p-5">
-        <h3 className="text-lg font-heading text-[var(--primary-cyan)] mb-3">
-          Allocation Breakdown
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <MetricCard
-            label="Risk Pool (60%)"
-            value={renderCurrency(allocation.pool)}
-            description="Stabilises claims liquidity."
-          />
-          <MetricCard
-            label="Reinsurance (20%)"
-            value={renderCurrency(allocation.reinsurance)}
-            description="Backstops catastrophic scenarios."
-          />
-          <MetricCard
-            label="SureStack Revenue (20%)"
-            value={renderCurrency(allocation.revenue)}
-            description="Funds protocol operations."
-          />
-        </div>
       </div>
     </motion.section>
   );

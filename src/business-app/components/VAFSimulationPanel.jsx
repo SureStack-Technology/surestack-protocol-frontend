@@ -4,7 +4,6 @@ import {
   calculateVAFMetrics,
   SIGMA_BASE_DEFAULT,
 } from "@shared/risk-engine/volatility/VAFEngine.js";
-import TokenIcon from "@components/ui/TokenIcon.jsx";
 
 const defaultState = {
   portfolio: 5_000_000,
@@ -176,25 +175,15 @@ export default function VAFSimulationPanel({ onSimulate, history = [] }) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: "easeOut", delay: 0.15 }}
-            className="md:col-span-3 glass-panel p-4"
+            className="md:col-span-3 glass-panel p-4 space-y-2"
           >
-            <h4 className="text-sm uppercase tracking-[0.28em] text-[var(--primary-cyan)] mb-2">
-              Allocation
+            <h4 className="text-sm uppercase tracking-[0.28em] text-[var(--primary-cyan)]">
+              Adjustment Insight
             </h4>
-            <ul className="text-sm text-[color:rgba(200,228,255,0.75)] space-y-1">
-              <li>
-                Risk Pool (60%): {renderCurrency(result.allocation.pool)}
-              </li>
-              <li>
-                Reinsurance (20%): {renderCurrency(result.allocation.reinsurance)}
-              </li>
-              <li>
-                SureStack Revenue (20%): {renderCurrency(result.allocation.revenue)}
-              </li>
-            </ul>
-            <p className="text-xs text-[color:rgba(200,228,255,0.6)] mt-3">
-              VAF allocations automatically triage funds towards liquidity, reinsurance buffers, and
-              protocol operations to keep coverage sustainable even in turbulent markets.
+            <p className="text-sm text-[color:rgba(200,228,255,0.75)]">
+              The Adjustment Engine routes resources automatically to preserve solvency. Treasury
+              allocation specifics remain confidential while the simulation focuses on volatility
+              responses.
             </p>
           </motion.div>
         </div>

@@ -2,10 +2,8 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import VAFAnalytics from "../../components/VAFAnalytics.jsx";
 import VAFSimulationPanel from "../../components/VAFSimulationPanel.jsx";
-import VAFAllocationBreakdown from "../../components/VAFAllocationBreakdown.jsx";
 import VolatilityCharts from "../../components/VolatilityCharts.jsx";
 import TierRulesCard from "../../components/TierRulesCard.jsx";
-import RevenueExplainer from "@/user-app/components/RevenueExplainer.jsx";
 import EnterpriseBadge from "@/components/ui/EnterpriseBadge.jsx";
 import {
   calculateVAFMetrics,
@@ -17,6 +15,16 @@ import { formatNumber } from "@/utils/formatters";
 
 const DEFAULT_PORTFOLIO = 7_500_000;
 const DEFAULT_K = 0.18;
+
+const SectionHeader = ({ children }) => (
+  <h2 className="text-2xl font-heading text-white uppercase tracking-[0.24em]">
+    {children}
+  </h2>
+);
+
+const Paragraph = ({ children }) => (
+  <p className="text-sm text-[color:rgba(200,228,255,0.72)]">{children}</p>
+);
 
 export default function VAFModulePage() {
   const [history, setHistory] = useState([]);
@@ -57,8 +65,6 @@ export default function VAFModulePage() {
     });
     setMetrics(computed);
   }, [history, portfolioValue, sigmaBase, k]);
-
-  const allocation = metrics?.allocation ?? { pool: 0, reinsurance: 0, revenue: 0 };
 
   const handleSimulation = (result) => {
     if (!result) return;
@@ -111,7 +117,7 @@ export default function VAFModulePage() {
         <p className="text-sm text-[color:rgba(200,228,255,0.72)] max-w-3xl">
           Adjustments safeguard the SureStack treasury by proportionally tuning premiums during
           periods of extreme market volatility. Inspect volatility trends, stress test scenarios, and
-          examine actuarial allocations in one unified console.
+          review actuarial signals in one unified console.
         </p>
       </motion.header>
 
@@ -160,30 +166,10 @@ export default function VAFModulePage() {
       <VolatilityCharts history={stats.history} sigmaBase={stats.sigmaBase} />
       <TierRulesCard />
       <section className="glass-card p-6 space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-heading text-white uppercase tracking-[0.24em]">
-            Liquidity &amp; Adjustment Engine
-          </h2>
-          <p className="text-sm text-[color:rgba(200,228,255,0.72)]">
-            Adjustments activate only during high volatility to stabilise payouts. When markets normalise the adjustment automatically
-            returns to zero. We monitor these buffers continuously to keep underwriting solvent without overcharging policy holders.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-panel p-4 rounded-lg border border-white/10 space-y-3">
-            <h3 className="text-lg font-heading text-white">Adjustment Overview</h3>
-            <p className="text-sm text-white/70">
-              Adjustment tiers scale with 30-day volatility. When sigma levels breach thresholds we proportionally lift fees, and
-              once volatility cools the engine retracts back to zero automatically.
-            </p>
-            <ul className="space-y-2 text-white/70 text-sm">
-              <li>• 60% funds direct liquidity for payouts</li>
-              <li>• 20% secures reinsurance &amp; counterparty buffers</li>
-              <li>• 20% invests in underwriting intelligence &amp; ops</li>
-            </ul>
-          </div>
-          <RevenueExplainer />
-        </div>
+        <SectionHeader>Adjustment Engine Overview</SectionHeader>
+        <Paragraph>
+          The Adjustment Engine helps maintain stability during periods of high volatility. It dynamically adapts coverage parameters without revealing internal treasury allocation or margin structure.
+        </Paragraph>
         <div className="glass-panel p-4 rounded-lg border border-white/10 space-y-2">
           <h3 className="text-lg font-heading text-white">Need bespoke coverage?</h3>
           <p className="text-sm text-white/70">
@@ -204,7 +190,6 @@ export default function VAFModulePage() {
         sigmaBase={stats.sigmaBase}
         k={stats.k}
       />
-      <VAFAllocationBreakdown allocation={allocation} />
       <VAFSimulationPanel onSimulate={handleSimulation} history={stats.history} />
     </motion.section>
   );
