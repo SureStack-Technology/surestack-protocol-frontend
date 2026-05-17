@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { requireClerkAuth } from '../middleware/clerkAuth.js'
 import { prisma } from '../lib/prisma.js'
 import { syncUserFromClerk } from '../services/clerkSync.js'
+import { loadAuthUser } from '../services/authUser.js'
 import {
   getFoundersPassStatusForUser,
   submitFoundersPassEngagement,
