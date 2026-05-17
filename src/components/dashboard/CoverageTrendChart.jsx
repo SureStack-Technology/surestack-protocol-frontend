@@ -2,8 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend, CartesianGrid } from "recharts";
 
 /**
- * 📈 Coverage & Premiums Trend Chart
- * Displays the last 15 PolicyCreated events with coverage and premium values.
+ * 📈 Risk analytics trend chart
+ * Displays the last 15 PolicyCreated events with value monitored and fee signals.
  * Updates reactively when new events stream in.
  */
 export default function CoverageTrendChart() {
@@ -112,14 +112,14 @@ export default function CoverageTrendChart() {
       <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 mt-2 shadow-md">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-blue-400">
-            📈 Coverage & Premiums Trend (last 15 events)
+            📈 Risk analytics trend (last 15 events)
           </h3>
         </div>
         <div className="h-[200px] flex items-center justify-center text-neutral-500 text-sm">
           <div className="text-center">
             <p>No recent data available</p>
             <p className="text-xs mt-1 text-neutral-600">
-              Create a policy to see coverage and premium trends
+              Create a program to see trends
             </p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function CoverageTrendChart() {
     <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 mt-2 shadow-md">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-blue-400">
-          📈 Coverage & Premiums Trend (last 15 events)
+          📈 Risk analytics trend (last 15 events)
         </h3>
         <div className="flex gap-2">
           <button
@@ -142,7 +142,7 @@ export default function CoverageTrendChart() {
                 : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
             }`}
           >
-            💰 Coverage
+            💰 Value
           </button>
           <button
             onClick={() => setMode("premium")}
@@ -152,7 +152,7 @@ export default function CoverageTrendChart() {
                 : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
             }`}
           >
-            🪙 Premiums
+            🪙 Fees
           </button>
           <button
             onClick={() => setMode("both")}
@@ -209,9 +209,9 @@ export default function CoverageTrendChart() {
               }}
               formatter={(value, key) => {
                 if (key === "coverage") {
-                  return [`$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, "Coverage"];
+                  return [`$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, "Value monitored"];
                 } else if (key === "premium") {
-                  return [`$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, "Premium"];
+                  return [`$${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`, "Risk intelligence fee"];
                 }
                 return [value, key];
               }}
@@ -249,7 +249,7 @@ export default function CoverageTrendChart() {
                 dot={{ r: 3, fill: "#00ffcc" }}
                 activeDot={{ r: 6, fill: "#00ffcc", stroke: "#00ffcc", strokeWidth: 2 }}
                 isAnimationActive={true}
-                name="💰 Coverage"
+                name="💰 Value"
                 connectNulls={false}
               />
             )}
@@ -263,7 +263,7 @@ export default function CoverageTrendChart() {
                 dot={{ r: 3, fill: "#a855f7" }}
                 activeDot={{ r: 6, fill: "#a855f7", stroke: "#a855f7", strokeWidth: 2 }}
                 isAnimationActive={true}
-                name="🪙 Premiums"
+                name="🪙 Fees"
                 connectNulls={false}
               />
             )}
