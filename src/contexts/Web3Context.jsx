@@ -15,7 +15,7 @@ export const useWeb3 = () => {
 
 export const Web3Provider = ({ children }) => {
   const hybridProvider = useMemo(() => getHybridProvider(), [])
-  const hybridWsProvider = useMemo(() => getHybridWebSocketProvider(), [])
+  const [hybridWsProvider, setHybridWsProvider] = useState(null)
   const [walletProvider, setWalletProvider] = useState(null)
   const [signer, setSigner] = useState(null)
   const [account, setAccount] = useState(null)
@@ -24,34 +24,60 @@ export const Web3Provider = ({ children }) => {
   const [isConnecting, setIsConnecting] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  const isMetaMaskInstalled = () => typeof window !== 'undefined' && window.ethereum
+  const getInjectedEthereum = useCallback(() => {
+    try {
+      if (typeof window === 'undefined') return null
+      const eth = window.ethereum
+      if (!eth) return null
+
+      let providers
+      try {
+        providers = eth.providers
+      } catch {
+        return eth
+      }
+
+      if (Array.isArray(providers) && providers.length > 0) {
+        const metamaskProvider = providers.find((provider) => provider?.isMetaMask)
+        return metamaskProvider ?? providers[0]
+      }
+
+      return eth
+    } catch (err) {
+      console.warn('[Web3Context] injected provider detection failed:', err?.message || err)
+      return null
+    }
+  }, [])
+
+  const isMetaMaskInstalled = useCallback(() => Boolean(getInjectedEthereum()), [getInjectedEthereum])
 
   const connectWallet = useCallback(async () => {
-    if (!isMetaMaskInstalled()) {
+    const ethereum = getInjectedEthereum()
+
+    if (!ethereum) {
       alert('Please install MetaMask to use this app!')
       return
     }
 
     setIsConnecting(true)
     try {
-      const ethereum = window.ethereum
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
-      setAccount(accounts[0] ?? null)
-      setIsConnected(true)
+      const selectedAccount = accounts?.[0]
+      if (!selectedAccount) {
+        throw new Error('No wallet account returned from provider')
+      }
 
-      const browserProvider = new ethers.BrowserProvider(ethereum, 'any')
-      const browserSigner = await browserProvider.getSigner()
-      const network = await browserProvider.getNetwork()
-      const networkChainId = Number(network.chainId)
+      let activeChainHex = await ethereum.request({ method: 'eth_chainId' })
 
-      if (networkChainId !== NETWORK_CONFIG.chainIdDec) {
+      if (activeChainHex?.toLowerCase() !== NETWORK_CONFIG.chainIdHex.toLowerCase()) {
         try {
           await ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: NETWORK_CONFIG.chainIdHex }],
           })
+          activeChainHex = await ethereum.request({ method: 'eth_chainId' })
         } catch (switchError) {
-          if (switchError.code === 4902) {
+          if (switchError?.code === 4902) {
             await ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [
@@ -64,13 +90,23 @@ export const Web3Provider = ({ children }) => {
                 },
               ],
             })
+            activeChainHex = await ethereum.request({ method: 'eth_chainId' })
+          } else {
+            throw switchError
           }
         }
       }
 
+      const browserProvider = new ethers.BrowserProvider(ethereum, 'any')
+      const browserSigner = await browserProvider.getSigner()
+      const network = await browserProvider.getNetwork()
+      const networkChainId = Number(network.chainId)
+
       setWalletProvider(browserProvider)
       setSigner(browserSigner)
-      setChainId(networkChainId)
+      setAccount(selectedAccount)
+      setIsConnected(true)
+      setChainId(networkChainId || parseInt(activeChainHex, 16))
       setIsSyncing(true)
 
       setTimeout(() => {
@@ -78,19 +114,24 @@ export const Web3Provider = ({ children }) => {
       }, 0)
 
       console.log('🔍 [Web3Context] Wallet Connected:')
-      console.log('  Account:', accounts[0])
+      console.log('  Account:', selectedAccount)
       console.log('  Chain ID:', networkChainId)
     } catch (error) {
       console.error('Error connecting wallet:', error)
-      alert('Failed to connect wallet. Please try again.')
+      if (error?.code === 4001) {
+        alert('Wallet connection was cancelled.')
+      } else {
+        alert(error?.message ? `Failed to connect wallet: ${error.message}` : 'Failed to connect wallet. Please try again.')
+      }
       setIsConnected(false)
       setSigner(null)
       setWalletProvider(null)
       setAccount(null)
+      setChainId(null)
     } finally {
       setIsConnecting(false)
     }
-  }, [])
+  }, [getInjectedEthereum])
 
   const disconnectWallet = useCallback(() => {
     setWalletProvider(null)
@@ -101,12 +142,52 @@ export const Web3Provider = ({ children }) => {
     setIsSyncing(false)
   }, [])
 
+  /** Re-bind BrowserProvider + signer from injected wallet (fixes stale signer after auto-connect). */
+  const refreshWalletSession = useCallback(async () => {
+    const ethereum = getInjectedEthereum()
+    if (!ethereum) {
+      return { ok: false, reason: 'no_provider' }
+    }
+    try {
+      const accounts = await ethereum.request({ method: 'eth_accounts' })
+      if (!accounts?.length) {
+        disconnectWallet()
+        return { ok: false, reason: 'no_accounts' }
+      }
+      const browserProvider = new ethers.BrowserProvider(ethereum, 'any')
+      const browserSigner = await browserProvider.getSigner()
+      const network = await browserProvider.getNetwork()
+      const selected = accounts[0]
+      const networkChainId = Number(network.chainId)
+
+      setWalletProvider(browserProvider)
+      setSigner(browserSigner)
+      setAccount(selected)
+      setIsConnected(true)
+      setChainId(networkChainId)
+      setIsSyncing(false)
+
+      return { ok: true, account: selected, chainId: networkChainId }
+    } catch (error) {
+      console.error('[Web3Context] refreshWalletSession failed', error)
+      return { ok: false, reason: 'refresh_failed', message: error?.message }
+    }
+  }, [disconnectWallet, getInjectedEthereum])
+
   useEffect(() => {
-    if (!isMetaMaskInstalled()) {
+    try {
+      setHybridWsProvider(getHybridWebSocketProvider())
+    } catch (err) {
+      console.warn('[Web3Context] WebSocket provider unavailable:', err?.message || err)
+      setHybridWsProvider(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    const ethereum = getInjectedEthereum()
+    if (!ethereum) {
       return
     }
-
-    const ethereum = window.ethereum
 
     const checkConnection = async () => {
       try {
@@ -136,11 +217,23 @@ export const Web3Provider = ({ children }) => {
 
     checkConnection()
 
-    const handleAccountsChanged = (accounts) => {
+    const handleAccountsChanged = async (accounts) => {
       if (accounts.length === 0) {
         disconnectWallet()
       } else {
-        connectWallet()
+        try {
+          const browserProvider = new ethers.BrowserProvider(ethereum, 'any')
+          const browserSigner = await browserProvider.getSigner()
+          const network = await browserProvider.getNetwork()
+
+          setAccount(accounts[0])
+          setIsConnected(true)
+          setWalletProvider(browserProvider)
+          setSigner(browserSigner)
+          setChainId(Number(network.chainId))
+        } catch (error) {
+          console.error('Error handling account change:', error)
+        }
       }
     }
 
@@ -155,7 +248,7 @@ export const Web3Provider = ({ children }) => {
       ethereum.removeListener('accountsChanged', handleAccountsChanged)
       ethereum.removeListener('chainChanged', handleChainChanged)
     }
-  }, [connectWallet, disconnectWallet])
+  }, [connectWallet, disconnectWallet, getInjectedEthereum, isMetaMaskInstalled])
 
   const value = {
     provider: hybridProvider,
@@ -170,7 +263,9 @@ export const Web3Provider = ({ children }) => {
     isSyncing,
     connectWallet,
     disconnectWallet,
+    refreshWalletSession,
     isMetaMaskInstalled,
+    getInjectedEthereum,
   }
 
   return <Web3Context.Provider value={value}>{children}</Web3Context.Provider>

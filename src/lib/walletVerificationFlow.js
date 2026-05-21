@@ -28,12 +28,24 @@ export function logWalletVerify(source, step, extra) {
 }
 
 function getInjectedEthereum() {
-  if (typeof window === 'undefined' || !window.ethereum) return null
-  if (Array.isArray(window.ethereum.providers) && window.ethereum.providers.length > 0) {
-    const metamask = window.ethereum.providers.find((p) => p?.isMetaMask)
-    return metamask ?? window.ethereum.providers[0]
+  try {
+    if (typeof window === 'undefined') return null
+    const eth = window.ethereum
+    if (!eth) return null
+    let providers
+    try {
+      providers = eth.providers
+    } catch {
+      return eth
+    }
+    if (Array.isArray(providers) && providers.length > 0) {
+      const metamask = providers.find((p) => p?.isMetaMask)
+      return metamask ?? providers[0]
+    }
+    return eth
+  } catch {
+    return null
   }
-  return window.ethereum
 }
 
 /**
