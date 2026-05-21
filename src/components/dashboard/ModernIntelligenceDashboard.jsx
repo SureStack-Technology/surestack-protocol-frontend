@@ -5,6 +5,7 @@ import { useDashboardProfile } from '@/hooks/useDashboardProfile'
 import ExplorerIntelligenceBackdrop from '@/components/dashboard/ExplorerIntelligenceBackdrop.jsx'
 import ExplorerReferenceBar from '@/components/dashboard/ExplorerReferenceBar.jsx'
 import MarketPulseWidget from '@/components/dashboard/MarketPulseWidget.jsx'
+import NarrativePulseCard from '@/components/dashboard/NarrativePulseCard.jsx'
 import SecurityPulseWidget from '@/components/dashboard/SecurityPulseWidget.jsx'
 import CurrentPlanCard from '@/components/dashboard/CurrentPlanCard.jsx'
 import PrimeCommandCenter from '@/components/dashboard/prime/PrimeCommandCenter.jsx'
@@ -110,6 +111,7 @@ export default function ModernIntelligenceDashboard({
       <div className="relative z-10 space-y-11 sm:space-y-12 lg:space-y-14">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-7 lg:gap-9 items-stretch">
           <MarketPulseWidget variant="context" />
+          {isExplorer ? <NarrativePulseCard profile={profile ?? undefined} /> : null}
           <SecurityPulseWidget />
           <ExplorerWalletPanel profile={profile ?? undefined} onProfileRefresh={refetchProfile} />
         </div>

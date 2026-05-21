@@ -16,6 +16,7 @@ import ExplorerIntelligenceBackdrop from '@/components/dashboard/ExplorerIntelli
 import ExplorerReferenceBar from '@/components/dashboard/ExplorerReferenceBar.jsx'
 import PrimeWalletIntelligenceConsole from '@/components/dashboard/PrimeWalletIntelligenceConsole.jsx'
 import UniversalRiskScanner from '@/components/dashboard/prime/UniversalRiskScanner.jsx'
+import SocialIntelligencePanel from '@/components/dashboard/prime/SocialIntelligencePanel.jsx'
 import { ExplorerFoundingPanel } from '@/components/dashboard/ExplorerAcquisitionView.jsx'
 import { usePrimeCommandCenter } from '@/hooks/usePrimeCommandCenter.js'
 import { hasIntelligenceProOrHigher } from '@/utils/dashboardPersonalization.js'
@@ -352,6 +353,8 @@ export default function PrimeCommandCenter({ profile, profileLoading, profileErr
             </div>
           </motion.div>
         </div>
+
+        <SocialIntelligencePanel profile={profile} />
 
         <motion.div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-7">
           <motion.div
