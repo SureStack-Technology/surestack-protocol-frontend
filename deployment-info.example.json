@@ -1,0 +1,6 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "oracleIntegration": "0x1B081326b7C36f949F7EE4d801361E1d2c9E67d1",
+  "OracleReaderV2": "0x1B081326b7C36f949F7EE4d801361E1d2c9E67d1"
+}
