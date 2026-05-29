@@ -119,6 +119,7 @@ export const CONTRACT_ADDRESSES = {
     deploymentInfo?.dao,
   TIMELOCK: process.env.TIMELOCK_ADDRESS || deploymentInfo?.timelock,
   ORACLE_READER:
+    process.env.ORACLE_READER_V2_ADDRESS ||
     process.env.ORACLE_CONTRACT_ADDRESS ||
     process.env.ORACLE_INTEGRATION_CONTRACT ||
     deploymentInfo?.oracleIntegration,

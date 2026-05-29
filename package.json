@@ -15,6 +15,8 @@
   "scripts": {
     "validate:env": "node scripts/check-env.js",
     "dev": "npm run validate:env && vite --port 3000 --clearScreen false",
+    "dev:3001": "npm run validate:env && vite --port 3001 --clearScreen false",
+    "backend:dev": "npm --prefix backend run dev",
     "dev:skip-env": "vite --port 3000 --clearScreen false",
     "build": "vite build",
     "preview": "vite preview",
@@ -40,6 +42,7 @@
     "fix:aliases": "node scripts/fix-alias-imports.js"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/orbitron": "^5.2.8",
     "@fontsource/rajdhani": "^5.2.7",
@@ -74,7 +77,7 @@
     "@nomicfoundation/hardhat-ignition-ethers": "0.15.15",
     "@nomicfoundation/hardhat-network-helpers": "^1.1.2",
     "@nomicfoundation/hardhat-toolbox": "6.1.0",
-    "@nomicfoundation/hardhat-verify": "3.0.6",
+    "@nomicfoundation/hardhat-verify": "^2.1.0",
     "@openzeppelin/contracts": "^5.0.0",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",

@@ -5,9 +5,13 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node scripts/start.js",
-    "dev": "node --watch src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "dev:watch": "node --watch src/server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "test": "node --test src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
   },
   "keywords": [
     "surestack-protocol",
@@ -27,13 +31,18 @@
     "url": "https://github.com/SureStack-Technology/surestack-protocol-backend/issues"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "ethers": "^6.12.0",
+    "@clerk/backend": "^3.4.6",
+    "@prisma/client": "5.22.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.1",
-    "cors": "^2.8.5"
+    "ethers": "^6.12.0",
+    "express": "^4.18.2",
+    "resend": "^6.12.3",
+    "svix": "^1.93.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21"
+    "@types/express": "^4.17.21",
+    "nodemon": "^3.1.9",
+    "prisma": "5.22.0"
   }
 }
-

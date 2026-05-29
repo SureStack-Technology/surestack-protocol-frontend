@@ -10,15 +10,25 @@ import { fetchInitialHistory, appendLatestPrice } from "@shared/services/priceHi
 import { putMany } from "@shared/utils/idb"
 import aggregatorAbi from "@shared/abi/AggregatorV3Interface.json"
 import { guard } from "@/diagnostics/hookGuard"
+import { fetchOracleRestPrice } from "@shared/services/oracleRest"
+import { getBackendBaseUrl } from "@shared/services/validatorApi"
 
 const FEED = import.meta.env.VITE_ETH_USD_FEED
 
 const FALLBACK_STATE = {
   price: 0,
+  feedConfigured: Boolean(FEED && FEED.length >= 42),
+  hasValidQuote: false,
+  quoteForUi: null,
   updatedAt: null,
   history: [],
   rows: [],
   error: null,
+  warmup: true,
+  source: null,
+  isStreaming: false,
+  connectionState: "disconnected",
+  contractError: false,
 }
 
 export function useEthUsdFeed() {
@@ -32,6 +42,11 @@ export function useEthUsdFeed() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [connectionState, setConnectionState] = useState("disconnected")
   const [contractError, setContractError] = useState(false)
+  const [restPrice, setRestPrice] = useState(null)
+  const [restUpdatedAt, setRestUpdatedAt] = useState(null)
+  const [restError, setRestError] = useState(null)
+  const [restLoading, setRestLoading] = useState(false)
+  const [restAttempted, setRestAttempted] = useState(false)
 
   const timer = useRef(null)
   const mounted = useRef(true)
@@ -61,6 +76,7 @@ export function useEthUsdFeed() {
         if (!feedAddress || feedAddress.length < 42) {
           console.warn("[useEthUsdFeed] Skipping fetch due to missing feed address")
           setContractError(false)
+          setWarmup(false)
           return
         }
 
@@ -81,6 +97,7 @@ export function useEthUsdFeed() {
         setUpdatedAt(nextTimestamp)
         setError(null)
         setContractError(false)
+        setWarmup(false)
 
         setHistory((prev) => {
           appendLatestPrice(prev).then((updated) => {
@@ -127,6 +144,39 @@ export function useEthUsdFeed() {
     }
   })
 
+  /** Backend GET /api/oracle/price — primary reference when on-chain feed is missing or RPC fails. */
+  useEffect(() => {
+    const ac = new AbortController()
+
+    const poll = async () => {
+      if (!mounted.current) return
+      setRestLoading(true)
+      setRestAttempted(true)
+      try {
+        const { price: p, updatedAt: u } = await fetchOracleRestPrice({ signal: ac.signal })
+        if (!mounted.current) return
+        setRestPrice(p)
+        setRestUpdatedAt(u ? new Date(u) : new Date())
+        setRestError(null)
+        setWarmup(false)
+      } catch (e) {
+        if (e?.name === "AbortError") return
+        if (!mounted.current) return
+        setRestError(e?.message || "rest_oracle_failed")
+        console.warn("[useEthUsdFeed] REST /api/oracle/price failed", e?.message || e)
+      } finally {
+        if (mounted.current) setRestLoading(false)
+      }
+    }
+
+    poll()
+    const id = setInterval(poll, 30_000)
+    return () => {
+      ac.abort()
+      clearInterval(id)
+    }
+  }, [])
+
   useEffect(() => {
     mounted.current = true
 
@@ -165,6 +215,15 @@ export function useEthUsdFeed() {
       }
 
       const provider = wsProviderRef.current
+      if (!provider) {
+        console.warn("[useEthUsdFeed] No WebSocket provider — using HTTP polling and REST oracle")
+        setConnectionState("disconnected")
+        setIsStreaming(false)
+        if (!timer.current) {
+          timer.current = setInterval(() => fetchLatestPrice.current(), 60_000)
+        }
+        return
+      }
       const wsLabel = wsInfo?.url || "shared-ws"
       console.info("[useEthUsdFeed] using WebSocket provider", wsLabel)
 
@@ -311,11 +370,40 @@ export function useEthUsdFeed() {
     })
   }, [price, updatedAt, history.length, error])
 
+  const numeric =
+    price != null && Number.isFinite(Number(price)) ? Number(price) : null
+  const fromFailedState = error === 'fallback' || contractError
+  const contractQuoteValid =
+    !fromFailedState &&
+    numeric != null &&
+    Number.isFinite(numeric) &&
+    (numeric > 0 || (numeric === 0 && updatedAt != null))
+
+  const restNumeric =
+    restPrice != null && Number.isFinite(Number(restPrice)) && Number(restPrice) > 0
+      ? Number(restPrice)
+      : null
+
+  const hasValidQuote = contractQuoteValid || restNumeric != null
+  const quoteForUi = contractQuoteValid ? numeric : restNumeric
+  const mergedUpdatedAt = contractQuoteValid ? updatedAt : restUpdatedAt ?? updatedAt
+
+  const chainFeedConfigured = Boolean(FEED && FEED.length >= 42)
+  const restApiReachable = import.meta.env.DEV || Boolean(getBackendBaseUrl())
+  const feedConfigured = chainFeedConfigured || restApiReachable
+
   const result = {
-    price: price ?? FALLBACK_STATE.price,
-    updatedAt: updatedAt ?? FALLBACK_STATE.updatedAt,
+    price: quoteForUi ?? price ?? null,
+    feedConfigured,
+    /** True when we should show a numeric ETH/USD quote (excludes fallback $0). */
+    hasValidQuote,
+    /** Quoted value for UI; null when unavailable. Zero allowed only with a feed timestamp. */
+    quoteForUi,
+    updatedAt: mergedUpdatedAt ?? FALLBACK_STATE.updatedAt,
     history,
     warmup,
+    restLoading,
+    restAttempted,
     source,
     rows,
     error,

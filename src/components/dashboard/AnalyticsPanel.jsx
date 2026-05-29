@@ -4,11 +4,11 @@ import CoverageTrendChart from "./CoverageTrendChart.jsx";
 import TokenIcon from "../ui/TokenIcon.jsx";
 
 /**
- * 📊 SureStack Analytics Dashboard
+ * Advanced analytics surface for the intelligence console.
  * Aggregates live & cached event data from the LiveEventsPanel feed.
- * Auto-updates on new events and persists across sessions.
+ * @param {{ variant?: 'protocol' | 'explorer' }} props
  */
-export default function AnalyticsPanel() {
+export default function AnalyticsPanel({ variant = 'protocol' }) {
   const [stats, setStats] = useState({
     totalPolicies: 0,
     totalCoverage: 0,
@@ -82,6 +82,8 @@ export default function AnalyticsPanel() {
     };
   }, []);
 
+  const isExplorer = variant === 'explorer'
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -92,14 +94,19 @@ export default function AnalyticsPanel() {
       <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
         <div>
           <h2 className="text-sm font-subheading uppercase tracking-[0.35em] text-neon-soft">
-            📊 SureStack Analytics
+            {isExplorer ? 'Your console' : 'Real-Time Risk Intelligence'}
           </h2>
           <p className="gradient-text text-2xl font-heading mt-1 drop-shadow">
-            Protocol Intelligence Hub
+            {isExplorer ? 'Activity snapshot' : 'Protocol Intelligence Hub'}
+          </p>
+          <p className="text-xs text-slate-500 mt-2 font-mono uppercase tracking-[0.2em]">
+            {isExplorer
+              ? 'Local activity snapshot — full Digital Asset Risk Intelligence unlocks with Prime Intelligence and above'
+              : 'On-chain program activity (when connected)'}
           </p>
         </div>
         <div className="px-3 py-2 rounded-lg bg-slate-900/60 text-sm font-mono text-neon-cyan border border-[rgba(0,255,240,0.25)] shadow-[0_0_16px_rgba(0,255,240,0.2)]">
-          Auto-synced with live events
+          Live when RPC / WS configured
         </div>
       </div>
 
@@ -109,7 +116,7 @@ export default function AnalyticsPanel() {
             {stats.totalPolicies}
           </div>
           <div className="text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
-            Policies
+            Programs
           </div>
         </div>
 
@@ -118,7 +125,7 @@ export default function AnalyticsPanel() {
             ${stats.totalCoverage.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
           <div className="text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
-            Total Coverage
+            Value monitored
           </div>
         </div>
 
@@ -128,7 +135,7 @@ export default function AnalyticsPanel() {
             <span>{stats.totalPremiums.toFixed(2)} SST</span>
           </div>
           <div className="text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
-            Total Premiums
+            {isExplorer ? 'Program fees (preview)' : 'Risk intelligence fees'}
           </div>
         </div>
 
@@ -137,7 +144,7 @@ export default function AnalyticsPanel() {
             {stats.avgCoveragePercent.toFixed(0)}%
           </div>
           <div className="text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
-            Avg Coverage
+            {isExplorer ? 'Avg program limit (preview)' : 'Avg protection limit'}
           </div>
         </div>
 
@@ -146,12 +153,12 @@ export default function AnalyticsPanel() {
             {stats.claimsProcessed}
           </div>
           <div className="text-xs text-slate-400 uppercase tracking-[0.2em] mt-2">
-            Claims Processed
+            Incident assistance events
           </div>
         </div>
       </div>
 
-      {/* 📈 Coverage Trend Chart */}
+      {/* 📈 Risk analytics trend */}
       <CoverageTrendChart />
     </motion.div>
   );

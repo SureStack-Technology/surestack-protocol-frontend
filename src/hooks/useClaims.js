@@ -26,7 +26,7 @@ export const useClaims = () => {
       const scaledLoss = BigInt(Math.floor(Number(lossEventValueUSD) * 1e8))
       console.log(`🔢 [useClaims] Scaled loss value: ${scaledLoss.toString()} (${lossEventValueUSD} USD × 1e8)`)
 
-      toast.loading('Processing claim...', { id: 'process-claim' })
+      toast.loading('Processing incident support request…', { id: 'process-claim' })
       const tx = await policyManager.processClaim(
         policyId,
         scaledLoss,
@@ -56,7 +56,10 @@ export const useClaims = () => {
         console.log('✅ [useClaims] Payout amount:', payoutAmount)
       }
 
-      toast.success(`Claim processed! Payout: ${payoutAmount || 'N/A'} SST`, { id: 'process-claim' })
+      toast.success(
+        `Incident support recorded. Member assistance transfer: ${payoutAmount || 'N/A'} SST`,
+        { id: 'process-claim' }
+      )
 
       // Refresh claims history
       await fetchClaimHistory()
@@ -64,7 +67,7 @@ export const useClaims = () => {
       return { txHash: tx.hash, payoutAmount }
     } catch (err) {
       console.error('❌ [useClaims] Error processing claim:', err)
-      toast.error(err.reason || err.message || 'Failed to process claim', { id: 'process-claim' })
+      toast.error(err.reason || err.message || 'Could not complete incident support request', { id: 'process-claim' })
       throw err
     }
   }, [isConnected, policyManager, account])
@@ -136,7 +139,7 @@ export const useClaims = () => {
       return enrichedClaims
     } catch (err) {
       console.error('❌ [useClaims] Error fetching claim history:', err)
-      setError(err.message || 'Failed to fetch claim history')
+      setError(err.message || 'Could not load incident support history')
       setClaims([])
       return []
     } finally {

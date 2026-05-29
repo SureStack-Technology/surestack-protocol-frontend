@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { Web3Provider } from '@contexts/Web3Context'
@@ -6,11 +6,9 @@ import { SimulationProvider } from '@contexts/SimulationContext'
 import MainLayout from '@/layouts/MainLayout'
 import BusinessLayout from '@components/BusinessLayout'
 import Dashboard from '@components/Dashboard'
-import ClaimPanel from '@components/ClaimPanel'
 import BusinessDashboard from '@components/business/BusinessDashboard'
 import VAFModulePage from './business-app/pages/vaf/index.jsx'
 import Billing from './pages/Billing.jsx'
-import UserPoliciesPage from './user-app/pages/Policies.jsx'
 import BusinessPoliciesPage from './business-app/pages/policies/index.jsx'
 import BusinessClaimsPage from './business-app/pages/claims/index.jsx'
 import BusinessGovernanceIndexPage from './business-app/pages/governance/BusinessGovernanceIndexPage.jsx'
@@ -23,6 +21,22 @@ import BusinessValidatorsPage from './business-app/pages/validators/index.jsx'
 import RiskPoolsPage from './business-app/pages/risk-pools/index.jsx'
 import UnderwritingPanel from '@components/business/UnderwritingPanel'
 import EnterpriseCTA from './business-app/pages/enterprise/index.jsx'
+import FoundersPass from './pages/FoundersPass.jsx'
+import ProtectedRoute from '@/components/auth/ProtectedRoute.jsx'
+import OnboardingGate from '@/components/auth/OnboardingGate.jsx'
+import LandingPage from '@/pages/Landing.jsx'
+import SignInPage from '@/pages/SignIn.jsx'
+import SignUpPage from '@/pages/SignUp.jsx'
+import AuthRedirectPage from '@/pages/AuthRedirect.jsx'
+import OnboardingPage from '@/pages/Onboarding.jsx'
+import PricingPage from '@/pages/Pricing.jsx'
+import EnterprisePage from '@/pages/Enterprise.jsx'
+import MembershipPage from '@/pages/Membership.jsx'
+import AboutPage from '@/pages/About.jsx'
+import TermsPage from '@/pages/legal/TermsPage.jsx'
+import PrivacyPage from '@/pages/legal/PrivacyPage.jsx'
+import MembershipTermsPage from '@/pages/legal/MembershipTermsPage.jsx'
+import FoundersPassTermsPage from '@/pages/legal/FoundersPassTermsPage.jsx'
 
 // 🧠 Diagnostic system imports
 import { ErrorBoundary } from './diagnostics/ErrorBoundary'
@@ -33,13 +47,12 @@ import HealthCheck from './pages/HealthCheck'
 
 // Wrap critical components with tracing
 const TDashboard = withTrace(Dashboard, 'Dashboard')
-const TClaimPanel = withTrace(ClaimPanel, 'ClaimPanel')
 const TBusinessDashboard = withTrace(BusinessDashboard, 'BusinessDashboard')
 const TUnderwritingPanel = withTrace(UnderwritingPanel, 'UnderwritingPanel')
 const TBusinessValidatorsPage = withTrace(BusinessValidatorsPage, 'BusinessValidatorsPage')
 const TAdjustmentsPage = withTrace(VAFModulePage, 'BusinessAdjustments')
 const TBilling = withTrace(Billing, 'Billing')
-const TUserPoliciesPage = withTrace(UserPoliciesPage, 'UserPoliciesPage')
+const TFoundersPass = withTrace(FoundersPass, 'FoundersPass')
 const TBusinessPolicies = withTrace(BusinessPoliciesPage, 'BusinessPolicies')
 const TBusinessClaims = withTrace(BusinessClaimsPage, 'BusinessClaims')
 const TBusinessRiskPoolsPage = withTrace(RiskPoolsPage, 'BusinessRiskPoolsPage')
@@ -50,7 +63,8 @@ const TBusinessGovernanceProposalDetailPage = withTrace(BusinessGovernancePropos
 const TBusinessStressTestPage = withTrace(BusinessStressTestPage, 'BusinessStressTestPage')
 const TBusinessAuditPage = withTrace(BusinessAuditPage, 'BusinessAuditPage')
 const TBusinessEnterprisePage = withTrace(EnterpriseCTA, 'BusinessEnterprisePage')
-
+const TEnterprisePublic = withTrace(EnterprisePage, 'EnterprisePublic')
+const TMembership = withTrace(MembershipPage, 'Membership')
 function AppContent() {
   console.log('[BOOT] AppContent render START')
 
@@ -199,11 +213,34 @@ function AppContent() {
         </div>
       )}
       <Routes>
-        <Route element={<MainLayout />}>
-          <Route index element={<TDashboard />} />
-          <Route path="policies" element={<TUserPoliciesPage />} />
-          <Route path="claims" element={<TClaimPanel />} />
-          <Route path="billing" element={<TBilling />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/enterprise" element={<TEnterprisePublic />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/legal/terms" element={<TermsPage />} />
+        <Route path="/legal/privacy" element={<PrivacyPage />} />
+        <Route path="/legal/membership" element={<MembershipTermsPage />} />
+        <Route path="/legal/founders-pass" element={<FoundersPassTermsPage />} />
+        <Route path="/founders-pass" element={<TFoundersPass />} />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
+        <Route path="/auth/redirect" element={<AuthRedirectPage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route element={<OnboardingGate />}>
+            <Route element={<MainLayout />}>
+              <Route path="/dashboard" element={<TDashboard />} />
+              {/* Legacy protocol / insurance console paths — redirect to intelligence dashboard (internal demo: mount LegacyProtocolConsole manually if needed) */}
+              <Route path="/legacy-protocol-console" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/programs" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/incident-support" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/policies" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/claims" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/membership" element={<TMembership />} />
+              <Route path="/billing" element={<TBilling />} />
+            </Route>
+          </Route>
         </Route>
 
         <Route path="/business" element={<BusinessLayout />}>
@@ -223,7 +260,7 @@ function AppContent() {
           <Route path="underwriting" element={<TUnderwritingPanel />} />
         </Route>
 
-        <Route path="health" element={<HealthCheck />} />
+        <Route path="/health" element={<HealthCheck />} />
       </Routes>
     </>
   )

@@ -214,14 +214,14 @@ export default function ValidatorStatsPanel({ onStatsUpdate }) {
       
       {/* SST Correlation & Risk Grade Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {/* Insured Coverage Info */}
+        {/* Protection limit vs staked capital */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.5 }}
           className="bg-neutral-800 rounded-xl p-4 border border-neutral-700"
         >
-          <div className="text-sm text-neutral-400 mb-2">Insured via Staked Capital</div>
+          <div className="text-sm text-neutral-400 mb-2">Observed vs staked capital</div>
           <div className="text-xl font-bold text-[var(--primary-cyan)] mb-2">
             {loading ? (
               "—"
@@ -239,7 +239,7 @@ export default function ValidatorStatsPanel({ onStatsUpdate }) {
           {!loading && stats.totalStaked > 0 && (
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs text-neutral-400 mb-1">
-                <span>Coverage / Staked Ratio</span>
+                <span>Protection limit / staked ratio</span>
                 <span className="font-mono">{sstCorrelation.toFixed(1)}%</span>
               </div>
           <div className="h-2 bg-neutral-700 rounded-full overflow-hidden">

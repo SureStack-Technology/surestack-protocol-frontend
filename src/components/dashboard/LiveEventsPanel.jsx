@@ -226,7 +226,9 @@ export default function LiveEventsPanel() {
               ? "🟢 Streaming"
               : status === "reconnecting"
               ? "🔴 Reconnecting…"
-              : "🟡 " + status.charAt(0).toUpperCase() + status.slice(1)}
+              : status === "connecting" || status === "subscribed"
+              ? "⚪ Waiting for activity"
+              : "⚪ No recent on-chain events"}
           </span>
         </h3>
 
@@ -250,7 +252,11 @@ export default function LiveEventsPanel() {
       </div>
 
       {events.length === 0 ? (
-        <p className="text-slate-400 text-sm">No events yet</p>
+        <p className="text-slate-400 text-sm">
+          {status === "streaming" || status === "subscribed"
+            ? "No recent on-chain events in this window."
+            : "Waiting for activity — events appear when your environment can reach the program contract."}
+        </p>
       ) : (
         <div className="space-y-3 max-h-64 overflow-y-auto pr-1 custom-scroll neon-scrollbar">
           {events.map((e, idx) => (
@@ -285,13 +291,13 @@ export default function LiveEventsPanel() {
                   </span>
                 </div>
                 <div>
-                  💰 Coverage:{" "}
+                  💰 Protection limit:{" "}
                   <span className="text-green-300">
                     ${parseFloat(e.args?.coverage || 0).toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  💵 Premium:{" "}
+                  💵 Membership fee (USD signal):{" "}
                   <span className="text-yellow-300">
                     ${parseFloat(e.args?.premium || 0).toFixed(2)}
                   </span>

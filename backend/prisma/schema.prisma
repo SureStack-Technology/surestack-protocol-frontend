@@ -1,0 +1,244 @@
+// SureStack Phase 1 — PostgreSQL schema for onboarding, tiers, wallets, analytics
+// Stripe / governance / NFT fields reserved for future phases
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MembershipTier {
+  EXPLORER_ACCESS
+  INTELLIGENCE_PRO
+  STRATEGIC_ACCESS
+}
+
+enum SubscriptionStatus {
+  NONE
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+model User {
+  id            String  @id @default(cuid())
+  clerkId       String  @unique
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  firstName     String?
+  lastName      String?
+  imageUrl      String?
+
+  membershipTier      MembershipTier     @default(EXPLORER_ACCESS)
+  subscriptionStatus  SubscriptionStatus @default(NONE)
+  onboardingCompleted Boolean            @default(false)
+  onboardingStep      Int                @default(0)
+
+  stripeCustomerId         String?
+  stripeSubscriptionId     String?
+  institutionalIntent      Boolean @default(false)
+  governanceAccessEligible Boolean @default(false)
+  foundersPassLinked       Boolean @default(false)
+
+  /// Free early-adopter community credential (not a subscription tier).
+  foundingMember          Boolean   @default(false)
+  foundingCohort          String?
+  founderClaimedAt        DateTime?
+  /// Reserved for future Pro discount when billing grants it server-side.
+  founderDiscountPercent  Int?
+  /// e.g. ACTIVE | PENDING | FUTURE_NFT_READY — set by membership/claim flows only.
+  founderCredentialStatus String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallets             Wallet[]
+  analyticsEvents     AnalyticsUsage[]
+  walletRiskSnapshots WalletRiskSnapshot[]
+  foundersPass        FoundersPass?
+  walletRiskHistory   WalletRiskHistory[]
+  primeAlerts         PrimeAlert[]
+  contractIntelReports   ContractIntelligenceReport[]
+  contractIntelHistory ContractIntelligenceHistory[]
+
+  /// One lifetime complimentary full Prime AI analyst report for Explorer tier.
+  explorerComplimentaryPrimeAnalystConsumed Boolean @default(false)
+}
+
+enum FoundersPassStatus {
+  PENDING
+  ACTIVE
+}
+
+model FoundersPass {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletAddress      String?
+  walletVerified     Boolean            @default(false)
+  xHandle            String?
+  xFollowSubmitted   Boolean            @default(false)
+  xFollowVerified    Boolean            @default(false)
+  engagementProofUrl String?
+  engagementVerified Boolean            @default(false)
+  telegramUsername   String?
+  telegramVerified   Boolean            @default(false)
+  status             FoundersPassStatus @default(PENDING)
+  activatedAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([userId, status])
+}
+
+/// EIP-191 wallet verification challenge (DB-backed; survives API restarts / multiple instances).
+model WalletChallenge {
+  id         String    @id @default(cuid())
+  clerkId    String
+  nonce      String    @unique
+  address    String
+  chainId    Int
+  message    String    @db.Text
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([clerkId, expiresAt])
+}
+
+model Wallet {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address    String
+  chainId    Int       @default(11155111)
+  verifiedAt DateTime?
+  label      String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, address])
+  @@index([address])
+}
+
+model WalletRiskSnapshot {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletAddress String
+  chainId       Int
+  score         Int
+  band          String
+  summary       String?             @db.Text
+  /// Deterministic inputs used for scoring + scenario intelligence (JSON).
+  signalsSnapshot Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  findings      WalletRiskFinding[]
+  history       WalletRiskHistory[]
+
+  @@unique([userId, walletAddress, chainId])
+  @@index([userId, updatedAt])
+}
+
+/// Append-only risk score timeline (Prime retention + audit trail).
+model WalletRiskHistory {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletAddress   String
+  chainId         Int
+  score           Int
+  band            String
+  previousScore   Int?
+  snapshotId      String?
+  snapshot        WalletRiskSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  findingsCodes   String[]
+  trigger         String             @default("API_REFRESH")
+  createdAt       DateTime           @default(now())
+
+  @@index([userId, walletAddress, chainId, createdAt])
+}
+
+/// In-app subscription retention alerts (email/push in later phases).
+model PrimeAlert {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletAddress String?
+  chainId       Int?
+  severity      String
+  alertType     String
+  title         String
+  detail        String   @db.Text
+  read          Boolean  @default(false)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, read, createdAt])
+}
+
+model WalletRiskFinding {
+  id         String             @id @default(cuid())
+  snapshotId String
+  snapshot   WalletRiskSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+  code       String
+  severity   String
+  title      String
+  detail     String             @db.Text
+
+  @@index([snapshotId])
+}
+
+/// Latest cached Contract Intelligence Engine report per user + contract + chain.
+model ContractIntelligenceReport {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contractAddress String
+  chainId         Int
+  /// prime_lite | alpha_advanced
+  tier            String
+  trustScore      Int
+  trustBand       String
+  report          Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  history         ContractIntelligenceHistory[]
+
+  @@unique([userId, contractAddress, chainId])
+  @@index([userId, updatedAt])
+}
+
+model ContractIntelligenceHistory {
+  id              String                    @id @default(cuid())
+  userId          String
+  user            User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contractAddress String
+  chainId         Int
+  tier            String
+  trustScore      Int
+  trustBand       String
+  trigger         String                    @default("API_ANALYZE")
+  reportId        String?
+  report          ContractIntelligenceReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  createdAt       DateTime                  @default(now())
+
+  @@index([userId, contractAddress, chainId, createdAt])
+}
+
+model AnalyticsUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([eventType])
+}
