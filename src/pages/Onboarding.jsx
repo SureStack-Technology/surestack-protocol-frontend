@@ -13,10 +13,12 @@ import PublicMarketingHeader from '@/components/layout/PublicMarketingHeader.jsx
 import { clearExplorerWalletConsoleSkip, markExplorerWalletConsoleSkipped } from '@/utils/dashboardPersonalization'
 import { ProfileSyncShell } from '@/components/auth/AuthSessionShell.jsx'
 import {
+  ALPHA_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_BADGE,
   ATLAS_INTELLIGENCE_DESCRIPTION,
   ATLAS_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
+  PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
   formatActivePlanLabel,
 } from '@/constants/intelligenceTiers.js'
@@ -26,7 +28,7 @@ const UPGRADE_TIERS = [
     id: 'INTELLIGENCE_PRO',
     label: 'Prime Intelligence',
     description:
-      `$59/mo — your AI digital asset risk co-pilot: continuous monitoring, full Scenario Intelligence Simulator, Wallet Health Timeline, Alert Center, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and flagship paid tier depth.`,
+      `${PRIME_INTELLIGENCE_PRICE} — your AI digital asset risk co-pilot: continuous intelligence refresh, Adaptive Threat Intelligence Terminal, Executive Verdict Engine, full Scenario Intelligence Simulator, Wallet Health Timeline, Alert Center, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and flagship paid tier depth.`,
     badge: 'Flagship paid tier',
     badgeClass:
       'border-violet-400/35 bg-violet-500/10 text-violet-200',
@@ -37,7 +39,7 @@ const UPGRADE_TIERS = [
     id: 'ALPHA_INTELLIGENCE',
     label: 'Alpha Intelligence',
     description:
-      '$129/mo — operator-grade intelligence: Live Protocol Exposure Graph, Protocol Exposure Map, multi-wallet analytics, Smart Contract Trust Engine, and smart-money surfaces.',
+      `${ALPHA_INTELLIGENCE_PRICE} — operator-grade intelligence: everything in Prime plus multi-wallet intelligence, cross-wallet analytics, smart money / whale intelligence, and advanced alert routing.`,
     badge: 'Priority operators',
     badgeClass:
       'border-fuchsia-400/35 bg-fuchsia-950/40 text-fuchsia-100',

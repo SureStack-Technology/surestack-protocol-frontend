@@ -11,11 +11,15 @@ import {
   ATLAS_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
   ALPHA_INTELLIGENCE_FEATURES,
+  ALPHA_INTELLIGENCE_PRICE,
+  ENTERPRISE_INTELLIGENCE_FEATURES,
+  ENTERPRISE_INTELLIGENCE_TAGLINE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
   INTELLIGENCE_ACCESS_HEADING,
   MARKETING_ONLY_TIERS,
   PRIME_INTELLIGENCE_FEATURES,
+  PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
 } from '@/constants/intelligenceTiers.js'
 
@@ -43,9 +47,9 @@ const tiers = [
   {
     name: 'Prime Intelligence',
     badge: 'Flagship · retail',
-    price: '$59/mo',
+    price: PRIME_INTELLIGENCE_PRICE,
     description:
-      `Your AI digital asset risk co-pilot — continuous wallet and market-aware intelligence, full Scenario Intelligence Simulator, full AI Wallet Risk Analyst, threat awareness playbooks, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and Alert Center. Analytics and awareness for self-directed decisions — not a licensed carrier, broker, investment advisor, or retained incident response firm.`,
+      `Your AI digital asset risk co-pilot — continuous intelligence refresh, Adaptive Threat Intelligence Terminal, Universal Contract Analyzer, Executive Verdict Engine, full Scenario Intelligence Simulator, full AI Wallet Risk Analyst, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and Alert Center. Analytics and awareness for self-directed decisions — not a licensed carrier, broker, investment advisor, or retained incident response firm.`,
     features: PRIME_INTELLIGENCE_FEATURES,
     cta: 'Join Prime Intelligence',
     ctaTo: '/membership',
@@ -54,9 +58,9 @@ const tiers = [
   {
     name: 'Alpha Intelligence',
     badge: 'Active operators',
-    price: '$129/mo',
+    price: ALPHA_INTELLIGENCE_PRICE,
     description:
-      'Operator-grade digital asset intelligence for advanced traders, operators, and serious DeFi users. Includes everything in Prime Intelligence plus multi-wallet intelligence, protocol and smart-money surfaces, and exportable reporting — still intelligence and decision support, not custody or regulated advice.',
+      'Operator-grade digital asset intelligence for advanced traders, operators, and serious DeFi users. Includes everything in Prime Intelligence plus multi-wallet intelligence, cross-wallet analytics, smart-money surfaces, and advanced alert routing — still intelligence and decision support, not custody or regulated advice.',
     features: ALPHA_INTELLIGENCE_FEATURES,
     cta: 'Register Alpha Intelligence interest',
     ctaTo: '/membership',
@@ -77,21 +81,9 @@ const tiers = [
   {
     name: MARKETING_ONLY_TIERS.ENTERPRISE_INTELLIGENCE,
     badge: 'White glove',
-    price: 'Contact sales',
-    description:
-      'Institutional digital asset intelligence infrastructure — white-label consoles, SSO, audit logs, compliance-oriented reporting surfaces, and SLA-backed monitoring. Coordinated with your solutions architecture team.',
-    features: [
-      'White-label dashboards',
-      'SSO',
-      'Audit logs',
-      'Custom APIs',
-      'Compliance reporting surfaces',
-      'Strategic intelligence dashboards',
-      'Branded portals',
-      'Dedicated solutions architecture',
-      'SLA-backed monitoring',
-      'Custom alert integrations',
-    ],
+    price: 'Custom',
+    description: `${ENTERPRISE_INTELLIGENCE_TAGLINE} White-label consoles, SSO, audit logs, private deployment options, compliance surfaces, and SLA-backed monitoring — coordinated with your solutions architecture team.`,
+    features: ENTERPRISE_INTELLIGENCE_FEATURES,
     cta: 'Institutional overview',
     ctaTo: '/enterprise',
     highlight: false,

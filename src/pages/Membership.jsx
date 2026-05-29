@@ -9,17 +9,20 @@ import { resolveMembershipEntitlements } from '@/utils/dashboardPersonalization.
 import { CARRIER_DISCLAIMER } from '@/constants/complianceCopy.js'
 import {
   ATLAS_INTELLIGENCE_BADGE,
-  ATLAS_INTELLIGENCE_DESCRIPTION,
   ATLAS_INTELLIGENCE_FEATURES,
   ATLAS_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
   ALPHA_INTELLIGENCE_FEATURES,
+  ALPHA_INTELLIGENCE_PRICE,
+  ENTERPRISE_INTELLIGENCE_FEATURES,
+  ENTERPRISE_INTELLIGENCE_TAGLINE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
   EXPLORER_UPGRADE_CTA,
   MARKETING_ONLY_TIERS,
   MEMBERSHIP_LADDER_PREMIUM_INTRO,
   PRIME_INTELLIGENCE_FEATURES,
+  PRIME_INTELLIGENCE_PRICE,
 } from '@/constants/intelligenceTiers.js'
 
 const EXPLORER_FEATURES = [
@@ -32,19 +35,6 @@ const EXPLORER_FEATURES = [
   'Founders Pass access',
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   'Scenario Intelligence — 2 fixed presets only: ETH volatility shock, stablecoin depeg scenario',
-]
-
-const ENTERPRISE_FEATURES = [
-  'White-label dashboards',
-  'SSO',
-  'Audit logs',
-  'Custom APIs',
-  'Compliance reporting surfaces',
-  'Strategic intelligence dashboards',
-  'Branded portals',
-  'Dedicated solutions architecture',
-  'SLA-backed monitoring',
-  'Custom alert integrations',
 ]
 
 function AccessCard({
@@ -272,7 +262,7 @@ export default function MembershipPage() {
 
         <AccessCard
           title="Prime Intelligence"
-          price="$59/mo"
+          price={PRIME_INTELLIGENCE_PRICE}
           statusLabel={primeStatusLabel}
           tagline="Your AI digital asset risk co-pilot"
           statusTone={primeStatusTone}
@@ -313,7 +303,7 @@ export default function MembershipPage() {
 
         <AccessCard
           title="Alpha Intelligence"
-          price="$129/mo"
+          price={ALPHA_INTELLIGENCE_PRICE}
           statusLabel={alphaStatusLabel}
           tagline="Operator-grade digital asset intelligence"
           statusTone={hasAtlas ? 'emerald' : 'violet'}
@@ -341,7 +331,7 @@ export default function MembershipPage() {
               className="btn-outline w-full justify-center py-2.5 text-sm border-fuchsia-400/35 text-fuchsia-100 inline-flex items-center gap-2 disabled:opacity-50"
             >
               {alphaLoading ? <Loader2 className="animate-spin" size={18} /> : null}
-              {hasPrime ? 'Upgrade path via Atlas' : 'Register Alpha Intelligence interest'}
+              {hasPrime ? 'Explore Atlas Intelligence' : 'Register Alpha Intelligence interest'}
             </button>
           )}
         </AccessCard>
@@ -369,18 +359,15 @@ export default function MembershipPage() {
               <ArrowRight size={16} />
             </Link>
           ) : (
-            <>
-              <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">{ATLAS_INTELLIGENCE_DESCRIPTION}</p>
-              <button
-                type="button"
-                disabled={atlasLoading || profileLoading}
-                onClick={requestAtlas}
-                className="btn-cyber w-full justify-center py-2.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
-              >
-                {atlasLoading ? <Loader2 className="animate-spin" size={18} /> : null}
-                Request Atlas Intelligence access
-              </button>
-            </>
+            <button
+              type="button"
+              disabled={atlasLoading || profileLoading}
+              onClick={requestAtlas}
+              className="btn-cyber w-full justify-center py-2.5 text-sm inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {atlasLoading ? <Loader2 className="animate-spin" size={18} /> : null}
+              Request Atlas Intelligence access
+            </button>
           )}
         </AccessCard>
 
@@ -394,9 +381,9 @@ export default function MembershipPage() {
                 ? 'Active on your account'
                 : 'Request Enterprise Access'
           }
-          tagline="Institutional digital asset intelligence infrastructure"
+          tagline={ENTERPRISE_INTELLIGENCE_TAGLINE}
           statusTone={hasEnterprise ? 'emerald' : 'amber'}
-          features={ENTERPRISE_FEATURES}
+          features={ENTERPRISE_INTELLIGENCE_FEATURES}
           borderClass={
             hasEnterprise
               ? 'border-emerald-500/35 shadow-[0_0_40px_rgba(16,185,129,0.12)]'
@@ -416,7 +403,7 @@ export default function MembershipPage() {
 
       <AccessCard
         title="Founders Pass"
-        price="Free · community credential"
+        price="Free · Community Credential"
         statusLabel="Private early access · not a subscription tier"
         statusTone="slate"
         features={[

@@ -10,9 +10,11 @@ import {
   ATLAS_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
   ATLAS_INTELLIGENCE_DESCRIPTION,
+  ALPHA_INTELLIGENCE_PRICE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
   PRIME_INTELLIGENCE_FEATURES,
+  PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
   getTierDisplayName,
 } from '@/constants/intelligenceTiers.js'
@@ -189,7 +191,7 @@ export default function CurrentPlanCard({
                 <div className="flex items-start gap-2 min-w-0">
                   <Lock className="text-slate-500 shrink-0 mt-0.5" size={16} aria-hidden />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-200">Prime Intelligence — $59/mo</p>
+                    <p className="text-sm font-semibold text-slate-200">Prime Intelligence — {PRIME_INTELLIGENCE_PRICE}</p>
                     <p className="text-[11px] text-slate-500">Early Access</p>
                   </div>
                 </div>
@@ -202,7 +204,7 @@ export default function CurrentPlanCard({
                 <div className="flex items-start gap-2 min-w-0">
                   <Lock className="text-slate-500 shrink-0 mt-0.5" size={16} aria-hidden />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-200">Alpha Intelligence — $129/mo</p>
+                    <p className="text-sm font-semibold text-slate-200">Alpha Intelligence — {ALPHA_INTELLIGENCE_PRICE}</p>
                     <p className="text-[11px] text-slate-500">Advanced operators · includes Prime depth</p>
                   </div>
                 </div>
@@ -244,7 +246,7 @@ export default function CurrentPlanCard({
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">Prime Intelligence — $59/mo</p>
+                  <p className="text-sm font-semibold text-white">Prime Intelligence — {PRIME_INTELLIGENCE_PRICE}</p>
                   <p className="text-xs text-slate-400">
                     Full Prime stack — AI analyst, scenarios, timelines, Alert Center,{' '}
                     {WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}
@@ -256,7 +258,7 @@ export default function CurrentPlanCard({
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">Alpha Intelligence — $129/mo</p>
+                  <p className="text-sm font-semibold text-white">Alpha Intelligence — {ALPHA_INTELLIGENCE_PRICE}</p>
                   <p className="text-xs text-slate-400">Everything in Prime plus operator-grade maps, trust engine, and smart-money surfaces</p>
                 </div>
                 <Link to="/membership" className="btn-outline px-3 py-1 text-xs border-fuchsia-400/25 text-fuchsia-100 shrink-0">

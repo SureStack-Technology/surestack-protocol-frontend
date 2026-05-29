@@ -31,59 +31,79 @@ export const WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF = 'AI Market & Threat Intel
 export const EXPLORER_AI_WALLET_ANALYST_FEATURE =
   'AI Wallet Risk Analyst — 1 complimentary analysis'
 
+/** Membership pricing — single source for pricing / membership / dashboard UI (not billing enforcement). */
+export const PRIME_INTELLIGENCE_PRICE = '$99/mo'
+export const ALPHA_INTELLIGENCE_PRICE = '$199/mo'
+
 /** Prime Intelligence feature list — single source for pricing / membership / dashboard cards (UI). */
 export const PRIME_INTELLIGENCE_FEATURES = [
-  'Ongoing wallet intelligence monitoring',
-  'Wallet exposure analysis',
+  'Continuous intelligence refresh',
+  'Adaptive Threat Intelligence Terminal',
+  'Token / Contract / Wallet Analysis',
+  'Universal Contract Analyzer',
   'Approval / spender risk detection',
-  'Suspicious contract interaction alerts',
+  'Wallet exposure analysis',
+  'Suspicious interaction alerts',
   'Wallet hygiene recommendations',
-  'Protocol exposure awareness',
   'Market volatility intelligence',
   'Wallet Health Timeline (7d / 30d)',
   'Scenario Intelligence Simulator (full access)',
   'AI Wallet Risk Analyst (full access)',
-  'Threat awareness response playbooks',
-  WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
+  'Executive Verdict Engine',
   'Alert Center',
   'Priority feature access',
 ]
 
 /** Alpha Intelligence feature list — operator-grade differentiators (UI). */
 export const ALPHA_INTELLIGENCE_FEATURES = [
-  'Multi-wallet monitoring',
+  'Everything in Prime Intelligence',
+  'Multi-wallet intelligence',
   'Cross-wallet analytics',
-  'Protocol Exposure Map',
-  'Live Protocol Exposure Graph',
-  'Smart Contract Trust Engine',
-  'Whale / Smart Money Intelligence',
+  'Smart money / whale intelligence',
   'Advanced alert routing',
   'Custom watchlists',
-  'Faster intelligence refresh cadence',
-  'Exportable intelligence reports',
   'Advanced AI Analyst',
+  'Faster refresh cadence',
+  'Priority upgrade path to Atlas',
 ]
 
 /** Atlas Intelligence — premium DAO / treasury tier (UI; STRATEGIC_ACCESS on backend). */
-export const ATLAS_INTELLIGENCE_PRICE = '$299/mo'
+export const ATLAS_INTELLIGENCE_PRICE = '$499/mo'
 export const ATLAS_INTELLIGENCE_BADGE = 'EARLY ACCESS'
 export const ATLAS_INTELLIGENCE_DESCRIPTION = 'Treasury & protocol intelligence infrastructure.'
 export const ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR =
   'DAO / treasury · protocol intelligence · APIs · team workspaces'
 
 export const ATLAS_INTELLIGENCE_FEATURES = [
-  'DAO / treasury intelligence posture',
-  'Treasury exposure monitoring',
+  'Everything in Alpha Intelligence',
+  'Treasury exposure intelligence',
   'Protocol dependency intelligence',
-  'Multi-wallet monitoring',
-  'Team workspaces',
-  'API access (when enabled)',
+  'Incident intelligence',
+  'Strategic dashboards',
   'Advanced reporting & exports',
+  'API integrations',
   'Automation workflows',
+  'Priority onboarding & support',
+  'Dedicated intelligence workspaces',
+]
+
+/** Enterprise Intelligence — institutional tier (UI; marketing only). */
+export const ENTERPRISE_INTELLIGENCE_TAGLINE =
+  'Institutional infrastructure for treasury teams, exchanges, custodians, and protocol operators.'
+
+export const ENTERPRISE_INTELLIGENCE_FEATURES = [
+  'Everything in Atlas Intelligence',
+  'White-label dashboards',
+  'Dedicated solutions architecture',
+  'Custom APIs',
+  'Branded deployments',
+  'SSO / Identity Integration',
+  'Audit Logs',
+  'Private Deployment Options',
+  'Compliance surfaces',
+  'SLA-backed monitoring',
+  'Custom alert integrations',
   'Priority solutions desk',
-  'Strategic intelligence dashboards',
-  'Incident timeline intelligence',
-  'Priority onboarding',
 ]
 
 export function getTierDisplayName(tierKey) {

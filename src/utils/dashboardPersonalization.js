@@ -2,7 +2,12 @@
  * Intelligence console vs protocol demo telemetry vs Explorer acquisition tier.
  */
 
-import { ATLAS_INTELLIGENCE_DESCRIPTION, EXPLORER_POSITIONING_TAGLINE } from '@/constants/intelligenceTiers.js'
+import {
+  ATLAS_INTELLIGENCE_DESCRIPTION,
+  ATLAS_INTELLIGENCE_PRICE,
+  EXPLORER_POSITIONING_TAGLINE,
+  PRIME_INTELLIGENCE_PRICE,
+} from '@/constants/intelligenceTiers.js'
 
 export function isDemoModeEnabled() {
   return import.meta.env.VITE_DEMO_MODE === 'true'
@@ -256,14 +261,14 @@ export function getConsoleExperienceLabels(profile) {
     case 'INTELLIGENCE_PRO':
       return {
         sidebarSubtitle: 'Prime Intelligence · flagship paid tier',
-        headerSubtitle: 'Flagship retail · $59/mo',
+        headerSubtitle: `Flagship retail · ${PRIME_INTELLIGENCE_PRICE}`,
         dashboardHeroTitle: 'Prime Intelligence workspace',
         dashboardHeroSubtitle: 'Your AI digital asset risk co-pilot',
       }
     case 'STRATEGIC_ACCESS':
       return {
         sidebarSubtitle: 'Atlas Intelligence',
-        headerSubtitle: 'DAO / treasury · $299/mo · EARLY ACCESS',
+        headerSubtitle: `DAO / treasury · ${ATLAS_INTELLIGENCE_PRICE} · EARLY ACCESS`,
         dashboardHeroTitle: 'Atlas Intelligence workspace',
         dashboardHeroSubtitle: ATLAS_INTELLIGENCE_DESCRIPTION,
       }
