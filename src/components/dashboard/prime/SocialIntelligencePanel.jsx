@@ -2,13 +2,20 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Beaker, Loader2, MessageCircle, RefreshCw, Sparkles } from 'lucide-react'
 import { useLunarCrushIntel } from '@/hooks/useLunarCrushIntel.js'
+import { formatIntelProviderUserMessage } from '@/utils/primeApiErrors.js'
 import {
   DEFAULT_SHOWCASE_SCENARIO_ID,
   getLunarCrushScenarioById,
   isLiveLunarCrushStatus,
   LUNARCRUSH_SCENARIOS,
-  LUNARCRUSH_SCENARIO_SHOWCASE_DISCLOSURE,
 } from '@/data/lunarCrushScenarioShowcase.js'
+import { buildCategoryNarrativePanelData } from '@/shared/services/tokenNarrativeFallback.js'
+
+const SHOWCASE_DISCLOSURE =
+  'Scenario Showcase uses simulated social intelligence data to demonstrate how SureStack will interpret premium LunarCrush signals once full provider access is enabled.'
+
+const CATEGORY_FALLBACK_DISCLOSURE =
+  'Category narrative fallback uses token-type templates until LunarCrush live data is enabled. Meme tokens may use the scenario showcase; other categories do not include meme trending assets.'
 
 function moodClass(mood) {
   if (mood === 'bullish') return 'text-emerald-300'
@@ -32,9 +39,7 @@ function formatVolume(n) {
 
 function MetricCard({ label, value, subtext, wide }) {
   return (
-    <div
-      className={`rounded-lg border border-white/[0.08] bg-black/25 px-3 py-2.5 ${wide ? 'col-span-2 sm:col-span-1' : ''}`}
-    >
+    <div className={`prime-social-metric ${wide ? 'col-span-2 sm:col-span-1' : ''}`}>
       <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">{label}</p>
       <p className="text-sm text-white mt-1 font-medium tabular-nums">{value}</p>
       {subtext ? <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">{subtext}</p> : null}
@@ -106,7 +111,7 @@ function AnomaliesList({ items }) {
   )
 }
 
-function LiveSocialView({ data, error }) {
+function LiveSocialView({ data, errorMessage }) {
   const narratives = data?.trendingNarratives || []
   const assets = data?.trendingAssets || []
   const anomalies = data?.anomalySignals || []
@@ -146,7 +151,70 @@ function LiveSocialView({ data, error }) {
       </div>
 
       <AnomaliesList items={anomalies} />
-      {error ? <p className="text-[11px] text-amber-200/80 font-mono">Refresh issue — {error}</p> : null}
+      {errorMessage ? (
+        <p className="text-[11px] text-amber-200/80">Refresh issue — {errorMessage}</p>
+      ) : null}
+    </div>
+  )
+}
+
+function CategoryFallbackSocialView({ panel }) {
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border border-sky-500/35 bg-sky-950/30 text-sky-100">
+          Category narrative fallback
+        </span>
+        {panel.symbol ? (
+          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">{panel.symbol}</span>
+        ) : null}
+        <span
+          className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${severityClass(panel.severity)}`}
+        >
+          {panel.severity}
+        </span>
+      </div>
+
+      <div className="rounded-xl border border-sky-500/25 bg-gradient-to-br from-sky-950/20 via-violet-950/15 to-black/30 px-4 py-3.5">
+        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-sky-200/80 mb-1.5">{panel.title}</p>
+        <p className="text-sm text-slate-100 leading-relaxed">{panel.intelligenceBrief}</p>
+        <p className="text-xs text-slate-400/90 mt-3 leading-relaxed border-t border-white/[0.06] pt-3 max-w-prose">
+          <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500 block mb-1">
+            Risk interpretation
+          </span>
+          {panel.riskInterpretation}
+        </p>
+      </div>
+
+      {panel.trendingNarratives?.length ? (
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 mb-2">
+            Narrative focus areas
+          </p>
+          <NarrativesList items={panel.trendingNarratives} />
+        </div>
+      ) : null}
+
+      {panel.recommendedActions?.length ? (
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 mb-2">Recommended actions</p>
+          <ul className="space-y-2">
+            {panel.recommendedActions.map((action) => (
+              <li
+                key={action}
+                className="text-xs text-slate-200 border border-violet-500/15 rounded-lg px-3 py-2.5 bg-violet-950/15 flex gap-2"
+              >
+                <span className="text-violet-300 font-mono shrink-0">→</span>
+                <span>{action}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <p className="text-[11px] text-slate-500 leading-relaxed border border-white/10 rounded-xl px-4 py-3 bg-black/25">
+        {CATEGORY_FALLBACK_DISCLOSURE}
+      </p>
     </div>
   )
 }
@@ -185,7 +253,10 @@ function ShowcaseSocialView({ scenario }) {
           Intelligence brief
         </p>
         <p className="text-sm text-slate-100 leading-relaxed">{scenario.intelligenceBrief}</p>
-        <p className="text-xs text-slate-400 mt-3 leading-relaxed border-t border-white/[0.06] pt-3">
+        <p className="text-xs text-slate-400/90 mt-3 leading-relaxed border-t border-white/[0.06] pt-3 max-w-prose">
+          <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500 block mb-1">
+            Risk interpretation
+          </span>
           {scenario.riskInterpretation}
         </p>
       </div>
@@ -219,7 +290,7 @@ function ShowcaseSocialView({ scenario }) {
       </div>
 
       <p className="text-[11px] text-slate-500 leading-relaxed border border-white/10 rounded-xl px-4 py-3 bg-black/25">
-        {LUNARCRUSH_SCENARIO_SHOWCASE_DISCLOSURE}
+        {SHOWCASE_DISCLOSURE}
       </p>
     </div>
   )
@@ -227,18 +298,85 @@ function ShowcaseSocialView({ scenario }) {
 
 /**
  * Prime — LunarCrush social intelligence (live feed or scenario showcase when provider limited).
+ * @param {'full' | 'embed'} [variant]
  */
-export default function SocialIntelligencePanel({ profile }) {
+export default function SocialIntelligencePanel({ profile, variant = 'full', narrativeTargetSymbol = null }) {
   const { primeTrends, loading, error, refresh } = useLunarCrushIntel({ profile })
   const [scenarioId, setScenarioId] = useState(DEFAULT_SHOWCASE_SCENARIO_ID)
 
   const showLive = isLiveLunarCrushStatus(primeTrends?.status)
-  const showShowcase = !loading && !showLive
+  const showShowcase = !showLive
 
-  const scenario = useMemo(
-    () => getLunarCrushScenarioById(scenarioId) || LUNARCRUSH_SCENARIOS[0],
-    [scenarioId],
+  const categoryPanel = useMemo(
+    () => (narrativeTargetSymbol ? buildCategoryNarrativePanelData(narrativeTargetSymbol) : null),
+    [narrativeTargetSymbol],
   )
+
+  const useCategoryFallback = showShowcase && categoryPanel?.viewMode === 'category_fallback'
+  const useMemeShowcase = showShowcase && categoryPanel?.viewMode === 'meme_showcase'
+
+  const scenario = useMemo(() => {
+    if (useMemeShowcase && categoryPanel?.scenario) return categoryPanel.scenario
+    return getLunarCrushScenarioById(scenarioId) || LUNARCRUSH_SCENARIOS[0]
+  }, [scenarioId, useMemeShowcase, categoryPanel])
+
+  const body =
+    loading && !primeTrends ? (
+      <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+        <Loader2 className="animate-spin" size={18} aria-hidden />
+        Loading social intelligence…
+      </div>
+    ) : showLive ? (
+      <LiveSocialView data={primeTrends} errorMessage={formatIntelProviderUserMessage(error)} />
+    ) : useCategoryFallback ? (
+      <CategoryFallbackSocialView panel={categoryPanel} />
+    ) : (
+      <ShowcaseSocialView scenario={scenario} />
+    )
+
+  const embedHeaderLabel = showLive
+    ? 'LunarCrush live'
+    : useCategoryFallback
+      ? 'Category narrative fallback'
+      : useMemeShowcase
+        ? 'Scenario Intelligence Active'
+        : 'Scenario Intelligence Active'
+
+  if (variant === 'embed') {
+    return (
+      <div className="prime-social-embed max-h-[420px] overflow-y-auto pr-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-fuchsia-200/80">
+            {embedHeaderLabel}
+          </p>
+          {showShowcase && !useCategoryFallback ? (
+            <select
+              value={scenarioId}
+              onChange={(e) => setScenarioId(e.target.value)}
+              className="text-[10px] font-mono rounded border border-fuchsia-500/30 bg-black/40 px-2 py-1 text-fuchsia-100"
+              aria-label="Select narrative scenario"
+            >
+              {LUNARCRUSH_SCENARIOS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          ) : showLive ? (
+            <button
+              type="button"
+              onClick={() => refresh()}
+              className="text-slate-400 hover:text-violet-200 p-1"
+              aria-label="Refresh social intelligence"
+            >
+              <RefreshCw size={14} />
+            </button>
+          ) : null}
+        </div>
+        {body}
+      </div>
+    )
+  }
 
   return (
     <motion.section
@@ -247,23 +385,32 @@ export default function SocialIntelligencePanel({ profile }) {
       className="prime-glass p-6 sm:p-7 border border-fuchsia-500/25 prime-panel-hover"
     >
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-5">
-        <div>
+        <div className="space-y-1.5 max-w-2xl">
           <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-fuchsia-200/90 flex items-center gap-2">
             <MessageCircle size={14} aria-hidden />
-            Social Intelligence
+            Social Intelligence Layer
           </p>
-          <h2 className="text-lg font-heading text-white mt-1">
-            {showShowcase ? 'Scenario showcase — social narratives' : 'Market narratives & anomalies'}
+          <h2 className="text-lg font-heading text-white">
+            {showLive
+              ? 'Market narratives & anomalies'
+              : useCategoryFallback
+                ? categoryPanel?.title || 'Narrative intelligence'
+                : 'Narrative scenario cockpit'}
           </h2>
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Premium narrative risk detection powered by LunarCrush.
+          </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {showShowcase ? (
-            <label className="flex flex-col gap-1 min-w-[12rem]">
-              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">Scenario</span>
+          {showShowcase && !useCategoryFallback ? (
+            <label className="prime-scenario-select flex flex-col gap-1.5 min-w-[12rem] px-3 py-2.5">
+              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-fuchsia-200/80">
+                Scenario selector
+              </span>
               <select
                 value={scenarioId}
                 onChange={(e) => setScenarioId(e.target.value)}
-                className="text-sm rounded-lg border border-fuchsia-500/30 bg-black/40 text-slate-100 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-fuchsia-400/50"
+                aria-label="Select narrative scenario"
               >
                 {LUNARCRUSH_SCENARIOS.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -283,19 +430,7 @@ export default function SocialIntelligencePanel({ profile }) {
           </button>
         </div>
       </div>
-
-      {loading && !primeTrends ? (
-        <div className="flex items-center gap-2 text-slate-400 text-sm py-8">
-          <Loader2 className="animate-spin" size={18} aria-hidden />
-          Loading social intelligence…
-        </div>
-      ) : showLive ? (
-        <LiveSocialView data={primeTrends} error={error} />
-      ) : showShowcase ? (
-        <ShowcaseSocialView scenario={scenario} />
-      ) : (
-        <p className="text-sm text-slate-500">Social intelligence unavailable.</p>
-      )}
+      {body}
     </motion.section>
   )
 }

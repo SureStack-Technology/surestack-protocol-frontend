@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState, useCallback, useEffect } from 'react'
 import { Loader2, Radar, Shield } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { SOLANA_CHAIN_ID, useUniversalRiskScanner } from '@/hooks/useUniversalRiskScanner.js'
@@ -54,17 +54,29 @@ const SOLANA_ZERO_EXAMPLES = [
  */
 export default function UniversalRiskScanner({
   api,
+  scanner: scannerProp,
   lastInteractedAddress = null,
   walletAddress = null,
   walletCacheKey = null,
   approvalInventory = null,
   showWalletExposure = false,
+  prefillAddress = null,
 }) {
-  const { report, busy, error, analyze, clearScan } = useUniversalRiskScanner(api)
+  const internalScanner = useUniversalRiskScanner(api)
+  const { report, busy, error, analyze, clearScan } = scannerProp ?? internalScanner
   const [address, setAddress] = useState('')
   const [chainId, setChainId] = useState(1)
   const [scanMode, setScanMode] = useState('contract')
   const [instantExposure, setInstantExposure] = useState(null)
+
+  useEffect(() => {
+    const addr = String(prefillAddress || '').trim()
+    if (!addr) return
+    setAddress(addr)
+    if (chainId !== SOLANA_CHAIN_ID && /^0x[a-fA-F0-9]{40}$/i.test(addr)) {
+      setScanMode('contract')
+    }
+  }, [prefillAddress, chainId])
 
   const isSolana = chainId === SOLANA_CHAIN_ID
 

@@ -37,6 +37,29 @@ export function formatPrimeIntelUserMessage(errorCode, status, fallbackMessage) 
 /**
  * @param {unknown} err
  */
+/**
+ * User-safe copy for LunarCrush / Birdeye feed errors (no raw API codes in Prime UI).
+ * @param {string | null | undefined} errorCode
+ * @returns {string | null} null hides the inline error row
+ */
+export function formatIntelProviderUserMessage(errorCode) {
+  const code = String(errorCode || '').toLowerCase().trim()
+  if (!code) return null
+  if (code === 'invalid_token' || code.includes('invalid_token')) {
+    return 'Provider authentication pending'
+  }
+  if (AUTH_ERROR_CODES.has(code)) {
+    return 'Provider authentication pending'
+  }
+  if (code.includes('tier_required') || code === 'birdeye_watchlist_failed') {
+    return 'Provider connection pending'
+  }
+  if (/^[a-z][a-z0-9_]*$/.test(code)) {
+    return 'Provider connection pending'
+  }
+  return null
+}
+
 export function messageFromCaughtError(err) {
   if (err && typeof err === 'object' && 'friendlyMessage' in err && err.friendlyMessage) {
     return String(err.friendlyMessage)
