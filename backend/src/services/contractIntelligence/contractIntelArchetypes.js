@@ -44,6 +44,33 @@ const ETHEREUM_MAINNET = {
     narrativeHint:
       'Established fiat-backed stablecoin with verified source and institutional usage — administrative upgrade paths exist by design.',
   },
+  '0x514910771af9ca656af840dff83e8264ecf986ca': {
+    id: 'link',
+    label: 'Chainlink (LINK)',
+    class: 'canonical_token',
+    scoreFloor: 85,
+    scoreCeiling: 94,
+    narrativeHint:
+      'Established oracle network token with verified source and long production history — review admin and proxy controls as standard governance risk.',
+  },
+  '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984': {
+    id: 'uni',
+    label: 'Uniswap (UNI)',
+    class: 'canonical_token',
+    scoreFloor: 84,
+    scoreCeiling: 93,
+    narrativeHint:
+      'Established DeFi governance token — verified production contract with expected administrative surfaces.',
+  },
+  '0x7fc66500c84a76ad7e9c93481fe6c2e88f4923e6': {
+    id: 'aave',
+    label: 'Aave (AAVE)',
+    class: 'canonical_token',
+    scoreFloor: 84,
+    scoreCeiling: 93,
+    narrativeHint:
+      'Established DeFi protocol token — verified source with governance-controlled upgrade paths.',
+  },
   '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': {
     id: 'weth',
     label: 'Wrapped Ether (WETH)',
@@ -97,6 +124,26 @@ export function archetypeFromContractName(contractName) {
       scoreFloor: 83,
       scoreCeiling: 92,
       narrativeHint: 'Permit2-style allowance contract — standard DeFi approval infrastructure.',
+    }
+  }
+  if (/chainlink|link token/i.test(n)) {
+    return {
+      id: 'link_name',
+      label: contractName,
+      class: 'canonical_token',
+      scoreFloor: 84,
+      scoreCeiling: 93,
+      narrativeHint: 'Established oracle network token identified by explorer metadata.',
+    }
+  }
+  if (/uniswap|aave/i.test(n)) {
+    return {
+      id: 'defi_token_name',
+      label: contractName,
+      class: 'canonical_token',
+      scoreFloor: 83,
+      scoreCeiling: 92,
+      narrativeHint: 'Established DeFi token identified by explorer metadata.',
     }
   }
   if (/usd coin|usdc|tether|dai|wrapped ether|weth/i.test(n)) {

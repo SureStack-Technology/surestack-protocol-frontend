@@ -48,6 +48,14 @@ function shouldApplyTokenAdminHeuristics(onChain, etherscan) {
  * @param {object} input
  * @param {import('./contractIntelArchetypes.js').ContractArchetype | null} archetype
  */
+const ARCHETYPE_ADMIN_CODES = new Set([
+  'UPGRADEABLE_PROXY',
+  'OWNER_PRIVILEGE',
+  'PAUSE_PRIVILEGE',
+  'MINT_PRIVILEGE',
+  'BLACKLIST_PRIVILEGE',
+])
+
 function applyArchetypeCalibration(raw, archetype) {
   if (!archetype) return raw
 
@@ -59,8 +67,12 @@ function applyArchetypeCalibration(raw, archetype) {
     ) {
       return { ...f, severity: 'INFO', title: f.title, detail: `${f.detail} (expected for this infrastructure class.)` }
     }
-    if (archetype.class === 'canonical_token' && f.code === 'UPGRADEABLE_PROXY') {
-      return { ...f, severity: 'INFO', detail: `${f.detail} Standard upgrade pattern for established tokens.` }
+    if (archetype.class === 'canonical_token' && ARCHETYPE_ADMIN_CODES.has(f.code)) {
+      return {
+        ...f,
+        severity: 'INFO',
+        detail: `${f.detail} Expected administrative surface for established tokens — review governance policy.`,
+      }
     }
     return f
   })
@@ -180,13 +192,14 @@ export function scoreFromSignals({ onChain, goPlus, etherscan, tier, address, ch
     score += 2
   }
 
+  const isEstablished = Boolean(archetype?.class === 'canonical_token' || archetype?.class === 'canonical_infrastructure')
   const isProxy = Boolean(onChain?.upgradeableProxy || etherscan?.proxy)
   if (isProxy) {
-    const proxyPenalty = verified && (archetype || txCount > 200) ? 3 : 8
+    const proxyPenalty = verified && isEstablished ? 2 : verified && txCount > 200 ? 4 : 8
     score -= proxyPenalty
     findings.push({
       code: 'UPGRADEABLE_PROXY',
-      severity: verified ? 'INFO' : 'WATCH',
+      severity: verified && isEstablished ? 'INFO' : 'WATCH',
       title: 'Upgradeable proxy detected',
       detail: verified
         ? 'Upgradeable architecture detected — review admin controls and timelocks; common for established protocols.'
@@ -196,42 +209,43 @@ export function scoreFromSignals({ onChain, goPlus, etherscan, tier, address, ch
 
   if (applyAdminHeuristics) {
     const sel = onChain?.privilegedSelectors || {}
+    const adminSeverity = (base) => (verified && isEstablished ? 'INFO' : verified ? 'WATCH' : base)
     if (sel.owner) {
       privileged.owner = true
-      score -= verified ? 2 : 5
+      score -= verified && isEstablished ? 1 : verified ? 2 : 5
       findings.push({
         code: 'OWNER_PRIVILEGE',
-        severity: verified ? 'INFO' : 'WATCH',
+        severity: adminSeverity('WATCH'),
         title: 'Ownership controls present',
         detail: 'owner() detected — assess admin concentration and timelock policy.',
       })
     }
     if (sel.pause || sel.unpause) {
       privileged.pause = true
-      score -= verified ? 5 : 10
+      score -= verified && isEstablished ? 2 : verified ? 4 : 10
       findings.push({
         code: 'PAUSE_PRIVILEGE',
-        severity: 'HIGH',
+        severity: adminSeverity('WATCH'),
         title: 'Pause / unpause capability',
-        detail: 'Privileged roles can halt transfers or interactions.',
+        detail: 'Privileged roles can halt transfers or interactions — standard for regulated stablecoins and governance tokens.',
       })
     }
     if (sel.mint) {
       privileged.mint = true
-      score -= verified ? 6 : 12
+      score -= verified && isEstablished ? 3 : verified ? 5 : 12
       findings.push({
         code: 'MINT_PRIVILEGE',
-        severity: 'HIGH',
+        severity: adminSeverity('WATCH'),
         title: 'Mint capability detected',
         detail: 'Supply can be inflated by privileged callers — verify caps and timelocks.',
       })
     }
     if (sel.blacklist) {
       privileged.blacklist = true
-      score -= verified ? 7 : 14
+      score -= verified && isEstablished ? 3 : verified ? 5 : 14
       findings.push({
         code: 'BLACKLIST_PRIVILEGE',
-        severity: 'HIGH',
+        severity: adminSeverity('WATCH'),
         title: 'Blacklist / blocklist controls',
         detail: 'Addresses may be restricted from transferring or interacting.',
       })

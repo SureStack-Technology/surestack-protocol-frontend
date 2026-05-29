@@ -5,6 +5,7 @@ import {
 } from '../tokenConcentration/evmTokenConcentration.js'
 import { mergeTokenConcentrationIntoCore } from '../tokenConcentration/tokenConcentrationScoring.js'
 import {
+  fetchContractDeploymentMeta,
   fetchEtherscanContractMeta,
   fetchGoPlusAddressSecurity,
   fetchOnChainContractSignals,
@@ -83,12 +84,13 @@ export async function analyzeContractIntelligence(opts) {
 
   let core = scoreFromSignals({ onChain, goPlus, etherscan, tier, address, chainId })
 
-  if (
-    core.isContract &&
-    isLikelyErc20Token({ onChain, etherscan, address, chainId })
-  ) {
+  let deploymentMeta = { available: false }
+  if (core.isContract && isLikelyErc20Token({ onChain, etherscan, address, chainId })) {
+    deploymentMeta = await fetchContractDeploymentMeta(address, chainId).catch(() => ({
+      available: false,
+    }))
     try {
-      const concentration = await analyzeEvmTokenConcentration(address, chainId)
+      const concentration = await analyzeEvmTokenConcentration(address, chainId, deploymentMeta)
       core = mergeTokenConcentrationIntoCore(core, concentration, {
         isCanonical: Boolean(core.archetypeId),
       })
@@ -166,6 +168,7 @@ export async function analyzeContractIntelligence(opts) {
     ...alphaExtras,
     aiSummary,
     multiContractTrust: multiContractTrust.length ? multiContractTrust : undefined,
+    deploymentMeta,
   })
 
   return {

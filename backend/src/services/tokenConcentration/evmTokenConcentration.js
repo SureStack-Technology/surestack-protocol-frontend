@@ -1,4 +1,5 @@
 import { resolveContractArchetype } from '../contractIntelligence/contractIntelArchetypes.js'
+import { fetchContractDeploymentMeta } from '../contractIntelligence/contractIntelProviders.js'
 import { fetchDexScreenerToken } from './dexScreenerProvider.js'
 import { fetchGoPlusTokenSecurity, parseGoPlusHolders } from './goPlusTokenProvider.js'
 import { buildTokenConcentrationIntel } from './tokenConcentrationScoring.js'
@@ -27,13 +28,24 @@ export function isLikelyErc20Token({ onChain, etherscan, address, chainId }) {
  * @param {string} address
  * @param {number} chainId
  */
-export async function analyzeEvmTokenConcentration(address, chainId) {
+/**
+ * @param {string} address
+ * @param {number} chainId
+ * @param {object | null} [deploymentMetaIn] — reuse when already fetched by contract intel engine
+ */
+export async function analyzeEvmTokenConcentration(address, chainId, deploymentMetaIn = null) {
   const archetype = resolveContractArchetype(address, chainId)
   const isCanonical = archetype?.class === 'canonical_token'
 
-  const [dex, goPlusRow] = await Promise.all([
+  const deploymentMetaPromise =
+    deploymentMetaIn != null
+      ? Promise.resolve(deploymentMetaIn)
+      : fetchContractDeploymentMeta(address, chainId)
+
+  const [dex, goPlusRow, deploymentMeta] = await Promise.all([
     fetchDexScreenerToken(address, chainId),
     fetchGoPlusTokenSecurity(address, chainId),
+    deploymentMetaPromise,
   ])
 
   const goPlusParsed = parseGoPlusHolders(goPlusRow)
@@ -43,5 +55,6 @@ export async function analyzeEvmTokenConcentration(address, chainId) {
     dex,
     goPlusParsed,
     isCanonical,
+    deploymentMeta,
   })
 }

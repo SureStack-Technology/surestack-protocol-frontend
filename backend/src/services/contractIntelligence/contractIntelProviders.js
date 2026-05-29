@@ -106,6 +106,206 @@ export async function fetchGoPlusAddressSecurity(address, chainId) {
   }
 }
 
+const ETHERSCAN_MIN_INTERVAL_MS = 350
+let lastEtherscanCallAt = 0
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function etherscanThrottle() {
+  const wait = ETHERSCAN_MIN_INTERVAL_MS - (Date.now() - lastEtherscanCallAt)
+  if (wait > 0) await sleep(wait)
+  lastEtherscanCallAt = Date.now()
+}
+
+async function etherscanV2Get(urlPathParams) {
+  const apiKey = process.env.ETHERSCAN_API_KEY
+  if (!apiKey) return null
+  await etherscanThrottle()
+  const url = new URL('https://api.etherscan.io/v2/api')
+  for (const [k, v] of Object.entries(urlPathParams)) {
+    url.searchParams.set(k, String(v))
+  }
+  url.searchParams.set('apikey', apiKey)
+  try {
+    const res = await fetch(url.toString())
+    if (!res.ok) return null
+    return await res.json()
+  } catch {
+    return null
+  }
+}
+
+/** @param {object} params @param {number} [retries] */
+async function etherscanV2GetWithRetry(params, retries = 1) {
+  let json = await etherscanV2Get(params)
+  for (let i = 0; i < retries; i++) {
+    const rateLimited =
+      json?.status === '0' &&
+      typeof json?.result === 'string' &&
+      /rate limit/i.test(json.result)
+    if (!rateLimited) break
+    await sleep(450)
+    json = await etherscanV2Get(params)
+  }
+  return json
+}
+
+/**
+ * Etherscan getcontractcreation returns timestamp + blockNumber on the row (v2).
+ * @param {object | null | undefined} row
+ */
+function timestampMsFromCreationRow(row) {
+  const ts = Number(row?.timestamp)
+  if (!Number.isFinite(ts) || ts <= 0) return null
+  return ts < 1e12 ? ts * 1000 : ts
+}
+
+/**
+ * @param {object | null | undefined} row
+ */
+function blockNumberFromCreationRow(row) {
+  const raw = row?.blockNumber
+  if (raw == null || raw === '') return null
+  const s = String(raw)
+  if (/^0x/i.test(s)) {
+    const n = Number.parseInt(s, 16)
+    return Number.isFinite(n) ? n : null
+  }
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+
+/**
+ * @param {object | null | undefined} json
+ */
+function parseContractCreationRow(json) {
+  if (!json || json.status !== '1') return null
+  const result = json.result
+  if (Array.isArray(result) && result.length > 0) return result[0]
+  if (result && typeof result === 'object' && !Array.isArray(result)) return result
+  return null
+}
+
+async function resolveBlockTimestampMs(chainId, blockNumber) {
+  const blockHex = `0x${Number(blockNumber).toString(16)}`
+  const alchemyKey = process.env.ALCHEMY_API_KEY
+  const url = alchemyKey ? alchemyChainUrl(chainId, alchemyKey) : null
+  if (url) {
+    try {
+      const block = await rpc(url, 'eth_getBlockByNumber', [blockHex, false])
+      const ts = Number.parseInt(String(block?.timestamp || '0x0'), 16)
+      if (ts > 0) return ts * 1000
+    } catch {
+      /* fall through */
+    }
+  }
+
+  const blockJson = await etherscanV2Get({
+    chainid: String(chainId),
+    module: 'proxy',
+    action: 'eth_getBlockByNumber',
+    tag: blockHex,
+    boolean: 'false',
+  })
+  const blockTs = Number.parseInt(String(blockJson?.result?.timestamp || '0x0'), 16)
+  if (blockTs > 0) return blockTs * 1000
+  return null
+}
+
+async function resolveCreationTimestampMs(chainId, row) {
+  const fromRow = timestampMsFromCreationRow(row)
+  if (fromRow) return fromRow
+
+  const blockFromRow = blockNumberFromCreationRow(row)
+  if (blockFromRow != null) {
+    const fromBlock = await resolveBlockTimestampMs(chainId, blockFromRow)
+    if (fromBlock) return fromBlock
+  }
+
+  if (!row?.txHash) return null
+
+  const txJson = await etherscanV2Get({
+    chainid: String(chainId),
+    module: 'proxy',
+    action: 'eth_getTransactionByHash',
+    txhash: row.txHash,
+  })
+  const tx = txJson?.result
+  const blockNumber = tx?.blockNumber
+    ? Number.parseInt(String(tx.blockNumber), 16)
+    : blockFromRow
+  if (blockNumber == null || !Number.isFinite(blockNumber)) return null
+  return resolveBlockTimestampMs(chainId, blockNumber)
+}
+
+/**
+ * Contract creation time from explorer (proxy address when scanned target is a proxy).
+ * @param {string} address
+ * @param {number} chainId
+ */
+export async function fetchContractDeploymentMeta(address, chainId) {
+  if (!process.env.ETHERSCAN_API_KEY) {
+    return { available: false, source: 'unavailable' }
+  }
+
+  const addr = String(address || '').toLowerCase()
+  const json = await etherscanV2GetWithRetry(
+    {
+      chainid: String(chainId),
+      module: 'contract',
+      action: 'getcontractcreation',
+      contractaddresses: addr,
+    },
+    2,
+  )
+
+  const row = parseContractCreationRow(json)
+  if (!row?.txHash && !row?.timestamp) {
+    return {
+      available: false,
+      source: 'etherscan_v2',
+      error: typeof json?.result === 'string' ? json.result : json?.message || 'no_creation_row',
+    }
+  }
+
+  const contractCreatedAtMs = await resolveCreationTimestampMs(chainId, row)
+
+  const etherscanMeta = await fetchEtherscanContractMeta(address, chainId)
+  const implAddr = etherscanMeta?.implementation
+    ? String(etherscanMeta.implementation).toLowerCase()
+    : null
+
+  let implementationCreatedAtMs = null
+  if (implAddr && implAddr !== addr && /^0x[a-f0-9]{40}$/.test(implAddr)) {
+    const implJson = await etherscanV2GetWithRetry(
+      {
+        chainid: String(chainId),
+        module: 'contract',
+        action: 'getcontractcreation',
+        contractaddresses: implAddr,
+      },
+      1,
+    )
+    const implRow = parseContractCreationRow(implJson)
+    if (implRow) {
+      implementationCreatedAtMs = await resolveCreationTimestampMs(chainId, implRow)
+    }
+  }
+
+  return {
+    available: Boolean(contractCreatedAtMs),
+    source: 'etherscan_v2',
+    contractCreatedAtMs,
+    contractCreator: row.contractCreator || null,
+    creationTxHash: row.txHash || null,
+    isProxy: Boolean(etherscanMeta?.proxy || implAddr),
+    implementationAddress: implAddr,
+    implementationCreatedAtMs,
+  }
+}
+
 /** @param {string} address @param {number} chainId */
 export async function fetchEtherscanContractMeta(address, chainId) {
   const apiKey = process.env.ETHERSCAN_API_KEY

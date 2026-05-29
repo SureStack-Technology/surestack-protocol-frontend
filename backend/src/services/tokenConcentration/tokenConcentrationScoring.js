@@ -1,6 +1,9 @@
 import { trustBandFromScore } from '../contractIntelligence/contractIntelTypes.js'
 import { solanaTrustBandFromScore } from '../solanaRiskScanner/solanaTypes.js'
-import { formatDeploymentAge, liquidityDepthLabel } from './tokenConcentrationTypes.js'
+import {
+  formatDeploymentAgeFromTimestamp,
+  liquidityDepthLabel,
+} from './tokenConcentrationTypes.js'
 
 function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n))
@@ -80,11 +83,51 @@ export function solanaVerdictActionFrame(band, concentration, isCanonical = fals
 /**
  * @param {object} params
  */
+/**
+ * @param {object} [deploymentMeta] — from fetchContractDeploymentMeta
+ */
+export function resolveDeploymentAgeDisplay(deploymentMeta, pairCreatedAt) {
+  const contractAge = formatDeploymentAgeFromTimestamp(deploymentMeta?.contractCreatedAtMs)
+  const poolAge = formatDeploymentAgeFromTimestamp(pairCreatedAt)
+
+  if (contractAge) {
+    const proxyNote =
+      deploymentMeta?.isProxy && deploymentMeta?.implementationCreatedAtMs
+        ? ` (proxy; implementation deployed separately)`
+        : deploymentMeta?.isProxy
+          ? ' (proxy contract)'
+          : ''
+    return {
+      deploymentAge: `${contractAge}${proxyNote}`,
+      contractDeploymentAge: contractAge,
+      primaryPoolAge: poolAge || null,
+      deploymentAgeSource: 'contract_creation',
+    }
+  }
+
+  if (poolAge) {
+    return {
+      deploymentAge: `Primary pool ~${poolAge} — contract deployment age unavailable`,
+      contractDeploymentAge: null,
+      primaryPoolAge: poolAge,
+      deploymentAgeSource: 'dex_pool_approx',
+    }
+  }
+
+  return {
+    deploymentAge: 'Deployment age unavailable',
+    contractDeploymentAge: null,
+    primaryPoolAge: null,
+    deploymentAgeSource: 'unavailable',
+  }
+}
+
 export function buildTokenConcentrationIntel({
   holderMetrics,
   dex,
   goPlusParsed,
   isCanonical = false,
+  deploymentMeta = null,
 }) {
   const top10Pct = holderMetrics?.top10HolderPct ?? goPlusParsed?.top10HolderPct ?? null
   const top1Pct = holderMetrics?.top1HolderPct ?? goPlusParsed?.top1HolderPct ?? null
@@ -103,7 +146,10 @@ export function buildTokenConcentrationIntel({
         : 'unknown'
 
   const pairCreatedAt = dex?.pairCreatedAt || null
-  const deploymentAgeHours = pairCreatedAt ? (Date.now() - pairCreatedAt) / (1000 * 60 * 60) : null
+  const contractCreatedAtMs = deploymentMeta?.contractCreatedAtMs || null
+  const ageAnchorMs = contractCreatedAtMs || pairCreatedAt
+  const deploymentAgeHours = ageAnchorMs ? (Date.now() - ageAnchorMs) / (1000 * 60 * 60) : null
+  const ageDisplay = resolveDeploymentAgeDisplay(deploymentMeta, pairCreatedAt)
 
   const whaleRisk = computeWhaleRisk({
     top10Pct,
@@ -116,7 +162,19 @@ export function buildTokenConcentrationIntel({
   let tradingBehavior = 'Standard transfer patterns'
   if (top10Pct != null && top10Pct > 70) tradingBehavior = 'Highly concentrated ownership — exit liquidity risk elevated'
   else if (top1Pct != null && top1Pct > 20) tradingBehavior = 'Single-wallet dominance detected'
-  else if (deploymentAgeHours != null && deploymentAgeHours < 72) tradingBehavior = 'Recently launched — early transfer clustering possible'
+  else if (
+    deploymentAgeHours != null &&
+    deploymentAgeHours < 72 &&
+    !contractCreatedAtMs
+  ) {
+    tradingBehavior = 'Recently launched — early transfer clustering possible'
+  } else if (
+    deploymentAgeHours != null &&
+    deploymentAgeHours < 72 &&
+    contractCreatedAtMs
+  ) {
+    tradingBehavior = 'Newly listed pool on established contract — verify pool liquidity'
+  }
   else if (lpStatus === 'unlocked') tradingBehavior = 'DEX liquidity present — LP not locked'
   else if (isCanonical) tradingBehavior = 'Established token distribution'
 
@@ -156,7 +214,10 @@ export function buildTokenConcentrationIntel({
     liquidityConcentration,
     whaleRisk,
     tradingBehavior,
-    deploymentAge: formatDeploymentAge(pairCreatedAt),
+    deploymentAge: ageDisplay.deploymentAge,
+    contractDeploymentAge: ageDisplay.contractDeploymentAge,
+    primaryPoolAge: ageDisplay.primaryPoolAge,
+    deploymentAgeSource: ageDisplay.deploymentAgeSource,
     deploymentAgeHours,
     bundledWallets: 'Not detected from available sources',
     lpStatus,
@@ -255,13 +316,18 @@ export function mergeTokenConcentrationIntoCore(core, concentration, opts = {}) 
     })
   }
 
-  if (concentration.deploymentAgeHours != null && concentration.deploymentAgeHours < 48 && !isCanonical) {
+  if (
+    concentration.deploymentAgeHours != null &&
+    concentration.deploymentAgeHours < 48 &&
+    !isCanonical &&
+    concentration.deploymentAgeSource !== 'contract_creation'
+  ) {
     score -= 12
     findings.push({
       code: 'FRESH_DEPLOY',
       severity: 'WATCH',
       title: 'Recently deployed token',
-      detail: `Primary pool age ~${concentration.deploymentAge}.`,
+      detail: `Market surface age ~${concentration.deploymentAge}.`,
     })
   }
 
