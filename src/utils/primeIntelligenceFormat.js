@@ -1,13 +1,16 @@
-/** @typedef {'LATEST_SNAPSHOT' | 'ESTIMATED' | 'MODEL_GENERATED' | 'DEMO_MODE'} DataProvenance */
+/** @typedef {'LIVE' | 'PARTIAL_DATA' | 'LATEST_SNAPSHOT' | 'ESTIMATED' | 'MODEL_GENERATED' | 'DEMO_MODE' | 'PROVIDER_PENDING'} DataProvenance */
 
 /**
  * @param {DataProvenance} status
  * @returns {string}
  */
 export function formatDataStatusLabel(status) {
+  if (status === 'LIVE') return 'LIVE'
+  if (status === 'PARTIAL_DATA') return 'PARTIAL DATA'
   if (status === 'LATEST_SNAPSHOT') return 'LATEST SNAPSHOT'
   if (status === 'ESTIMATED') return 'ESTIMATED'
-  if (status === 'MODEL_GENERATED') return 'MODEL GENERATED'
+  if (status === 'MODEL_GENERATED' || status === 'INTELLIGENCE_SNAPSHOT') return 'INTELLIGENCE SNAPSHOT'
+  if (status === 'PROVIDER_PENDING') return 'PROVIDER PENDING'
   return 'DEMO MODE'
 }
 
@@ -15,9 +18,12 @@ export function formatDataStatusLabel(status) {
  * @param {DataProvenance} status
  */
 export function dataStatusClass(status) {
+  if (status === 'LIVE') return 'prime-data-status prime-data-status--live'
+  if (status === 'PARTIAL_DATA') return 'prime-data-status prime-data-status--partial'
   if (status === 'LATEST_SNAPSHOT') return 'prime-data-status prime-data-status--snapshot'
   if (status === 'ESTIMATED') return 'prime-data-status prime-data-status--estimated'
   if (status === 'MODEL_GENERATED') return 'prime-data-status prime-data-status--model'
+  if (status === 'PROVIDER_PENDING') return 'prime-data-status prime-data-status--pending'
   return 'prime-data-status prime-data-status--demo'
 }
 
@@ -42,7 +48,15 @@ export function resolveProvenance({
 
 /** Pick the strongest (most “live”) provenance for a section header. */
 export function mergeProvenance(...statuses) {
-  const rank = { LATEST_SNAPSHOT: 4, MODEL_GENERATED: 3, ESTIMATED: 2, DEMO_MODE: 1 }
+  const rank = {
+    LIVE: 6,
+    LATEST_SNAPSHOT: 5,
+    PARTIAL_DATA: 4,
+    ESTIMATED: 3,
+    MODEL_GENERATED: 3,
+    PROVIDER_PENDING: 2,
+    DEMO_MODE: 1,
+  }
   return statuses.reduce((best, s) => (rank[s] > rank[best] ? s : best), 'DEMO_MODE')
 }
 
@@ -123,6 +137,8 @@ export function analysisCertaintyLevel({ band, fromAnalyst, fromRisk }) {
  */
 export function walletExposureStateLabel(band) {
   switch (String(band || '').toUpperCase()) {
+    case 'PENDING':
+      return 'ASSESSMENT PENDING'
     case 'LOW':
       return 'LOW EXPOSURE'
     case 'MODERATE':
@@ -139,6 +155,8 @@ export function walletExposureStateLabel(band) {
 /** Short band label for command metric chips only (not Wallet Risk Index panel). */
 export function walletRiskBandChipLabel(band) {
   switch (String(band || '').toUpperCase()) {
+    case 'PENDING':
+      return 'ASSESSMENT PENDING'
     case 'LOW':
       return 'LOW RISK'
     case 'MODERATE':
@@ -159,7 +177,7 @@ export function walletRiskBandChipLabel(band) {
 export function formatMacroRegimeProvenanceLabel(provenance) {
   if (provenance === 'LATEST_SNAPSHOT') return 'LATEST SNAPSHOT'
   if (provenance === 'ESTIMATED') return 'AI CLASSIFIED'
-  if (provenance === 'MODEL_GENERATED') return 'MODEL GENERATED'
+  if (provenance === 'MODEL_GENERATED' || provenance === 'INTELLIGENCE_SNAPSHOT') return 'INTELLIGENCE SNAPSHOT'
   return 'DEMO MODE'
 }
 
@@ -169,6 +187,8 @@ export function formatMacroRegimeProvenanceLabel(provenance) {
  */
 export function exposureSeverityFromBand(band) {
   switch (String(band || '').toUpperCase()) {
+    case 'PENDING':
+      return 'MODERATE'
     case 'LOW':
       return 'LOW'
     case 'HIGH':
@@ -213,6 +233,9 @@ export function formatHeroChipDisplay(key, raw, band) {
   const n = Number(raw)
   switch (key) {
     case 'score':
+      if (band === 'PENDING' || raw == null || raw === '—') {
+        return { primary: 'PENDING', sub: 'Insufficient provider data' }
+      }
       return { primary: String(raw), sub: walletRiskBandChipLabel(band) }
     case 'delta':
       if (n === 0) return { primary: 'STABLE', sub: 'No movement detected' }
@@ -241,36 +264,7 @@ export function formatHeroChipDisplay(key, raw, band) {
   }
 }
 
-/**
- * @param {object} params
- * @returns {{ label: string, level: number, max: number }[]}
- */
-export function buildWalletExposureHeatmap({ findings = [], approvals, band, score }) {
-  const rows = approvals?.rows || []
-  const unlimited = rows.filter((r) => r.unlimited).length
-  const highRiskApprovals = rows.filter((r) => r.riskLevel === 'HIGH' || r.riskLevel === 'ELEVATED').length
-  const contractFindings = findings.filter((f) =>
-    /contract|approval|proxy|spender|protocol/i.test(`${f.code} ${f.title}`),
-  ).length
-
-  const bandBoost =
-    band === 'ELEVATED' ? 2 : band === 'HIGH' ? 1.5 : band === 'MODERATE' ? 0.5 : 0
-  const scoreNorm = Math.min(7, Math.max(1, Math.round((Number(score) || 50) / 14)))
-
-  const dex = Math.min(7, Math.round(scoreNorm * 0.85 + highRiskApprovals * 0.4 + bandBoost))
-  const stable = Math.min(7, Math.max(1, Math.round(3 + (findings.length ? 1 : 0))))
-  const nft = Math.min(7, Math.max(1, findings.some((f) => /nft/i.test(f.title)) ? 3 : 1))
-  const unknown = Math.min(7, Math.round(1 + contractFindings * 0.5 + unlimited * 0.3))
-  const protocol = Math.min(7, Math.round(2 + highRiskApprovals * 0.6 + contractFindings * 0.4))
-
-  return [
-    { label: 'DEX exposure', level: dex, max: 7 },
-    { label: 'Stablecoins', level: stable, max: 7 },
-    { label: 'NFT exposure', level: nft, max: 7 },
-    { label: 'Unknown contracts', level: unknown, max: 7 },
-    { label: 'Protocol dependency', level: protocol, max: 7 },
-  ]
-}
+export { buildWalletExposureHeatmap } from '@/utils/walletExposureHeatmap.js'
 
 /**
  * @param {string} summary
@@ -291,23 +285,56 @@ export function buildContextualFallbackFeed(headline, hasWallet) {
   const macroLine = macroRegimeFeedLine(headline)
   const now = Date.now()
   const base = [
-    { id: 'm1', summary: 'Approval exposure unchanged', severity: 'LOW', offset: 3600000 },
-    { id: 'm2', summary: 'No suspicious interactions detected', severity: 'LOW', offset: 7200000 },
-    { id: 'm3', summary: 'Contract intelligence report completed', severity: 'MEDIUM', offset: 10800000 },
-    { id: 'm4', summary: macroLine, severity: 'LOW', offset: 18000000 },
+    {
+      id: 'm1',
+      summary: 'EXPOSURE UPDATE · Approval inventory unchanged across verified surfaces',
+      severity: 'LOW',
+      offset: 3600000,
+      eventKind: 'EXPOSURE_UPDATE',
+    },
+    {
+      id: 'm2',
+      summary: 'SYSTEM ANALYSIS · No suspicious interactions detected in monitored window',
+      severity: 'LOW',
+      offset: 7200000,
+      eventKind: 'SYSTEM_ANALYSIS',
+    },
+    {
+      id: 'm3',
+      summary: 'INTELLIGENCE SNAPSHOT · Contract intelligence synthesis completed',
+      severity: 'MEDIUM',
+      offset: 10800000,
+      eventKind: 'INTELLIGENCE_SNAPSHOT',
+    },
+    { id: 'm4', summary: macroLine, severity: 'LOW', offset: 18000000, eventKind: 'RISK_OBSERVATION' },
     {
       id: 'm5',
-      summary: hasWallet ? 'Wallet exposure remains concentrated' : 'Wallet exposure model pending verification',
+      summary: hasWallet
+        ? 'RISK OBSERVATION · Wallet exposure concentration under active monitoring'
+        : 'INTELLIGENCE SNAPSHOT · Wallet exposure pending provider verification',
       severity: 'MEDIUM',
       offset: 25200000,
+      eventKind: 'RISK_OBSERVATION',
     },
-    { id: 'm6', summary: 'Threat posture stable', severity: 'LOW', offset: 32400000 },
-    { id: 'm7', summary: 'Intelligence cycle refreshed', severity: 'LOW', offset: 43200000 },
+    {
+      id: 'm6',
+      summary: 'RISK OBSERVATION · Threat posture stable across intelligence layers',
+      severity: 'LOW',
+      offset: 32400000,
+      eventKind: 'RISK_OBSERVATION',
+    },
+    {
+      id: 'm7',
+      summary: 'INTELLIGENCE SNAPSHOT · Intelligence cycle refreshed',
+      severity: 'LOW',
+      offset: 43200000,
+      eventKind: 'INTELLIGENCE_SNAPSHOT',
+    },
   ]
   return base.map((m) => ({
     ...m,
     at: new Date(now - m.offset).toISOString(),
     ts: now - m.offset,
-    source: 'model',
+    source: 'snapshot',
   }))
 }

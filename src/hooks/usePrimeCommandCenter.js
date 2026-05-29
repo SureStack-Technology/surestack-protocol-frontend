@@ -237,8 +237,15 @@ export function usePrimeCommandCenter(profile) {
   }, [macroData, macroError])
 
   const riskFromApi = Boolean(riskData?.success)
-  const score = riskFromApi ? Number(riskData.score) : hasWallet ? 66 : 66
-  const band = riskData?.band || 'MODERATE'
+  const assessmentPending = Boolean(riskData?.assessmentPending)
+  const score = assessmentPending
+    ? null
+    : riskFromApi && Number.isFinite(Number(riskData.score))
+      ? Number(riskData.score)
+      : hasWallet
+        ? null
+        : 66
+  const band = assessmentPending ? 'PENDING' : riskData?.band || (hasWallet ? 'PENDING' : 'MODERATE')
   const exposureSeverity = exposureSeverityFromBand(band)
 
   const timelineFromApi = Boolean(
@@ -417,7 +424,7 @@ export function usePrimeCommandCenter(profile) {
       const mocked = buildContextualFallbackFeed(macroState.headline, hasWallet)
       return {
         items: mocked,
-        sectionStatus: hasWallet ? 'MODEL_GENERATED' : 'DEMO_MODE',
+        sectionStatus: hasWallet ? 'INTELLIGENCE_SNAPSHOT' : 'DEMO_MODE',
         hasInferred: false,
       }
     }
@@ -465,7 +472,7 @@ export function usePrimeCommandCenter(profile) {
       })
     }
 
-    if (score >= 65) {
+    if (Number.isFinite(score) && score >= 65) {
       actions.push({
         id: 'concentration',
         title: 'Reduce concentration in high-volatility exposure',
@@ -493,7 +500,7 @@ export function usePrimeCommandCenter(profile) {
       }
     }
     if (hasWallet && riskFromApi) {
-      return { points: mockScoreSeries(score), status: 'MODEL_GENERATED' }
+      return { points: mockScoreSeries(score ?? 66), status: 'INTELLIGENCE_SNAPSHOT' }
     }
     return { points: mockScoreSeries(score), status: 'DEMO_MODE' }
   }, [primeIntel.timeline?.series, timelineFromApi, score, hasWallet, riskFromApi])
@@ -503,23 +510,41 @@ export function usePrimeCommandCenter(profile) {
     [scoreSeries.points, scoreDelta, band],
   )
 
-  const exposureHeatmap = useMemo(
+  const exposureHeatmapBundle = useMemo(
     () =>
       buildWalletExposureHeatmap({
+        exposureIntelligence: riskData?.exposureIntelligence ?? null,
         findings: riskData?.findings || [],
         approvals,
+        exposureHints: riskData?.exposureHints ?? null,
         band,
         score,
+        walletKey,
+        hasWallet,
+        approvalsFromApi,
+        riskFromApi,
+        approvalInventoryStatus: approvalInventory.status,
       }),
-    [riskData?.findings, approvals, band, score],
+    [
+      riskData?.exposureIntelligence,
+      riskData?.findings,
+      riskData?.exposureHints,
+      approvals,
+      band,
+      score,
+      walletKey,
+      hasWallet,
+      approvalsFromApi,
+      riskFromApi,
+      approvalInventory.status,
+    ],
   )
 
-  const heatmapStatus = resolveProvenance({
-    hasWallet,
-    hasApiData: riskFromApi,
-    isFreshSnapshot: riskFromApi,
-    isModelGenerated: hasWallet && !riskFromApi,
-  })
+  const exposureHeatmap = exposureHeatmapBundle.rows
+  const exposureHeatmapSubtitle = exposureHeatmapBundle.subtitle
+  const exposureHeatmapSources = exposureHeatmapBundle.sources || []
+
+  const heatmapStatus = exposureHeatmapBundle.provenance
 
   const walletRiskStatus = resolveProvenance({
     hasWallet,
@@ -666,6 +691,7 @@ export function usePrimeCommandCenter(profile) {
     loading: riskLoading || primeIntel.timelineLoading || intelLoading || macroLoading,
     score,
     band,
+    assessmentPending,
     exposureSeverity,
     scoreDelta,
     deltaDisplay,
@@ -678,6 +704,8 @@ export function usePrimeCommandCenter(profile) {
     scoreSeries,
     exposureTrend,
     exposureHeatmap,
+    exposureHeatmapSubtitle,
+    exposureHeatmapSources,
     heatmapStatus,
     macroState,
     walletRiskStatus,

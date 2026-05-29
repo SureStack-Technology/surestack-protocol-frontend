@@ -1,6 +1,9 @@
 import { prisma } from '../../lib/prisma.js'
 import { scoreWalletRisk } from './walletRiskScoring.js'
 import { fetchWalletSignals } from './walletRiskProviders.js'
+import { computeWalletExposureIntelligence } from '../walletExposure/walletExposureIntelligence.js'
+import { buildExposureMetrics, exposureInputSummary } from '../walletExposure/walletExposureMetrics.js'
+import { resolvePrimeApprovalChainId } from './alchemyChainResolver.js'
 import { SEPOLIA_CHAIN_ID } from './walletRiskTypes.js'
 import { buildNarrative } from './walletRiskNarrative.js'
 import { riskCacheGet, riskCacheSet } from './walletRiskCache.js'
@@ -28,6 +31,28 @@ function offlinePlaceholderSignals() {
     staleFiniteUnknownApprovalCount: 0,
     interactionBreadthRatio: 0,
     insufficientHistory: true,
+    nftTransferCount: 0,
+    erc1155TransferCount: 0,
+    dexTransferCount: 0,
+    dexInteractionCount: 0,
+    nftMarketplaceInteractions: 0,
+    nftHoldingsCount: 0,
+    nftCollectionCount: 0,
+    stableSharePct: 0,
+    stablecoinBalanceCount: 0,
+    stablecoinPresenceCount: 0,
+    stableTransferCount: 0,
+    stableSymbolsHeld: [],
+    protocolCounterparties: [],
+    topSpenderApprovalSharePct: 0,
+    approvalInventoryRows: [],
+    probeDexApproval: 0,
+    hasBalances: false,
+    hasTransfers: false,
+    hasApprovals: false,
+    hasNftScan: false,
+    hasNftHoldings: false,
+    providerLive: false,
   }
 }
 
@@ -81,7 +106,8 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
   const alchemyKey = process.env.ALCHEMY_API_KEY
   const hasAlchemy = Boolean(alchemyKey && String(alchemyKey).trim())
   /** Bust cache when switching between offline and live so reference payloads are not reused after configuring Alchemy. */
-  const cacheKey = `risk:${userId}:${wallet}:${chainId}:${hasAlchemy ? 'live' : 'ref'}`
+  const exposureChainId = resolvePrimeApprovalChainId(null, chainId)
+  const cacheKey = `risk:v2:${userId}:${wallet}:${chainId}:${exposureChainId}:${hasAlchemy ? 'live' : 'ref'}`
 
   if (!refresh) {
     const hit = riskCacheGet(cacheKey)
@@ -106,7 +132,7 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
 
   if (hasAlchemy) {
     try {
-      signals = await fetchWalletSignals(wallet, chainId, alchemyKey.trim())
+      signals = await fetchWalletSignals(wallet, exposureChainId, alchemyKey.trim())
     } catch (e) {
       const msg = e?.message || String(e)
       console.warn('[walletRiskService] provider failed', msg)
@@ -132,7 +158,55 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
     signals = offlinePlaceholderSignals()
   }
 
-  const { score, band, findings } = scoreWalletRisk(signals)
+  let { score, band, findings } = scoreWalletRisk(signals)
+
+  const approvalRowsForExposure = signals.approvalInventoryRows || []
+  const exposureIntelligence = hasAlchemy
+    ? computeWalletExposureIntelligence(signals, approvalRowsForExposure)
+    : {
+        provenance: 'PROVIDER_PENDING',
+        subtitle: 'Exposure bands pending — configure ALCHEMY_API_KEY for live wallet intelligence.',
+        sources: [],
+        bands: [],
+      }
+
+  const exposurePending = exposureIntelligence?.provenance === 'PROVIDER_PENDING'
+  const noOnChainSlices =
+    !signals.hasBalances && !signals.hasTransfers && !signals.hasApprovals
+  const assessmentPending =
+    exposurePending || (hasAlchemy && noOnChainSlices)
+
+  if (assessmentPending) {
+    score = null
+    band = 'PENDING'
+    findings = [
+      {
+        code: 'ASSESSMENT_PENDING',
+        severity: 'INFO',
+        message:
+          'Risk assessment pending — provider or on-chain exposure data not yet available.',
+      },
+      ...findings.filter((f) => f.code !== 'INSUFFICIENT_HISTORY'),
+    ]
+  }
+
+  let exposureInputSummaryPayload = null
+  if (hasAlchemy) {
+    const metrics =
+      exposureIntelligence.metrics || buildExposureMetrics(signals, approvalRowsForExposure)
+    exposureInputSummaryPayload = exposureInputSummary(metrics)
+    console.info(
+      '[walletExposure] inputs:',
+      JSON.stringify({
+        wallet,
+        walletChainId: chainId,
+        exposureChainId,
+        ...exposureInputSummaryPayload,
+        bandLevels: exposureIntelligence.bands?.map((b) => `${b.id}:${b.level}`),
+      }),
+    )
+    delete exposureIntelligence.metrics
+  }
 
   let summary = null
   if (hasAlchemy) {
@@ -149,6 +223,7 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
   const updatedAt = new Date().toISOString()
 
   const signalsSnapshotJson = JSON.parse(JSON.stringify(signals))
+  delete signalsSnapshotJson.approvalInventoryRows
 
   const snap = await prisma.walletRiskSnapshot.upsert({
     where: {
@@ -214,6 +289,27 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
     cached: false,
     updatedAt,
     establishing: Boolean(signals.insufficientHistory),
+    exposureHints: {
+      exposureChainId,
+      volatileSharePct: Number(signals.volatileSharePct) || 0,
+      stableSharePct: Number(signals.stableSharePct) || 0,
+      stablecoinBalanceCount: Number(signals.stablecoinBalanceCount) || 0,
+      topTokenSharePct: Number(signals.topTokenSharePct) || 0,
+      uniqueCounterparties: Number(signals.uniqueCounterparties) || 0,
+      unlimitedApprovalUnknownCount: Number(signals.unlimitedApprovalUnknownCount) || 0,
+      transferCount: Number(signals.transferCount) || 0,
+      dexInteractionCount: Number(signals.dexInteractionCount) || 0,
+      nftTransferCount: Number(signals.nftTransferCount) || 0,
+      nftHoldingsCount: Number(signals.nftHoldingsCount) || 0,
+      approvalCount: approvalRowsForExposure.length,
+      hasBalances: Boolean(signals.hasBalances),
+      hasTransfers: Boolean(signals.hasTransfers),
+      hasApprovals: Boolean(signals.hasApprovals),
+      hasNftScan: Boolean(signals.hasNftScan),
+    },
+    exposureInputSummary: exposureInputSummaryPayload,
+    exposureIntelligence,
+    assessmentPending,
   }
 
   riskCacheSet(cacheKey, payload)
