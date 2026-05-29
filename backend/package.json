@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "test": "node --test src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
+    "test": "node --test src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletExposure/walletExposureIntelligence.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
   },
   "keywords": [
     "surestack-protocol",

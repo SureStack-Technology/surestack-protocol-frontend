@@ -23,6 +23,7 @@ import contractIntelRouter from './routes/contractIntel.js';
 import solanaScannerRouter from './routes/solanaScanner.js';
 import foundersPassRouter from './routes/foundersPass.js';
 import intelligenceRouter from './routes/intelligence.js';
+import birdeyeIntelligenceRouter from './routes/birdeyeIntelligence.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -128,6 +129,7 @@ app.use('/api/prime/contracts', contractIntelRouter);
 app.use('/api/prime/solana', solanaScannerRouter);
 app.use('/api/founders-pass', foundersPassRouter);
 app.use('/api/intelligence', intelligenceRouter);
+app.use('/api/intelligence/birdeye', birdeyeIntelligenceRouter);
 
 app.use('/api/validators', validatorsRouter);
 app.use('/api/coverage', coverageRouter);
