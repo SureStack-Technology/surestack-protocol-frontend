@@ -1,9 +1,14 @@
-import { isLiveLunarCrushStatus } from '@/data/lunarCrushScenarioShowcase.js'
+import { isPrimeLunarCrushLive } from '@/data/lunarCrushScenarioShowcase.js'
 import PrimeContractTrustEvidence from '@/components/dashboard/prime/PrimeContractTrustEvidence.jsx'
+import PrimeSolanaMintEvidence from '@/components/dashboard/prime/PrimeSolanaMintEvidence.jsx'
 import PrimeProviderFeedCta from '@/components/dashboard/prime/PrimeProviderFeedCta.jsx'
 import SocialIntelligencePanel from '@/components/dashboard/prime/SocialIntelligencePanel.jsx'
 import OnChainBehaviorPanel from '@/components/dashboard/prime/OnChainBehaviorPanel.jsx'
 import PrimeBehaviorIntelligencePreview from '@/components/dashboard/prime/PrimeBehaviorIntelligencePreview.jsx'
+import LiquidityIntelligenceCard from '@/components/dashboard/prime/LiquidityIntelligenceCard.jsx'
+import WalletExposureEvidenceSummary from '@/components/dashboard/prime/WalletExposureEvidenceSummary.jsx'
+import { assessBehaviorCoverage } from '@/utils/behaviorIntelligenceStatus.js'
+import { scannerEvidenceBadge } from '@/utils/scannerProofStatus.mjs'
 import { dataStatusClass, formatDataStatusLabel } from '@/utils/primeIntelligenceFormat.js'
 import { exposureAccordionBadge } from '@/utils/walletExposureHeatmap.js'
 
@@ -120,23 +125,51 @@ export default function PrimeEvidenceLayers({
   narrativeTargetSymbol = null,
   behaviorSubtitle,
   analysisModeId,
+  solanaMintAddress = null,
+  solanaSymbol = null,
+  solanaTokenName = null,
   primeTrends,
   watchlist,
   birdeyeAssets = [],
+  riskData = null,
+  walletExposureProfile = null,
+  approvalRowsForExposure = [],
+  report = null,
 }) {
   const feed = intelligenceFeed
-  const lunarLive = isLiveLunarCrushStatus(primeTrends?.status)
-  const birdeyeLive = watchlist?.status === 'live'
+  const lunarLive = isPrimeLunarCrushLive(primeTrends)
+  const behaviorCoverage = assessBehaviorCoverage(watchlist, birdeyeAssets)
+  const birdeyeHasFeed = behaviorCoverage.mode !== 'pending'
   const showContractProof = analysisModeId === 'contract'
+  const showSolanaMintProof = analysisModeId === 'solana_token'
+  const solanaScannerReport = scannerReport?.chain === 'solana' ? scannerReport : null
+  const solanaProofBadge = scannerEvidenceBadge(report, solanaScannerReport)
+  const contractProofBadge = scannerEvidenceBadge(report, scannerReport)
 
   return (
     <div className="prime-evidence-stack space-y-3">
+      {showSolanaMintProof ? (
+        <EvidenceAccordion
+          id="prime-evidence-solana-mint"
+          title="Market Structure Evidence"
+          subtitle="Mint address, authority status, holder concentration, liquidity depth, and routing coverage."
+          badge={solanaProofBadge}
+        >
+          <PrimeSolanaMintEvidence
+            scannerReport={solanaScannerReport}
+            mintAddress={solanaMintAddress}
+            symbol={solanaSymbol}
+            tokenName={solanaTokenName}
+          />
+        </EvidenceAccordion>
+      ) : null}
+
       {showContractProof ? (
         <EvidenceAccordion
           id="prime-evidence-contract"
           title="Contract Trust"
           subtitle="Verified source, admin surface, proxy, bytecode fingerprint, and key findings."
-          badge={scannerReport ? 'Proof ready' : 'Pending scan'}
+          badge={contractProofBadge}
         >
           <PrimeContractTrustEvidence
             scannerReport={scannerReport}
@@ -147,8 +180,26 @@ export default function PrimeEvidenceLayers({
       ) : null}
 
       <EvidenceAccordion
+        id="prime-evidence-wallet-exposure-intel"
+        title="Wallet Exposure Intelligence"
+        subtitle="Exposure score, primary driver, and threat proof summary"
+        badge={
+          walletExposureProfile?.exposureScore != null
+            ? `Score ${walletExposureProfile.exposureScore}`
+            : exposureAccordionBadge(walletSnapshot?.hasWallet, heatmapStatus)
+        }
+      >
+        <WalletExposureEvidenceSummary
+          riskData={riskData}
+          walletExposureProfile={walletExposureProfile}
+          approvalRows={approvalRowsForExposure.length ? approvalRowsForExposure : approvalRows}
+          hasWallet={Boolean(walletSnapshot?.hasWallet)}
+        />
+      </EvidenceAccordion>
+
+      <EvidenceAccordion
         id="prime-evidence-wallet"
-        title="Wallet Exposure"
+        title="Wallet Exposure Bands"
         subtitle={
           walletSnapshot?.compact
             ? `Canonical index ${walletSnapshot.compact} — matches hero & verdict`
@@ -183,12 +234,25 @@ export default function PrimeEvidenceLayers({
       </EvidenceAccordion>
 
       <EvidenceAccordion
+        id="prime-evidence-liquidity"
+        title="Liquidity Intelligence"
+        subtitle="Depth, estimated market impact, venue diversity, and stability from indexed market data"
+        badge={
+          scannerReport?.liquidityIntelligence?.intelligenceScore != null
+            ? `Score ${scannerReport.liquidityIntelligence.intelligenceScore}`
+            : 'Liquidity'
+        }
+      >
+        <LiquidityIntelligenceCard scannerReport={scannerReport} variant="embed" />
+      </EvidenceAccordion>
+
+      <EvidenceAccordion
         id="prime-evidence-behavior"
         title="Behavior Intelligence"
         subtitle={behaviorSubtitle}
-        badge="Behavior"
+        badge={behaviorCoverage.badge}
       >
-        {birdeyeLive ? (
+        {birdeyeHasFeed ? (
           <OnChainBehaviorPanel profile={profile} variant="embed" />
         ) : (
           <>

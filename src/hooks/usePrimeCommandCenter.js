@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuthApi } from '@/hooks/useAuthApi.js'
 import { useWalletRiskIndex } from '@/hooks/useWalletRiskIndex.js'
 import { usePrimeWalletIntel } from '@/hooks/usePrimeWalletIntel.js'
@@ -12,8 +12,15 @@ import {
   writeLocalApprovalCache,
 } from '@/utils/approvalInventoryLocalCache.js'
 import { mapApprovalsResponseStatus } from '@/utils/approvalInventoryStatus.js'
+import {
+  APPROVAL_INVENTORY_TTL_MS,
+  fetchApprovalInventoryDeduped,
+  markApprovalInventoryFetched,
+} from '@/lib/approvalInventoryClient.js'
+import { buildWalletExposureIntel } from '@/lib/walletExposureIntelligence/buildWalletExposureIntel.js'
 
 const PRIME_APPROVAL_CHAIN_ID = 1
+const APPROVAL_FETCH_DEBOUNCE_MS = 400
 import {
   analysisCertaintyLevel,
   buildContextualFallbackFeed,
@@ -59,6 +66,7 @@ export function usePrimeCommandCenter(profile) {
 
   const { data: riskData, loading: riskLoading, refetch: refetchRisk } = useWalletRiskIndex(api, walletKey)
   const primeIntel = usePrimeWalletIntel(api, walletKey)
+  const { fetchApprovals, fetchThreatFeed } = primeIntel
   const { data: macroData, loading: macroLoading, error: macroError } = useExplorerMacroMarket()
 
   const [approvals, setApprovals] = useState(null)
@@ -68,15 +76,19 @@ export function usePrimeCommandCenter(profile) {
   const [analystPack, setAnalystPack] = useState(null)
   const [intelLoading, setIntelLoading] = useState(false)
 
+  const hasApprovalRowsRef = useRef(false)
+
   const applyApprovalsResponse = useCallback(
     (apRes, background, chainId = PRIME_APPROVAL_CHAIN_ID) => {
       const mapped = mapApprovalsResponseStatus(apRes.body, apRes.status)
 
       if (apRes.ok && Array.isArray(apRes.body?.rows)) {
         const body = { ...apRes.body, chainId: apRes.body.chainId ?? chainId }
+        hasApprovalRowsRef.current = true
         setApprovals(body)
         setApprovalInventoryFetchedAt(Date.now())
         setApprovalInventoryStatus(mapped === 'rate_limited' ? 'loaded' : mapped)
+        markApprovalInventoryFetched(walletKey, chainId)
         writeLocalApprovalCache(walletKey, body, chainId)
         return
       }
@@ -84,6 +96,7 @@ export function usePrimeCommandCenter(profile) {
         markLocalAlchemyBackoff(walletKey, chainId)
         const cached = readLocalApprovalCache(walletKey, chainId)
         if (cached?.body?.rows?.length) {
+          hasApprovalRowsRef.current = true
           setApprovals({
             ...cached.body,
             chainId: cached.body.chainId ?? chainId,
@@ -91,77 +104,102 @@ export function usePrimeCommandCenter(profile) {
             rateLimited: true,
           })
           setApprovalInventoryFetchedAt(cached.savedAt)
+          markApprovalInventoryFetched(walletKey, chainId, cached.savedAt)
           setApprovalInventoryStatus('loaded')
           return
         }
-        if (!background || !approvals?.rows?.length) {
+        if (!background || !hasApprovalRowsRef.current) {
           setApprovalInventoryStatus('rate_limited')
         }
         return
       }
       if (mapped === 'provider_missing' || mapped === 'auth_error' || mapped === 'rpc_error') {
-        if (!background || !approvals?.rows?.length) {
+        if (!background || !hasApprovalRowsRef.current) {
           setApprovalInventoryStatus(mapped)
         }
         return
       }
-      if (!background || !approvals?.rows?.length) {
+      if (!background || !hasApprovalRowsRef.current) {
         setApprovalInventoryStatus('rpc_error')
       }
     },
-    [walletKey, approvals?.rows?.length],
+    [walletKey],
   )
 
   const fetchApprovalInventory = useCallback(
-    async (background = false) => {
+    async ({ background = false, force = false } = {}) => {
       if (!walletKey) return
-      if (isLocalAlchemyBackoff(walletKey)) {
-        const cached = readLocalApprovalCache(walletKey)
+
+      if (isLocalAlchemyBackoff(walletKey, PRIME_APPROVAL_CHAIN_ID)) {
+        const cached = readLocalApprovalCache(walletKey, PRIME_APPROVAL_CHAIN_ID)
         if (cached?.body?.rows?.length) {
+          hasApprovalRowsRef.current = true
           setApprovals({
             ...cached.body,
             inventoryStale: true,
             rateLimited: true,
           })
           setApprovalInventoryFetchedAt(cached.savedAt)
+          markApprovalInventoryFetched(walletKey, PRIME_APPROVAL_CHAIN_ID, cached.savedAt)
           setApprovalInventoryStatus('loaded')
           return
         }
         if (!background) setApprovalInventoryStatus('rate_limited')
         return
       }
-      if (!background) setApprovalInventoryStatus('loading')
-      try {
-        const apRes = await primeIntel.fetchApprovals(PRIME_APPROVAL_CHAIN_ID)
-        applyApprovalsResponse(apRes, background, PRIME_APPROVAL_CHAIN_ID)
-      } catch {
-        if (!background || !approvals?.rows?.length) {
-          setApprovalInventoryStatus('error')
-        }
-      }
+
+      const result = await fetchApprovalInventoryDeduped(
+        walletKey,
+        PRIME_APPROVAL_CHAIN_ID,
+        async () => {
+          if (!background) setApprovalInventoryStatus('loading')
+          try {
+            const apRes = await fetchApprovals(PRIME_APPROVAL_CHAIN_ID)
+            applyApprovalsResponse(apRes, background, PRIME_APPROVAL_CHAIN_ID)
+            return apRes
+          } catch {
+            if (!background || !hasApprovalRowsRef.current) {
+              setApprovalInventoryStatus('error')
+            }
+            throw new Error('approval_inventory_fetch_failed')
+          }
+        },
+        { force, ttlMs: APPROVAL_INVENTORY_TTL_MS },
+      )
+
+      if (result?.skipped) return result
+      return result
     },
-    [walletKey, primeIntel, applyApprovalsResponse, approvals?.rows?.length],
+    [walletKey, fetchApprovals, applyApprovalsResponse],
+  )
+
+  const refreshApprovalInventory = useCallback(
+    () => fetchApprovalInventory({ background: false, force: true }),
+    [fetchApprovalInventory],
   )
 
   const loadIntelBundle = useCallback(async () => {
     if (!walletKey) return
     setIntelLoading(true)
     try {
-      const [apRes, thRes] = await Promise.all([
-        primeIntel.fetchApprovals(PRIME_APPROVAL_CHAIN_ID),
-        primeIntel.fetchThreatFeed(),
+      const [, thRes] = await Promise.all([
+        fetchApprovalInventory({ background: false, force: true }),
+        fetchThreatFeed(),
       ])
-      applyApprovalsResponse(apRes, false, PRIME_APPROVAL_CHAIN_ID)
       if (thRes.ok) setThreatItems(thRes.body?.items || [])
     } finally {
       setIntelLoading(false)
     }
-  }, [walletKey, primeIntel, applyApprovalsResponse])
+  }, [walletKey, fetchApprovalInventory, fetchThreatFeed])
 
   useEffect(() => {
-    if (!walletKey) return
+    if (!walletKey) {
+      hasApprovalRowsRef.current = false
+      return
+    }
     const cached = readLocalApprovalCache(walletKey, PRIME_APPROVAL_CHAIN_ID)
     if (cached?.body?.rows?.length) {
+      hasApprovalRowsRef.current = true
       setApprovals({
         ...cached.body,
         chainId: cached.body.chainId ?? PRIME_APPROVAL_CHAIN_ID,
@@ -169,27 +207,38 @@ export function usePrimeCommandCenter(profile) {
         rateLimited: isLocalAlchemyBackoff(walletKey, PRIME_APPROVAL_CHAIN_ID),
       })
       setApprovalInventoryFetchedAt(cached.savedAt)
+      if (!cached.stale) {
+        markApprovalInventoryFetched(walletKey, PRIME_APPROVAL_CHAIN_ID, cached.savedAt)
+      }
       setApprovalInventoryStatus('loaded')
     }
   }, [walletKey])
 
   useEffect(() => {
-    loadIntelBundle()
-  }, [loadIntelBundle])
+    if (!walletKey) return undefined
+    const timer = setTimeout(() => {
+      fetchApprovalInventory({ background: false, force: false })
+    }, APPROVAL_FETCH_DEBOUNCE_MS)
+    return () => clearTimeout(timer)
+  }, [walletKey, fetchApprovalInventory])
+
+  useEffect(() => {
+    if (!walletKey) return undefined
+    fetchThreatFeed()
+      .then((thRes) => {
+        if (thRes.ok) setThreatItems(thRes.body?.items || [])
+      })
+      .catch(() => {})
+  }, [walletKey, fetchThreatFeed])
 
   useEffect(() => {
     if (!walletKey) return undefined
     const timer = setInterval(() => {
       if (isLocalAlchemyBackoff(walletKey, PRIME_APPROVAL_CHAIN_ID)) return
-      if (
-        approvalInventoryFetchedAt &&
-        Date.now() - approvalInventoryFetchedAt > 90_000
-      ) {
-        fetchApprovalInventory(true)
-      }
-    }, 20_000)
+      fetchApprovalInventory({ background: true, force: false })
+    }, APPROVAL_INVENTORY_TTL_MS)
     return () => clearInterval(timer)
-  }, [walletKey, approvalInventoryFetchedAt, fetchApprovalInventory])
+  }, [walletKey, fetchApprovalInventory])
 
   const approvalInventory = useMemo(
     () => ({
@@ -659,6 +708,9 @@ export function usePrimeCommandCenter(profile) {
     return { ok, body }
   }, [primeIntel, refetchRisk, loadIntelBundle])
 
+  // Exposed for manual approval refresh from Prime surfaces
+  const refetchApprovalInventory = refreshApprovalInventory
+
   const operationalAdvisory = useMemo(() => {
     const top = riskDrivers[0]
     if (top?.severity === 'HIGH') {
@@ -684,6 +736,15 @@ export function usePrimeCommandCenter(profile) {
 
   const deltaDisplay =
     scoreDelta === 0 ? 'UNCHANGED' : `${scoreDelta >= 0 ? '+' : ''}${scoreDelta}`
+
+  const walletExposureProfile = useMemo(
+    () =>
+      buildWalletExposureIntel(riskData, {
+        approvalRows: approvals?.rows || [],
+        hasWallet,
+      }),
+    [riskData, approvals?.rows, hasWallet],
+  )
 
   return {
     walletKey,
@@ -719,6 +780,8 @@ export function usePrimeCommandCenter(profile) {
     lastInteractedContract,
     approvals,
     approvalInventory,
+    refetchApprovalInventory,
+    walletExposureProfile,
     api,
     isAuthReady: Boolean(walletKey),
   }

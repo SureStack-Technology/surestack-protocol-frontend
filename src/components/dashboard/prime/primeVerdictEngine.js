@@ -293,12 +293,20 @@ export function resolveTerminalConfidence({
   birdeyeLive,
   riskFromApi,
   providersPending,
+  isSolanaToken = false,
+  solanaMintResolved = false,
+  scannerReport = null,
 }) {
   if (modeId === 'token') {
+    if (isSolanaToken) {
+      if (scannerReport?.success === true || scannerSignals?.hasScan) return 'Scanner-backed'
+      if (!solanaMintResolved) return 'Partial provider coverage'
+      return 'Mint proof available — awaiting scan'
+    }
     if (tokenResolution?.confirmationRequired && !tokenContractConfirmed) {
       return 'Preliminary — confirm contract'
     }
-    if (!tokenContractConfirmed) return 'Scenario / provider-prepared'
+    if (!tokenContractConfirmed) return 'Partial provider coverage'
     if (scannerSignals?.hasScan) return 'Scanner-backed'
     return 'Contract proof available — awaiting scan'
   }
@@ -338,10 +346,18 @@ export function resolveScannerValidationLabel({
   tokenContractConfirmed,
   scannerSignals,
   presentation,
+  isSolanaToken = false,
+  solanaMintResolved = false,
+  scannerReport = null,
 }) {
   if (modeId === 'token') {
+    if (isSolanaToken) {
+      if (scannerReport?.success === true || scannerSignals?.hasScan) return 'Complete'
+      if (!solanaMintResolved) return 'Coverage pending'
+      return 'Mint scan available'
+    }
     if (tokenResolution?.confirmationRequired && !tokenContractConfirmed) return 'Confirm contract'
-    if (!tokenContractConfirmed) return 'Scenario only'
+    if (!tokenContractConfirmed) return 'Coverage pending'
     if (scannerSignals?.hasScan) return 'Complete'
     return 'Contract scan available'
   }
@@ -383,6 +399,18 @@ export function resolveVerdictPresentation({
 }
 
 export function buildRecommendation(report) {
+  if (report.modeId === 'token' && report.isSolanaToken) {
+    if (!report.solanaMintResolved) {
+      return 'Solana mint unresolved — paste a valid SPL mint or use a known symbol (BONK, WIF, JUP).'
+    }
+    if (
+      report.scannerSignals?.hasScan ||
+      report.scannerReport?.success === true
+    ) {
+      return 'Review liquidity concentration, holder distribution, and narrative momentum before interaction.'
+    }
+    return 'Run Solana Token Scan for liquidity, holder concentration, authority, and pool-risk evidence before exposure decisions.'
+  }
   if (
     report.modeId === 'token' &&
     report.narrativeCategory === 'meme' &&
@@ -398,13 +426,16 @@ export function buildRecommendation(report) {
   if (report.modeId === 'token' && report.tokenContractConfirmed && !report.scannerSignals?.hasScan) {
     return 'Run Contract Analyzer on the confirmed token contract for scanner-backed trust proof before exposure decisions.'
   }
-  if (report.modeId === 'token' && !report.tokenContractConfirmed) {
+  if (report.modeId === 'token' && !report.tokenContractConfirmed && !report.isSolanaToken) {
     return 'Contract proof unavailable until the token contract is resolved. Use scenario narrative only — do not treat as bytecode proof.'
   }
   if (report.modeId === 'protocol' && !report.scannerSignals?.hasScan) {
     return 'Confirm the official protocol URL, then run Contract Analyzer on recommended router or spender contracts before signing.'
   }
   if (report.isPreliminary) {
+    if (report.isSolanaToken) {
+      return 'Run Solana Token Scan before relying on this verdict for signing or approvals.'
+    }
     return 'Run Deep Contract Scan in Contract Analyzer before relying on this verdict for signing or approvals.'
   }
   if (report.scannerMostlyClean || (report.scannerSignals?.mostlyClean && report.providersPending)) {

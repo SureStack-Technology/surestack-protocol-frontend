@@ -11,11 +11,17 @@ import {
   fetchOnChainContractSignals,
 } from './contractIntelProviders.js'
 import { applyConfidenceCalibration } from '../scannerConfidence/scannerConfidenceEngine.js'
+import { attachLiquidityIntelligence } from '../liquidityIntelligence/attachLiquidityIntelligence.js'
+import { attachExecutiveIntelligence } from '../executiveIntelligence/attachExecutiveIntelligence.js'
 import { scoreFromSignals } from './contractIntelScoring.js'
 
 function finalizeEvmReport(payload) {
-  if (payload?.trustScore == null) return payload
-  return applyConfidenceCalibration(payload, 'evm')
+  let report = payload
+  if (payload?.trustScore != null) {
+    report = applyConfidenceCalibration(payload, 'evm')
+  }
+  report = attachLiquidityIntelligence(report)
+  return attachExecutiveIntelligence(report)
 }
 
 function buildAlphaExtensions(core, tier) {

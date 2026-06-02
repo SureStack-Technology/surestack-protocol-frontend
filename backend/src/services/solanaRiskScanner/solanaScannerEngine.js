@@ -1,7 +1,14 @@
 import { applyConfidenceCalibration } from '../scannerConfidence/scannerConfidenceEngine.js'
+import { applySolanaNarrativeRiskLayers } from './solanaMemeRiskCalibration.js'
+import { attachLiquidityIntelligence } from '../liquidityIntelligence/attachLiquidityIntelligence.js'
+import { attachExecutiveIntelligence } from '../executiveIntelligence/attachExecutiveIntelligence.js'
 import { analyzeSolanaTokenConcentration } from '../tokenConcentration/solanaTokenConcentration.js'
-import { mergeTokenConcentrationIntoCore } from '../tokenConcentration/tokenConcentrationScoring.js'
-import { resolveSolanaArchetype } from './solanaArchetypes.js'
+import { mergeSolanaTokenConcentrationIntoCore } from './solanaRiskMerge.js'
+import {
+  isMajorSolanaAsset,
+  normalizeSolanaMintAddress,
+  resolveSolanaArchetype,
+} from './solanaArchetypes.js'
 import { hasSolanaMarketIntel, logSolanaProvider } from './solanaProviderLog.js'
 import {
   fetchRecentSignatureCount,
@@ -53,9 +60,9 @@ function buildMarketOnlyMintReport(address, concentration, opts = {}) {
       'LIMITED MARKET INTELLIGENCE. No full on-chain mint data available from current RPC sources. Market signals from DexScreener and Jupiter where available.',
   }
 
-  core = mergeTokenConcentrationIntoCore(core, concentration, {
-    isSolana: true,
+  core = mergeSolanaTokenConcentrationIntoCore(core, concentration, {
     isCanonical: Boolean(archetype?.kind === 'canonical_mint'),
+    isMajorAsset: isMajorSolanaAsset(archetype) || Boolean(concentration?.isMajorAsset),
   })
 
   if (!core.verdictActionFrame) {
@@ -101,12 +108,15 @@ async function tryMarketOnlyMintScan(address) {
 
 /**
  * @param {string} address
+ * @param {{ symbol?: string | null }} [options]
  */
-export async function analyzeSolanaRisk(address) {
-  const rpcResult = await tryFetchSolanaAccountParsed(address)
+export async function analyzeSolanaRisk(address, options = {}) {
+  const normalizedAddress = normalizeSolanaMintAddress(address)
+  const requestedSymbol = options.symbol ? String(options.symbol).trim().toUpperCase() : null
+  const rpcResult = await tryFetchSolanaAccountParsed(normalizedAddress)
 
   logSolanaProvider({
-    mint: address,
+    mint: normalizedAddress,
     provider: 'Solana RPC',
     status: rpcResult.ok ? (rpcResult.data ? 'ok' : 'empty') : 'error',
     error_code: rpcResult.ok ? null : rpcResult.error_code,
@@ -122,9 +132,9 @@ export async function analyzeSolanaRisk(address) {
   const rpcUnavailable = !rpcResult.ok
 
   if (!account) {
-    const marketCore = await tryMarketOnlyMintScan(address)
+    const marketCore = await tryMarketOnlyMintScan(normalizedAddress)
     if (marketCore) {
-      return wrapSuccess(marketCore)
+      return finalizeScan(marketCore, requestedSymbol)
     }
 
     if (!rpcUnavailable) {
@@ -143,21 +153,21 @@ export async function analyzeSolanaRisk(address) {
     }
   }
 
-  const archetype = resolveSolanaArchetype(address)
+  const archetype = resolveSolanaArchetype(normalizedAddress)
   const owner = account.owner
   const parsed = account.data?.parsed
   const parsedType = parsed?.type
   const info = parsed?.info || {}
 
-  const signatureCount = await fetchRecentSignatureCount(address, 30)
+  const signatureCount = await fetchRecentSignatureCount(normalizedAddress, 30)
 
   if (
     (owner === TOKEN_PROGRAM_ID || owner === TOKEN_2022_PROGRAM_ID) &&
     parsedType === 'mint'
   ) {
-    const largestAccounts = await fetchTokenLargestAccounts(address)
+    const largestAccounts = await fetchTokenLargestAccounts(normalizedAddress)
     let core = scoreSolanaTokenMint({
-      address,
+      address: normalizedAddress,
       mint: {
         mintAuthority: info.mintAuthority ?? null,
         freezeAuthority: info.freezeAuthority ?? null,
@@ -166,16 +176,17 @@ export async function analyzeSolanaRisk(address) {
         tokenProgram: owner,
       },
       largestAccounts,
-      archetype: archetype?.kind === 'canonical_mint' ? archetype : null,
+      archetype:
+        archetype?.kind === 'canonical_mint' || archetype?.majorAsset ? archetype : null,
       metadataPresent: Boolean(archetype) || Boolean(info.name || info.symbol),
       signatureCount,
     })
 
     try {
-      const concentration = await analyzeSolanaTokenConcentration(address, largestAccounts)
-      core = mergeTokenConcentrationIntoCore(core, concentration, {
-        isSolana: true,
+      const concentration = await analyzeSolanaTokenConcentration(normalizedAddress, largestAccounts)
+      core = mergeSolanaTokenConcentrationIntoCore(core, concentration, {
         isCanonical: Boolean(archetype?.kind === 'canonical_mint'),
+        isMajorAsset: isMajorSolanaAsset(archetype) || Boolean(concentration?.isMajorAsset),
       })
     } catch (e) {
       console.warn('[solanaScanner] token concentration skipped', e?.message || e)
@@ -198,7 +209,7 @@ export async function analyzeSolanaRisk(address) {
       ]
     }
 
-    return wrapSuccess(core)
+    return finalizeScan(core, requestedSymbol)
   }
 
   if (account.executable) {
@@ -259,13 +270,30 @@ export async function analyzeSolanaRisk(address) {
   return wrapSuccess(core)
 }
 
+function attachRequestedSymbol(core, symbol) {
+  if (!core || !symbol) return core
+  return { ...core, requestedSymbol: symbol }
+}
+
+function finalizeScan(core, requestedSymbol) {
+  return wrapSuccess(attachRequestedSymbol(core, requestedSymbol))
+}
+
 function wrapSuccess(core) {
   const calibrated =
-    core?.trustScore != null ? applyConfidenceCalibration({ ...core, chain: 'solana' }, 'solana') : core
+    core?.trustScore != null
+      ? applyConfidenceCalibration({ ...core, chain: 'solana' }, 'solana')
+      : core
+  const layered =
+    calibrated?.trustScore != null ? applySolanaNarrativeRiskLayers(calibrated) : calibrated
+  const withLiquidity = attachLiquidityIntelligence(layered)
+  const withExecutive = attachExecutiveIntelligence(withLiquidity, {
+    symbol: withLiquidity?.requestedSymbol,
+  })
   return {
     success: true,
     product: 'surestack_solana_risk_scanner',
     analyzedAt: new Date().toISOString(),
-    ...calibrated,
+    ...withExecutive,
   }
 }

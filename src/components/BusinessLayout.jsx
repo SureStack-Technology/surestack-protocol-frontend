@@ -20,6 +20,7 @@ import NeuroGridBackground from '@components/visuals/NeuroGridBackground'
 import CanvasBackground from '@components/visuals/CanvasBackground'
 import DataFlowOverlay from '@components/visuals/DataFlowOverlay'
 import RiskTicker from '@components/ui/RiskTicker'
+import { PrimeIntelligenceHeroProvider } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
 import { prefetchBusinessAll } from '@shared/prefetchBusiness'
 import { useBusinessRole } from '@shared/hooks/useBusinessRole'
 import { withTrace } from '../diagnostics/withTrace'
@@ -102,7 +103,9 @@ export default function BusinessLayout() {
       <CanvasBackground />
       <DataFlowOverlay />
       <div className="fixed inset-x-0 top-0 h-16 z-40">
-        <RiskTicker />
+        <PrimeIntelligenceHeroProvider>
+          <RiskTicker />
+        </PrimeIntelligenceHeroProvider>
       </div>
       <div className="relative z-20 flex min-h-screen">
         <motion.aside

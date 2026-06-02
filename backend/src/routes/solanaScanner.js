@@ -1,19 +1,31 @@
 import { Router } from 'express'
-import { makeRequireClerkAuth } from '../middleware/clerkAuth.js'
 import { loadAuthUser } from '../services/authUser.js'
+import { makePrimeAuthWithDevBypass, loadPrimeUserForRequest } from '../middleware/primeAuthDevBypass.js'
 import { analyzeSolanaRisk } from '../services/solanaRiskScanner/solanaScannerEngine.js'
 import { normalizeSolanaAddress } from '../services/solanaRiskScanner/solanaTypes.js'
 
 const router = Router()
-const requirePrimeAuth = makeRequireClerkAuth({ unauthorizedError: 'prime_intel_auth_missing' })
+const requirePrimeAuth = makePrimeAuthWithDevBypass({ unauthorizedError: 'prime_intel_auth_missing' })
 
 function hasPlusIntelligence(tier) {
   return tier === 'INTELLIGENCE_PRO' || tier === 'STRATEGIC_ACCESS'
 }
 
+function resolveScanAddress(body) {
+  return normalizeSolanaAddress(body?.address || body?.target || body?.mint)
+}
+
 router.post('/analyze', requirePrimeAuth, async (req, res) => {
+  console.log('[solanaScanner]', {
+    body: req.body,
+    devBypass: Boolean(req.devPrimeAuthBypass),
+    hasRpc: Boolean(process.env.SOLANA_RPC_URL || process.env.HELIUS_API_KEY),
+    hasBirdeye: Boolean(process.env.BIRDEYE_API_KEY && process.env.BIRDEYE_API_KEY !== 'real_key_here'),
+    hasLunarCrush: Boolean(process.env.LUNARCRUSH_API_KEY),
+  })
+
   try {
-    const user = await loadAuthUser(req.clerkUserId)
+    const user = await loadPrimeUserForRequest(req, loadAuthUser)
     if (!user) return res.status(404).json({ success: false, error: 'user_not_found' })
 
     if (!hasPlusIntelligence(user.membershipTier)) {
@@ -24,7 +36,7 @@ router.post('/analyze', requirePrimeAuth, async (req, res) => {
       })
     }
 
-    const address = normalizeSolanaAddress(req.body?.address)
+    const address = resolveScanAddress(req.body)
     if (!address) {
       return res.status(400).json({
         success: false,
@@ -33,7 +45,26 @@ router.post('/analyze', requirePrimeAuth, async (req, res) => {
       })
     }
 
-    const report = await analyzeSolanaRisk(address)
+    const symbol = req.body?.symbol ? String(req.body.symbol).trim().toUpperCase() : null
+    console.log('[solanaScanner] analyze start', { address, symbol })
+
+    const report = await analyzeSolanaRisk(address, { symbol })
+
+    console.log('[solanaScanner] analyze done', {
+      address,
+      success: report?.success,
+      error: report?.error,
+      trustScore: report?.trustScore,
+      compositeTrustScore: report?.compositeTrustScore,
+      technicalTrustScore: report?.technicalTrustScore,
+      scannerVerdict: report?.scannerVerdict,
+      trustBand: report?.trustBand,
+      hasTokenConcentration: Boolean(report?.tokenConcentration?.available),
+      jupiter: report?.tokenConcentration?.jupiterClassification,
+      marketCap: report?.tokenConcentration?.marketCapUsd,
+      liquidity: report?.tokenConcentration?.liquidityUsd,
+    })
+
     if (!report.success) {
       const status =
         report.error === 'all_providers_failed'

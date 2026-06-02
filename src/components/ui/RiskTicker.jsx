@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useEthUsdFeed } from "@shared/hooks/useEthUsdFeed";
 import { useChainlinkOracle } from "@shared/hooks/useChainlinkOracle";
+import { usePrimeIntelligenceHero } from "@/contexts/PrimeIntelligenceHeroContext.jsx";
 
 export default function RiskTicker() {
   const { price, updatedAt } = useEthUsdFeed();
   const oracle = useChainlinkOracle();
+  const { heroMetrics } = usePrimeIntelligenceHero();
 
   const [volatility, setVolatility] = useState(0);
   const [riskScore, setRiskScore] = useState(0);
@@ -13,6 +15,12 @@ export default function RiskTicker() {
   const [prevPrice, setPrevPrice] = useState(null);
 
   useEffect(() => {
+    if (heroMetrics?.active) {
+      setVolatility(heroMetrics.volatility);
+      setRiskScore(heroMetrics.riskScore);
+      return;
+    }
+
     let timer;
     const vol = Math.max(0, Number(oracle?.volatility ?? 0));
 
@@ -43,7 +51,7 @@ export default function RiskTicker() {
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [oracle?.volatility, price, prevPrice]);
+  }, [heroMetrics, oracle?.volatility, price, prevPrice]);
 
   useEffect(() => {
     if (price && prevPrice !== null) {
@@ -93,6 +101,11 @@ export default function RiskTicker() {
               >
                 {riskScore}
               </span>
+              {heroMetrics?.riskBand ? (
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                  {heroMetrics.riskBand}
+                </span>
+              ) : null}
             </div>
 
             <div className="flex items-center gap-4">

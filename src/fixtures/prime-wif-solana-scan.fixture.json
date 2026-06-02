@@ -1,0 +1,27 @@
+{
+  "symbol": "WIF",
+  "chain": "solana",
+  "mint": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+  "analysisModeId": "solana_token",
+  "scannerRoute": "POST /api/prime/solana/analyze",
+  "scannerPayload": {
+    "address": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+    "mint": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+    "target": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+    "symbol": "WIF"
+  },
+  "expectedUi": {
+    "mintScanAvailable": true,
+    "fallbackBanner": false,
+    "contractProofCopy": "Solana mint resolved — run Solana Token Scan for scanner-backed mint, liquidity, holder, and routing evidence.",
+    "panelsAfterScan": [
+      "Solana Token Intelligence",
+      "Liquidity Intelligence",
+      "Executive Intelligence"
+    ],
+    "backendLogMarkers": [
+      "[solanaScanner] analyze start",
+      "[solanaScanner] analyze done success true"
+    ]
+  }
+}

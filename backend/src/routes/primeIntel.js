@@ -21,6 +21,7 @@ import {
   PRIME_SCENARIO_IDS,
   simulateScenarioAgainstSignals,
 } from '../services/prime/scenarioIntelligenceEngine.js'
+import { classifyIntelligenceTarget } from '../services/prime/intelligenceTargetClassifier.js'
 
 const router = Router()
 const requirePrimeAuth = makeRequireClerkAuth({ unauthorizedError: 'prime_intel_auth_missing' })
@@ -278,6 +279,8 @@ router.get('/approvals/inventory', requirePrimeAuth, async (req, res) => {
       durationMs: Date.now() - started,
       rowCount: inv.rows?.length ?? 0,
       cacheHit: inv.cacheHit,
+      skippedFetch: inv.skippedFetch,
+      source: inv.source,
     })
 
     if (inv.rateLimited && !inv.rows?.length) {
@@ -483,6 +486,24 @@ router.post('/simulator/run', requirePrimeAuth, async (req, res) => {
   } catch (e) {
     console.error('[primeIntel] simulator failed', e?.message || e)
     return res.status(500).json({ success: false, error: 'prime_simulator_failed' })
+  }
+})
+
+router.post('/intelligence/classify', requirePrimeAuth, async (req, res) => {
+  try {
+    const input = String(req.body?.input ?? req.body?.query ?? '').trim()
+    if (!input) {
+      return res.status(400).json({
+        success: false,
+        error: 'input_required',
+        message: 'Provide a wallet, contract, token, or protocol target to classify.',
+      })
+    }
+    const classification = await classifyIntelligenceTarget(input)
+    return res.json({ success: true, classification })
+  } catch (e) {
+    console.error('[primeIntel] classify failed', e?.message || e)
+    return res.status(500).json({ success: false, error: 'classify_failed' })
   }
 })
 

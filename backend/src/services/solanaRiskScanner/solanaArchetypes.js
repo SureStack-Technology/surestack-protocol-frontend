@@ -73,12 +73,82 @@ const KNOWN = {
     scoreCeiling: 93,
     narrativeHint: 'Established Jupiter routing program.',
   },
+  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263: {
+    id: 'bonk',
+    label: 'Bonk (BONK)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 68,
+    scoreCeiling: 85,
+    narrativeHint:
+      'Major Solana meme asset with deep DEX liquidity — review holder concentration and narrative velocity before sizing exposure.',
+  },
+  EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm: {
+    id: 'wif',
+    label: 'dogwifhat (WIF)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 68,
+    scoreCeiling: 85,
+    narrativeHint: 'Major Solana meme asset — verify liquidity depth and holder distribution before exposure.',
+  },
+  JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN: {
+    id: 'jup_token',
+    label: 'Jupiter (JUP)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 72,
+    scoreCeiling: 94,
+    narrativeHint: 'Established Solana DeFi governance token with broad market participation.',
+  },
+  HZ1JovNiVvGrGNiiYvEozk1uhoiQphBBm6YV8kF9aM: {
+    id: 'pyth',
+    label: 'Pyth Network (PYTH)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 72,
+    scoreCeiling: 94,
+    narrativeHint: 'Oracle network token with institutional usage on Solana.',
+  },
+  jtojtomepa8beP8AuQc6eXt5GriYm485bACcj7DdG5a: {
+    id: 'jto',
+    label: 'Jito (JTO)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 70,
+    scoreCeiling: 93,
+    narrativeHint: 'Liquid staking / MEV infrastructure token on Solana.',
+  },
+  '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': {
+    id: 'ray',
+    label: 'Raydium (RAY)',
+    kind: 'major_asset',
+    majorAsset: true,
+    scoreFloor: 72,
+    scoreCeiling: 94,
+    narrativeHint: 'Core Solana DEX liquidity token with long market history.',
+  },
+}
+
+/** Legacy typo mints — redirect to canonical BONK mint (Ca6xjnB7 not Ca6Y7) */
+const MINT_ALIASES = {
+  DezXAZ8z7PnrnRJjz3wXBoRgixCa6Y7YaB1pPB263: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
+  DezXAZ8z7PnrnRJjz3wXBoRgixCa6Y7YaB1pPB2637: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',
 }
 
 /**
  * @param {string} address
  * @returns {SolanaArchetype | null}
  */
+export function normalizeSolanaMintAddress(address) {
+  return MINT_ALIASES[address] || address
+}
+
 export function resolveSolanaArchetype(address) {
-  return KNOWN[address] || null
+  const key = normalizeSolanaMintAddress(address)
+  return KNOWN[key] || null
+}
+
+export function isMajorSolanaAsset(archetype) {
+  return Boolean(archetype?.majorAsset || archetype?.kind === 'major_asset')
 }

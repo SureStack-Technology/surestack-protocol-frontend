@@ -6,21 +6,23 @@
 **Auditor**: Senior Blockchain Frontend Engineer  
 **Status**: ⚠️ **Business Frontend requires updates in specific components**
 
+> **2026 documentation note:** SureStack is **AI-powered digital asset risk intelligence and incident support**. This audit uses legacy “policy / claim / underwriting” wording in narrative; map to **protection program**, **incident support**, and **institutional risk review** unless referring to a file or RBAC key (e.g. `UnderwritingPanel.jsx`, `Underwriter`).
+
 ---
 
 ## 📊 Capability Report Table
 
 | Business Function | Component | Status | Implementation | Notes |
 |------------------|-----------|--------|----------------|-------|
-| **Policy Management** | `PolicyOps.jsx` | ✅ Complete | Full CRUD operations, premium adjustment | Uses `usePolicyManager` hook, RBAC support |
+| **Protection program operations** | `PolicyOps.jsx` | ✅ Complete | Full CRUD operations, program contribution adjustment | Uses `usePolicyManager` hook, RBAC support |
 | **Risk Pool Monitoring** | `RiskPoolManager.jsx` | ✅ Complete | Pool analytics, charts, validator tracking | Uses `useStaking` hook, simulation mode |
-| **Underwriting Analytics** | `UnderwritingPanel.jsx` | ✅ Complete | DAO proposal tracking, voting trends | Uses `useProposals` hook, charts |
+| **Institutional risk review (UI)** | `UnderwritingPanel.jsx` | ✅ Complete | DAO proposal tracking, voting trends | Uses `useProposals` hook, charts |
 | **DAO Governance** | `BusinessGovernancePanel.jsx` | ✅ Complete | Proposal creation, voting, history | Uses shared governance hooks |
 | **Governance Audit** | `GovernanceAudit.jsx` | ✅ Complete | Executed proposals, governance params | Full audit trail |
 | **Oracle Data Visibility** | `BusinessDashboard.jsx` | ❌ Missing | No Oracle feed integration | User dashboard has `OracleFeedPanel` |
 | **Live Metrics Dashboard** | `BusinessDashboard.jsx` | ⚠️ Partial | Basic stats only | Missing `useLiveDashboardMetrics` hook |
 | **Admin Controls** | `PolicyOps.jsx` | ✅ Complete | Premium adjustment, RBAC | Role-based permissions |
-| **Claim Management** | N/A | ⚠️ Missing | No dedicated business claim panel | User has `ClaimPanel` |
+| **Incident support console** | N/A | ⚠️ Missing | No dedicated business incident-support panel | User has `ClaimPanel` |
 | **Validator Management** | N/A | ⚠️ Missing | No business validator console | User has `ValidatorConsole` |
 
 ---
@@ -60,7 +62,7 @@
    - ⚠️ **Static Stats**: Business dashboard only shows static placeholder values
 
 2. **Missing Business-Specific Components**:
-   - ⚠️ **Claim Management Panel**: No business claim approval/rejection interface
+   - ⚠️ **Business incident support panel**: No business-side approval/rejection interface for **incident requests**
    - ⚠️ **Validator Management**: No business validator console (different from user view)
 
 3. **Layout Differences**:
@@ -76,14 +78,14 @@
 **Current Implementation:**
 ```jsx
 - Uses: useWeb3, useContracts
-- Shows: Static stats (Total Policies, Revenue, Claims, Validators)
+- Shows: Static stats (Total programs, Revenue, Incident support volume, Validators)
 - Missing: Live metrics, Oracle feed, Risk analytics
 ```
 
 **User Dashboard Comparison:**
 ```jsx
 - Uses: useLiveDashboardMetrics, OracleFeedPanel, RiskRadar
-- Shows: Live coverage, staked amounts, treasury, oracle price, risk indices
+   - Shows: Live **protection limit** context, staked amounts, treasury, oracle price, risk indices
 - Has: Real-time updates, charts, visualizations
 ```
 
@@ -104,8 +106,8 @@
 - Properly uses `useContracts` hook
 
 **Comparison with User PolicyPanel:**
-- User: Policy creation form, user policies list
-- Business: Policy management, premium adjustment, pool analytics
+- User: Protection program creation form, member program list
+- Business: Protection program operations, contribution adjustment, pool analytics
 - ✅ **Properly separated by role**
 
 ### 3. RiskPoolManager.jsx
@@ -239,10 +241,10 @@ const { policyManager, rewardPool, daoGovernance, ... } = useContracts()
    - **Impact**: Less immersive UI experience
    - **Fix**: Add missing background components
 
-5. **Missing Business Claim Management**
-   - **Issue**: No dedicated business claim approval/rejection panel
-   - **Impact**: Business users can't manage claims
-   - **Fix**: Create `BusinessClaimPanel` component
+5. **Missing business incident support workflow**
+   - **Issue**: No dedicated business **incident request** review console
+   - **Impact**: Business users can't manage **incident support** queues from this audit baseline
+   - **Fix**: Add a business incident-support surface (see `BusinessClaimPanel.jsx` roadmap)
 
 ### Low Priority Issues
 
@@ -291,14 +293,14 @@ import RiskTicker from './ui/RiskTicker'
 <RiskTicker />
 ```
 
-### Priority 3: Create BusinessClaimPanel.jsx
+### Priority 3: Create BusinessClaimPanel.jsx (incident support)
 
 ```jsx
-// New component for business claim management
-- Claim approval/rejection interface
-- Claim analytics and metrics
-- Integration with PolicyManager contract
-- RBAC for claim operations
+// New component for business incident support review
+- **Incident request** review / escalation interface
+- Incident support analytics and metrics
+- Integration with PolicyManager contract (on-chain name)
+- RBAC for incident-support operations
 ```
 
 ### Priority 4: Create BusinessValidatorConsole.jsx
@@ -323,7 +325,7 @@ import RiskTicker from './ui/RiskTicker'
 - ✅ **UI/UX Consistency**: Properly differentiated themes
 - ⚠️ **BusinessDashboard**: Missing live metrics, Oracle feed, visualizations
 - ⚠️ **BusinessLayout**: Missing some background components
-- ⚠️ **Missing Components**: Business claim management, validator console
+- ⚠️ **Missing Components**: Business **incident support** console, validator console
 
 **Overall Status:** 
 - **Architecture**: ✅ Excellent
@@ -333,7 +335,7 @@ import RiskTicker from './ui/RiskTicker'
 **Recommended Actions:**
 1. Update `BusinessDashboard.jsx` with live metrics and Oracle feed
 2. Enhance `BusinessLayout.jsx` with missing background components
-3. Create `BusinessClaimPanel.jsx` for claim management
+3. Create `BusinessClaimPanel.jsx` for **business incident support** workflows
 4. Create `BusinessValidatorConsole.jsx` for validator oversight
 
 ---

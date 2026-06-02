@@ -112,16 +112,41 @@ export function buildSolanaRiskScanView(report) {
   }
 
   if (addressType === 'SPL_TOKEN_MINT') {
-    const verdict = verdictFromTrustBand(report.trustBand) || 'MODERATE RISK'
+    const verdict =
+      report.scannerVerdict || verdictFromTrustBand(report.trustBand) || 'MODERATE RISK'
     const tokenIntel = buildTokenConcentrationIntelligenceRows(report)
+    const riskLayerRows = []
+    if (report.technicalTrustScore != null) {
+      riskLayerRows.push({
+        label: 'Technical trust',
+        value: `${report.technicalTrustLabel || '—'} (${report.technicalTrustScore}/100)`,
+      })
+    }
+    if (report.narrativeRiskScore != null) {
+      riskLayerRows.push({
+        label: 'Narrative risk',
+        value: `${report.narrativeRiskLabel || '—'} (${report.narrativeRiskScore}/100)`,
+      })
+    }
+    if (report.compositeTrustScore != null) {
+      riskLayerRows.push({
+        label: 'Composite trust',
+        value: `${report.compositeRiskBand || report.riskLayers?.composite || '—'} (${report.compositeTrustScore}/100)`,
+      })
+    }
     return {
       chain: 'solana',
       verdict,
       verdictTone: verdictToneClass(verdict),
-      verdictSubtitle: verdictSubtitleFromReport(report),
-      trustScore: report.trustScore,
+      verdictSubtitle: report.scannerVerdictDetail || verdictSubtitleFromReport(report),
+      trustScore: report.compositeTrustScore ?? report.trustScore,
+      technicalTrustScore: report.technicalTrustScore ?? null,
+      narrativeRiskScore: report.narrativeRiskScore ?? null,
       confidence: buildConfidenceView(report),
-      recommendation: recommendationFromTrustBand(report.trustBand, true),
+      recommendation:
+        report.scannerVerdict === 'MODERATE WATCH'
+          ? 'PROCEED WITH CAUTION'
+          : recommendationFromTrustBand(report.trustBand, true),
       narrative: report.interpretationSummary,
       findings: report.findings || [],
       intelligence: [
@@ -136,6 +161,7 @@ export function buildSolanaRiskScanView(report) {
           value: report.metadataPresent ? 'Metadata signals present' : 'Metadata not resolved on RPC',
         },
         ...tokenIntel,
+        ...riskLayerRows,
         { label: 'Token type', value: report.archetypeLabel || 'SPL token mint' },
         {
           label: 'Behavioral heuristics',

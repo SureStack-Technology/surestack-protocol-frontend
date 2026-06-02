@@ -40,18 +40,30 @@ export function useUniversalRiskScanner(api) {
   const [solanaError, setSolanaError] = useState(null)
 
   const analyzeSolana = useCallback(
-    async (address) => {
+    async (address, symbol = null) => {
       if (!api) {
         const msg = 'Session verification required. Refresh your Prime workspace and try again.'
+        setSolanaError(msg)
+        return { ok: false, error: msg }
+      }
+      const mint = String(address || '').trim()
+      if (!mint) {
+        const msg = 'Solana mint address is required.'
         setSolanaError(msg)
         return { ok: false, error: msg }
       }
       setSolanaBusy(true)
       setSolanaError(null)
       try {
+        const payload = {
+          address: mint,
+          mint,
+          target: mint,
+          ...(symbol ? { symbol: String(symbol).trim().toUpperCase() } : {}),
+        }
         const r = await api('/api/prime/solana/analyze', {
           method: 'POST',
-          body: { address },
+          body: payload,
         })
         const j = await readJson(r)
         if (!r.ok) {
@@ -75,11 +87,17 @@ export function useUniversalRiskScanner(api) {
   )
 
   const analyze = useCallback(
-    async ({ address, chainId = 1, relatedAddresses = [], approvalInventory = null }) => {
+    async ({
+      address,
+      chainId = 1,
+      symbol = null,
+      relatedAddresses = [],
+      approvalInventory = null,
+    }) => {
       if (chainId === SOLANA_CHAIN_ID) {
         setSolanaReport(null)
         evm.setReport(null)
-        return analyzeSolana(address)
+        return analyzeSolana(address, symbol)
       }
       setSolanaReport(null)
       setSolanaError(null)

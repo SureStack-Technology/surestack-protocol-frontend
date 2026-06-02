@@ -78,7 +78,7 @@ export default function NarrativePulseCard({ profile }) {
           ) : null}
           {status !== 'live' ? (
             <p className="text-[11px] text-violet-300/85 mt-3 font-mono leading-relaxed">
-              Prime Scenario Showcase available in Social Intelligence — simulated narratives for demo review.
+              Prime Narrative Intelligence Model available in Social Intelligence — indexed market observations for analyst review.
             </p>
           ) : null}
         </>

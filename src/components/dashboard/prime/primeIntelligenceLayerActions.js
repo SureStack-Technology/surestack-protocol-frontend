@@ -4,6 +4,7 @@ export const LAYER_ACTION_TYPES = {
   BEHAVIOR: 'behavior',
   CONTRACT: 'contract',
   WALLET: 'wallet',
+  LIQUIDITY: 'liquidity',
 }
 
 export const MODULE_LABELS = {
@@ -11,6 +12,7 @@ export const MODULE_LABELS = {
   behavior: 'Behavior',
   contract: 'Contract Trust',
   wallet: 'Wallet Exposure',
+  liquidity: 'Liquidity Intelligence',
 }
 
 const EXAMPLE_CONTRACT = '0xf280b16ef293d8e534e370794ef26bf312694126'
@@ -147,6 +149,17 @@ export function resolveLayerLaunch(layerId, ctx = {}) {
       return contractPrefill(ctx.query)
     case LAYER_ACTION_TYPES.WALLET:
       return walletPrefill(ctx.profile)
+    case LAYER_ACTION_TYPES.LIQUIDITY:
+      return {
+        query: String(ctx.query || '').trim() || 'BONK',
+        chain: 'solana',
+        modeId: 'token',
+        moduleId: LAYER_ACTION_TYPES.LIQUIDITY,
+        previewMessage:
+          'Liquidity intelligence review prepared. Run Intelligence Scan for market depth and impact estimates.',
+        moduleLabel: MODULE_LABELS.liquidity,
+        hint: 'Liquidity estimates are educational — not execution or investment advice.',
+      }
     default:
       return {
         query: '',
@@ -165,4 +178,5 @@ export const LAYER_BUTTON_LABELS = {
   behavior: 'Check Behavior Signals',
   contract: 'Run Contract Scan',
   wallet: 'Review Wallet Exposure',
+  liquidity: 'Review Liquidity Intelligence',
 }

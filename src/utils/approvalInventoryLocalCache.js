@@ -1,8 +1,8 @@
 const CACHE_PREFIX = 'surestack_approval_inventory_v1_'
 const BACKOFF_PREFIX = 'surestack_alchemy_backoff_v1_'
 
-/** Align with server success TTL (7 min). */
-export const APPROVAL_LOCAL_CACHE_MS = 7 * 60 * 1000
+/** Align with server + client fetch TTL (90s). */
+export const APPROVAL_LOCAL_CACHE_MS = 90_000
 
 /** Align with server backoff (3 min). */
 export const APPROVAL_LOCAL_BACKOFF_MS = 3 * 60 * 1000

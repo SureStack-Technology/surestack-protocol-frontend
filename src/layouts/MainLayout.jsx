@@ -14,6 +14,7 @@ import DevTelemetry from '../components/ui/DevTelemetry.jsx'
 import Logo from '@/components/ui/Logo.jsx'
 import { useRiskPulse } from '../hooks/useRiskPulse.js'
 import { DashboardProfileProvider, useDashboardProfile } from '@/hooks/useDashboardProfile'
+import { PrimeIntelligenceHeroProvider } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
 import {
   shouldShowInfraDiagnostics,
   getConsoleExperienceLabels,
@@ -30,7 +31,9 @@ import SiteLegalFooter from '@/components/layout/SiteLegalFooter.jsx'
 export default function MainLayout() {
   return (
     <DashboardProfileProvider>
-      <MainLayoutBody />
+      <PrimeIntelligenceHeroProvider>
+        <MainLayoutBody />
+      </PrimeIntelligenceHeroProvider>
     </DashboardProfileProvider>
   )
 }

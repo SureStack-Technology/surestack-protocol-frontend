@@ -21,6 +21,10 @@ export function normalizeSolanaAddress(raw) {
 export function getSolanaRpcUrl() {
   const env = process.env.SOLANA_RPC_URL?.trim()
   if (env) return env
+  const heliusKey = process.env.HELIUS_API_KEY?.trim()
+  if (heliusKey) {
+    return `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`
+  }
   if (process.env.NODE_ENV === 'development') {
     return 'https://api.mainnet-beta.solana.com'
   }

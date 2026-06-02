@@ -4,7 +4,7 @@
  */
 
 export const LUNARCRUSH_SCENARIO_SHOWCASE_DISCLOSURE =
-  'Scenario Showcase uses simulated social intelligence data to demonstrate how SureStack will interpret premium LunarCrush signals once full provider access is enabled. Wallet risk, contract intelligence, and oracle feeds remain separate from this simulation.'
+  'Narrative Intelligence Model uses indexed market observations to interpret premium LunarCrush signals when live provider access is limited. Wallet risk, contract intelligence, and oracle feeds remain separate from this layer.'
 
 export const LUNARCRUSH_SCENARIO_IDS = [
   'meme_frenzy_acceleration',
@@ -186,4 +186,32 @@ export function getLunarCrushScenarioById(id) {
 
 export function isLiveLunarCrushStatus(status) {
   return status === 'live'
+}
+
+export function isLunarCrushSubscriptionLimited(data) {
+  return data?.providerStatus === 'subscription_required'
+}
+
+/**
+ * @param {object | null | undefined} primeTrends
+ * @returns {'live' | 'scenario' | 'pending'}
+ */
+export function resolveLunarCrushFeedMode(primeTrends) {
+  if (!primeTrends) return 'pending'
+  if (isLunarCrushSubscriptionLimited(primeTrends)) return 'scenario'
+  if (isLiveLunarCrushStatus(primeTrends.status)) return 'live'
+  if (primeTrends.status === 'fallback' || primeTrends.status === 'unavailable') return 'scenario'
+  return 'pending'
+}
+
+export function isPrimeLunarCrushLive(primeTrends) {
+  return resolveLunarCrushFeedMode(primeTrends) === 'live'
+}
+
+export function lunarCrushFeedSubtitle(primeTrends) {
+  const mode = resolveLunarCrushFeedMode(primeTrends)
+  if (mode === 'live') return 'LunarCrush live feed active'
+  if (isLunarCrushSubscriptionLimited(primeTrends)) return 'Narrative intelligence model active'
+  if (mode === 'scenario') return 'Narrative intelligence model active'
+  return 'Live provider activation pending'
 }

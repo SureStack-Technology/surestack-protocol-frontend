@@ -2,6 +2,7 @@ import { prisma } from '../../lib/prisma.js'
 import { scoreWalletRisk } from './walletRiskScoring.js'
 import { fetchWalletSignals } from './walletRiskProviders.js'
 import { computeWalletExposureIntelligence } from '../walletExposure/walletExposureIntelligence.js'
+import { buildWalletExposureProfile } from '../walletExposure/walletExposureProfileEngine.js'
 import { buildExposureMetrics, exposureInputSummary } from '../walletExposure/walletExposureMetrics.js'
 import { resolvePrimeApprovalChainId } from './alchemyChainResolver.js'
 import { SEPOLIA_CHAIN_ID } from './walletRiskTypes.js'
@@ -190,10 +191,44 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
     ]
   }
 
+  let walletExposureProfile = null
+  let metricsForProfile = null
+  if (hasAlchemy) {
+    metricsForProfile =
+      exposureIntelligence.metrics || buildExposureMetrics(signals, approvalRowsForExposure)
+    walletExposureProfile = buildWalletExposureProfile(
+      signals,
+      approvalRowsForExposure,
+      exposureIntelligence,
+      {
+        score,
+        assessmentPending,
+        exposureHints: {
+          exposureChainId,
+          volatileSharePct: Number(signals.volatileSharePct) || 0,
+          stableSharePct: Number(signals.stableSharePct) || 0,
+          stablecoinBalanceCount: Number(signals.stablecoinBalanceCount) || 0,
+          topTokenSharePct: Number(signals.topTokenSharePct) || 0,
+          uniqueCounterparties: Number(signals.uniqueCounterparties) || 0,
+          unlimitedApprovalUnknownCount: Number(signals.unlimitedApprovalUnknownCount) || 0,
+          transferCount: Number(signals.transferCount) || 0,
+          dexInteractionCount: Number(signals.dexInteractionCount) || 0,
+          nftHoldingsCount: Number(signals.nftHoldingsCount) || 0,
+          approvalCount: approvalRowsForExposure.length,
+          hasBalances: Boolean(signals.hasBalances),
+          hasTransfers: Boolean(signals.hasTransfers),
+          hasApprovals: Boolean(signals.hasApprovals),
+          hasNftScan: Boolean(signals.hasNftScan),
+        },
+      },
+    )
+    walletExposureProfile.metrics = undefined
+  }
+
   let exposureInputSummaryPayload = null
   if (hasAlchemy) {
     const metrics =
-      exposureIntelligence.metrics || buildExposureMetrics(signals, approvalRowsForExposure)
+      exposureIntelligence.metrics || metricsForProfile || buildExposureMetrics(signals, approvalRowsForExposure)
     exposureInputSummaryPayload = exposureInputSummary(metrics)
     console.info(
       '[walletExposure] inputs:',
@@ -310,6 +345,7 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
     exposureInputSummary: exposureInputSummaryPayload,
     exposureIntelligence,
     assessmentPending,
+    walletExposureProfile,
   }
 
   riskCacheSet(cacheKey, payload)

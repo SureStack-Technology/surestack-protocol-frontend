@@ -5,6 +5,8 @@
 **Framework**: Vite + React + Tailwind + Ethers.js  
 **Timeline**: 2 Sprints (2-3 weeks)
 
+> **2026 documentation note:** SureStack is **AI-powered digital asset risk intelligence and incident support**. Roadmap language below uses “**incident request** / **incident support**” instead of legacy “claims” where describing UX; file names like `BusinessClaimPanel.jsx` remain as repository paths.
+
 ---
 
 ## 📋 Executive Summary
@@ -227,7 +229,7 @@ Add advanced features for business dashboard, real-time data streaming, and expo
 
 **Components to Create:**
 - `src/components/business/AdminActionsPanel.jsx` - Main admin actions widget
-- `src/components/business/PendingClaimsAlert.jsx` - Alert for pending claims
+- `src/components/business/PendingClaimsAlert.jsx` - Alert for pending **incident requests** *(filename historical)*
 - `src/components/business/ValidatorAlerts.jsx` - Alert for validator issues
 - `src/components/business/QuickActions.jsx` - Quick action buttons
 
@@ -237,7 +239,7 @@ Add advanced features for business dashboard, real-time data streaming, and expo
 
 **Hooks Needed:**
 - Create `src/hooks/useAdminAlerts.js` for fetching pending items
-- Create `src/hooks/usePendingClaims.js` for pending claims detection
+- Create `src/hooks/usePendingClaims.js` for pending **incident request** detection *(hook name may remain historical)*
 - Create `src/hooks/useValidatorAlerts.js` for validator health monitoring
 
 **Tailwind/UI Notes:**
@@ -247,7 +249,7 @@ Add advanced features for business dashboard, real-time data streaming, and expo
   <h3 className="text-lg font-semibold mb-4">Admin Actions</h3>
   <div className="space-y-2">
     <div className="flex items-center justify-between p-2 bg-yellow-500/20 rounded">
-      <span>3 Pending Claims</span>
+      <span>3 Pending incident requests</span>
       <button className="text-yellow-400 hover:text-yellow-300">Review</button>
     </div>
   </div>
@@ -256,7 +258,7 @@ Add advanced features for business dashboard, real-time data streaming, and expo
 
 **Expected Changes:**
 - Admin actions panel in business dashboard
-- Real-time alerts for pending claims
+- Real-time alerts for pending **incident requests**
 - Validator health alerts
 - Quick action buttons (approve, reject, review)
 - Notification badges with counts
@@ -323,10 +325,10 @@ Add advanced features for business dashboard, real-time data streaming, and expo
 ```
 
 **Expected Changes:**
-- Export button in claims panel and audit pages
+- Export button in **incident support** panel and audit pages
 - CSV download with formatted data
 - Date range selection for export
-- Filtered export (only reviewed claims, etc.)
+- Filtered export (only reviewed **incident support** cases, etc.)
 - Progress indicator during export
 
 ---
@@ -340,7 +342,7 @@ Add advanced features for business dashboard, real-time data streaming, and expo
 | **Sprint 1** | Tooltips & Timestamps | `Tooltip.jsx`, `Timestamp.jsx`, `RoleBadge.jsx` | Create | Add contextual help and time displays |
 | **Sprint 1** | Mobile Responsiveness | `BusinessLayout.jsx`, `MainLayout.jsx`, All dashboards | Update | Responsive design for all screen sizes |
 | **Sprint 2** | Simulation Mode | `SimulationModeToggle.jsx`, `SimulationControls.jsx` | Create | Interactive simulation for business dashboard |
-| **Sprint 2** | Admin Actions Widget | `AdminActionsPanel.jsx`, `PendingClaimsAlert.jsx` | Create | Real-time admin alerts and quick actions |
+| **Sprint 2** | Admin Actions Widget | `AdminActionsPanel.jsx`, `PendingClaimsAlert.jsx` | Create | Real-time admin alerts for **incident requests** |
 | **Sprint 2** | Real-Time Oracle Stream | `OracleFeedPanel.jsx`, `useOracleStream.js` | Update/Create | WebSocket/SSE streaming for live updates |
 | **Sprint 2** | Audit Log Export | `AuditLogExport.jsx`, `csvExport.js` | Create | CSV export functionality |
 
@@ -402,12 +404,12 @@ import { ValidatorAlerts } from './ValidatorAlerts'
 import { QuickActions } from './QuickActions'
 
 export default function AdminActionsPanel() {
-  const { pendingClaims, validatorIssues, loading } = useAdminAlerts()
+  const { pendingIncidentRequests, validatorIssues, loading } = useAdminAlerts()
   
   return (
     <div className="card-dark">
       <h3>Admin Actions</h3>
-      <PendingClaimsAlert count={pendingClaims.length} />
+      <PendingClaimsAlert count={pendingIncidentRequests.length} />
       <ValidatorAlerts issues={validatorIssues} />
       <QuickActions />
     </div>
@@ -560,7 +562,7 @@ export function exportToCSV(data, filename) {
 ### 4. useAuditLogs.js (New)
 **Purpose:** Fetch and format audit log data
 **Features:**
-- Fetch claims audit data
+- Fetch **incident support** audit data
 - Format for CSV export
 - Filter by date range
 - Filter by status

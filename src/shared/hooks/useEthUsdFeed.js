@@ -51,6 +51,7 @@ export function useEthUsdFeed() {
   const timer = useRef(null)
   const mounted = useRef(true)
   const wsProviderRef = useRef(null)
+  const wsLifecycleCleanupRef = useRef(null)
   const lastUpdateTime = useRef(0)
   const reconnectAttempts = useRef(0)
   const reconnectTimer = useRef(null)
@@ -200,6 +201,38 @@ export function useEthUsdFeed() {
       }, 15000)
     }
 
+    function bindWebSocketLifecycle(wsProvider, { onOpen, onClose, onError }) {
+      try {
+        const socket =
+          wsProvider?._websocket ??
+          wsProvider?.websocket ??
+          (typeof wsProvider?._getConnection === "function" ? wsProvider._getConnection() : null)
+
+        if (!socket?.addEventListener) return null
+
+        const handleOpen = () => onOpen?.()
+        const handleClose = () => onClose?.()
+        const handleError = (evt) => onError?.(evt)
+
+        socket.addEventListener("open", handleOpen)
+        socket.addEventListener("close", handleClose)
+        socket.addEventListener("error", handleError)
+
+        return () => {
+          try {
+            socket.removeEventListener("open", handleOpen)
+            socket.removeEventListener("close", handleClose)
+            socket.removeEventListener("error", handleError)
+          } catch (_) {
+            /* ignore cleanup errors */
+          }
+        }
+      } catch (err) {
+        console.warn("[useEthUsdFeed] WebSocket lifecycle binding skipped", err)
+        return null
+      }
+    }
+
     function connectWebSocket() {
       const wsInfo = getProviderHealth().ws
       try {
@@ -243,21 +276,31 @@ export function useEthUsdFeed() {
         })
       }
 
-      provider?.on?.("connect", () => {
-        if (!mounted.current) return
-        setConnectionState("connected")
-        setIsStreaming(true)
-      })
-
-      provider?.on?.("disconnect", (err) => {
-        if (!mounted.current) return
-        console.warn("[useEthUsdFeed] WebSocket disconnected", err)
-        setIsStreaming(false)
-        attemptReconnect()
+      wsLifecycleCleanupRef.current?.()
+      wsLifecycleCleanupRef.current = bindWebSocketLifecycle(provider, {
+        onOpen: () => {
+          if (!mounted.current) return
+          setConnectionState("connected")
+          setIsStreaming(true)
+          retries.current = 0
+          reconnectAttempts.current = 0
+        },
+        onClose: () => {
+          if (!mounted.current) return
+          console.warn("[useEthUsdFeed] WebSocket closed")
+          setIsStreaming(false)
+          setConnectionState("reconnecting")
+          attemptReconnect()
+        },
+        onError: (evt) => {
+          if (!mounted.current) return
+          console.warn("[useEthUsdFeed] WebSocket error", evt)
+        },
       })
 
       const feedAddress = FEED
-      provider.on("block", async (blockNumber) => {
+      try {
+        provider.on("block", async (blockNumber) => {
         if (!mounted.current) return
         if (!feedAddress || feedAddress.length < 42) {
           return
@@ -311,6 +354,9 @@ export function useEthUsdFeed() {
           console.warn("[useEthUsdFeed] block listener failed", err)
         }
       })
+      } catch (err) {
+        console.warn("[useEthUsdFeed] block subscription unavailable", err)
+      }
     }
 
     const initialise = async () => {
@@ -354,6 +400,8 @@ export function useEthUsdFeed() {
       mounted.current = false
       if (timer.current) clearInterval(timer.current)
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current)
+      wsLifecycleCleanupRef.current?.()
+      wsLifecycleCleanupRef.current = null
       if (wsProviderRef.current?.destroy) {
         wsProviderRef.current.destroy()
       }

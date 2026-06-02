@@ -99,6 +99,8 @@ export function scoreSolanaTokenMint(ctx) {
     score += 3
   }
 
+  const establishedMint = signatureCount > 100 || Boolean(archetype?.majorAsset)
+
   const holders = largestAccounts || []
   const totalUi = holders.reduce((sum, h) => sum + Number(h.uiAmount || 0), 0)
   const topUi = holders[0] ? Number(holders[0].uiAmount || 0) : 0
@@ -118,31 +120,31 @@ export function scoreSolanaTokenMint(ctx) {
     } else if (holders.length >= 8) {
       holderConcentration = 'DISPERSED'
       score += 4
-    } else {
+    } else if (!establishedMint) {
       holderConcentration = 'LOW_COUNT'
-      score -= 8
+      score -= 4
       findings.push({
         code: 'LOW_HOLDER_COUNT',
-        severity: 'WATCH',
-        title: 'Low holder visibility',
-        detail: 'Few large accounts dominate sampled token balances.',
+        severity: 'INFO',
+        title: 'Limited holder sample',
+        detail: 'RPC holder sample is small — market providers may supply fuller distribution.',
       })
     }
   }
 
-  if (!metadataPresent) {
-    score -= 6
+  if (!metadataPresent && !establishedMint) {
+    score -= 4
     findings.push({
       code: 'METADATA_MISSING',
       severity: 'INFO',
       title: 'Token metadata not resolved',
       detail: 'Name/symbol metadata unavailable from RPC — verify token identity manually.',
     })
-  } else {
+  } else if (metadataPresent) {
     score += 2
   }
 
-  if (signatureCount < 5) {
+  if (signatureCount < 5 && !archetype?.majorAsset) {
     score -= 6
     findings.push({
       code: 'NEW_MINT_SIGNAL',

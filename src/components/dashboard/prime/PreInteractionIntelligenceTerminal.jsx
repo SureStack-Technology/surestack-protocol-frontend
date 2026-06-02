@@ -2,11 +2,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { resolveLayerLaunch } from '@/components/dashboard/prime/primeIntelligenceLayerActions.js'
 import { motion } from 'framer-motion'
 import { ArrowRight, Radar, Search, Shield } from 'lucide-react'
-import { isLiveLunarCrushStatus } from '@/data/lunarCrushScenarioShowcase.js'
+import { isPrimeLunarCrushLive } from '@/data/lunarCrushScenarioShowcase.js'
+import { assessBehaviorCoverage } from '@/utils/behaviorIntelligenceStatus.js'
 import { buildPrimeWalletSnapshot } from '@/components/dashboard/prime/primeWalletRiskSnapshot.js'
 import PrimeEvidenceLayers from '@/components/dashboard/prime/PrimeEvidenceLayers.jsx'
 import PrimeContractAnalyzerPanel from '@/components/dashboard/prime/PrimeContractAnalyzerPanel.jsx'
+import PrimeSolanaTokenPanel from '@/components/dashboard/prime/PrimeSolanaTokenPanel.jsx'
+import ExecutiveIntelligenceCard from '@/components/dashboard/prime/ExecutiveIntelligenceCard.jsx'
+import ExecutiveSummaryCard from '@/components/dashboard/prime/ExecutiveSummaryCard.jsx'
+import LiquidityIntelligenceCard from '@/components/dashboard/prime/LiquidityIntelligenceCard.jsx'
+import WalletExposureIntelligenceCard from '@/components/dashboard/prime/WalletExposureIntelligenceCard.jsx'
 import PrimeIntelligenceLayersGrid from '@/components/dashboard/prime/PrimeIntelligenceLayersGrid.jsx'
+import {
+  buildExecutiveIntelFromScan,
+  buildPendingExecutiveIntel,
+  resolveExecutiveIntelligence,
+} from '@/lib/executiveIntelligence/buildExecutiveIntel.js'
+import { buildExecutiveSummary } from '@/lib/executiveIntelligence/buildExecutiveSummary.mjs'
+import { buildIntelligenceCoverageSources } from '@/lib/executiveIntelligence/buildIntelligenceCoverage.mjs'
+import { buildInstitutionalAnalystAssessment } from '@/lib/executiveIntelligence/buildInstitutionalAnalystAssessment.mjs'
+import { resolveHeroIntelligenceMetrics } from '@/lib/executiveIntelligence/resolveHeroIntelligenceMetrics.mjs'
+import { usePrimeIntelligenceHero } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
+import { hasScannerBackedProof, scannerProofBannerTitle } from '@/utils/scannerProofStatus.mjs'
 import {
   computeCompositeRisk,
   compositeScoreToRiskLevel,
@@ -15,6 +32,7 @@ import { buildInstitutionalTokenVerdict } from '@/components/dashboard/prime/pri
 import {
   buildRecommendation,
   deriveOverallRisk,
+  deriveScannerSignals,
   deriveTokenExecutiveRisk,
   formatTokenExecutiveDisplay,
   isNarrativeElevated,
@@ -42,6 +60,23 @@ import {
   formatTokenDisplayLabel,
   narrativeSummarySentence,
 } from '@/components/dashboard/prime/primeTokenDisplay.js'
+import {
+  classifyIntelligenceTarget,
+  classifyTargetSync,
+  recommendedModuleToModeId,
+} from '@/services/intelligenceTargetClassifier.js'
+import { SOLANA_CHAIN_ID } from '@/hooks/useUniversalRiskScanner.js'
+import {
+  hasSolanaMintResolved,
+  isSolanaTokenTarget,
+  resolveSolanaMintAddress,
+  resolveSolanaScanContext,
+  solanaScannerReportActive,
+} from '@/utils/solanaTokenTarget.js'
+import {
+  enrichSolanaScannerBackedReport,
+  isSolanaScannerBacked,
+} from '@/utils/solanaScannerBackedVerdict.mjs'
 
 const COMPLIANCE =
   'SureStack provides educational digital asset risk intelligence only. It does not provide financial advice, trading recommendations, custody, brokerage, insurance, or transaction execution.'
@@ -120,7 +155,7 @@ const EXAMPLE_CHIPS = [
   { label: 'Sample: PEPE', query: 'PEPE', modeId: 'token' },
   { label: 'Sample contract', query: '0xf280b16ef293d8e534e370794ef26bf312694126', modeId: 'contract' },
   { label: 'Sample spender', query: 'permit2 spender', modeId: 'approval' },
-  { label: 'Sample wallet', query: '0xd8dA6BF26964aF9D7eEd9e03E53402D6A1C8c104', modeId: 'wallet' },
+  { label: 'Sample wallet', query: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045', modeId: 'wallet' },
   { label: 'Sample: Uniswap', query: 'https://app.uniswap.org', modeId: 'protocol' },
   { label: 'Sample: LINK', query: 'LINK', modeId: 'token' },
 ]
@@ -157,9 +192,16 @@ export function getConnectedWalletAddress(profile) {
 }
 
 /** Module launch overrides query heuristics until the user edits the target. */
-export function resolveActiveMode(query, forcedModeId, connectedWalletAddress = null) {
+export function resolveActiveMode(
+  query,
+  forcedModeId,
+  connectedWalletAddress = null,
+  classification = null,
+) {
   const forced = forcedModeId && ANALYSIS_MODES[forcedModeId] ? ANALYSIS_MODES[forcedModeId] : null
   if (forced) return { ...forced }
+  const modeId = recommendedModuleToModeId(classification)
+  if (modeId && ANALYSIS_MODES[modeId]) return { ...ANALYSIS_MODES[modeId] }
   return detectAnalysisMode(query, connectedWalletAddress)
 }
 
@@ -179,7 +221,7 @@ function isValidReport(report) {
 
 function buildTokenNarrativeContext(primeTrends, targetSymbol) {
   const display = formatTokenDisplayLabel(targetSymbol)
-  const live = isLiveLunarCrushStatus(primeTrends?.status)
+  const live = isPrimeLunarCrushLive(primeTrends)
   if (live && primeTrends?.summary) {
     return narrativeSummarySentence(primeTrends.summary, 260)
   }
@@ -192,37 +234,63 @@ function buildTokenScenarioTitle(targetSymbol) {
   return buildCategoryNarrativeFallback(targetSymbol).scenarioTitle
 }
 
-function buildFallbackScanReport({ query, chain, mode, canonicalWallet, primeTrends, errorMessage }) {
+function buildFallbackScanReport({
+  query,
+  chain,
+  mode,
+  canonicalWallet,
+  primeTrends,
+  errorMessage,
+  targetClassification = null,
+  tokenResolution = null,
+}) {
   const safeMode = mode?.id ? mode : ANALYSIS_MODES.token
   const trimmed = String(query || '').trim()
   const isToken = safeMode.id === 'token'
   const target = trimmed || 'token target'
+  const solanaCtx = resolveSolanaScanContext({
+    targetClassification,
+    tokenResolution,
+    query: trimmed,
+    chain,
+  })
+  const isSolana = solanaCtx.isSolana
+  const mintResolved = solanaCtx.mintResolved
   return {
     query: trimmed || target,
     target,
     displayTarget: isToken ? formatTokenDisplayLabel(trimmed) : trimmed,
-    chain: CHAINS.find((c) => c.id === chain)?.label || chain || 'Ethereum',
+    chain: isSolana ? 'Solana' : CHAINS.find((c) => c.id === chain)?.label || chain || 'Ethereum',
+    chainId: isSolana ? 'solana' : chain || 'ethereum',
     modeId: safeMode.id,
     modeLabel: safeMode.label,
     modeTone: safeMode.tone,
     interactionType: safeMode.interactionType,
+    isSolanaToken: isSolana,
+    solanaMintResolved: mintResolved,
+    solanaMintAddress: solanaCtx.mint,
+    analysisModeId: isSolana ? 'solana_token' : safeMode.id,
+    targetClassification: targetClassification || null,
+    tokenResolution: tokenResolution || null,
     overallRisk: 'Moderate',
     overallRiskDisplay: 'Moderate',
-    confidence: isToken ? 'Scenario / provider-prepared' : 'Preliminary',
-    scannerValidation: isToken ? 'Scenario only' : 'Pending',
+    confidence: isToken ? 'Partial provider coverage' : 'Preliminary',
+    scannerValidation: isToken ? 'Coverage pending' : 'Pending',
     isPreliminary: false,
     isFallback: true,
     fallbackMessage: isToken
-      ? 'Token intelligence fallback active. Scenario intelligence is available; live provider feeds are pending.'
+      ? isSolana && mintResolved
+        ? 'Mint scan available — intelligence synthesis hit a fallback path. Re-run scan or refresh the terminal.'
+        : 'Token intelligence fallback active. Narrative intelligence model available; live provider feeds pending.'
       : errorMessage ||
         'Intelligence scan could not complete. Provider fallback is active. Try again or run Contract Analyzer.',
     modeVerdict: modeVerdictLead(safeMode.id),
     evidencePreview: MODE_EVIDENCE_PREVIEW[safeMode.id] || MODE_EVIDENCE_PREVIEW.default,
-    lunarLive: isLiveLunarCrushStatus(primeTrends?.status),
+    lunarLive: isPrimeLunarCrushLive(primeTrends),
     birdeyeLive: false,
     providersPending: true,
     narrativeContext: isToken ? buildTokenNarrativeContext(primeTrends, trimmed) : null,
-    behaviorContext: isToken ? 'Behavior Engine Ready — live Birdeye activation pending.' : null,
+    behaviorContext: isToken ? 'Behavior coverage pending — Birdeye activation in progress.' : null,
     scenarioTitle: isToken ? buildTokenScenarioTitle(trimmed) : null,
     scannerSignals: {},
     scannerMostlyClean: false,
@@ -230,11 +298,11 @@ function buildFallbackScanReport({ query, chain, mode, canonicalWallet, primeTre
     approvalsAtRisk: 0,
     walletSnapshot: canonicalWallet || { compact: 'Awaiting snapshot', hasWallet: false },
     recommendation: isToken
-      ? 'Proceed with scenario narrative context; cross-check behavior and contract trust before exposure decisions.'
+      ? 'Proceed with indexed narrative context; cross-check behavior and contract trust before exposure decisions.'
       : 'Retry the intelligence scan or open Contract Analyzer when a contract address is in scope.',
     analyst: {
       summary: isToken
-        ? `${formatTokenDisplayLabel(trimmed) || 'Token'} intelligence uses scenario showcase narrative while live feeds are pending.`
+        ? `${formatTokenDisplayLabel(trimmed) || 'Token'} intelligence uses narrative intelligence model while live feeds are pending.`
         : 'Provider fallback is active for this scan.',
       keyConcern: isToken
         ? 'Live narrative and behavior feeds may be partial until provider activation.'
@@ -243,60 +311,68 @@ function buildFallbackScanReport({ query, chain, mode, canonicalWallet, primeTre
         ? 'Expand Narrative and Behavior evidence layers, then re-run scan when providers are live.'
         : 'Run Intelligence Scan again or use Contract Analyzer for contract-backed proof.',
     },
+    contractProofNote:
+      isSolana && mintResolved
+        ? 'Solana mint resolved — run Solana Token Scan for scanner-backed mint, liquidity, holder, and routing evidence.'
+        : isToken
+          ? 'Contract proof unavailable until token contract is resolved.'
+          : null,
+    mintProofTitle: isSolana && mintResolved ? 'Solana mint resolved' : null,
     threats: [
-      { label: isToken ? 'Scenario narrative' : 'Fallback active', level: 'LOW' },
+      { label: isToken ? 'Narrative partial' : 'Fallback active', level: 'LOW' },
       { label: 'Behavior partial', level: 'LOW' },
     ],
     actions: [],
   }
 }
 
+function mergeScannerSignals(scannerSignals, scannerReport) {
+  if (!scannerReport) return scannerSignals || { hasScan: false }
+  return {
+    hasScan: false,
+    mostlyClean: false,
+    honeypotDetected: false,
+    maliciousScanner: false,
+    unlimitedApproval: false,
+    severeFindings: false,
+    ...(scannerSignals || {}),
+    ...deriveScannerSignals(scannerReport),
+  }
+}
+
+/** @param {object} draft @param {object} scannerReport */
+function applySolanaScannerBackedVerdict(draft, scannerReport) {
+  if (!isSolanaScannerBacked(draft, scannerReport)) return
+  Object.assign(draft, enrichSolanaScannerBackedReport(draft, scannerReport))
+}
+
 /**
- * Adaptive analysis mode from search input (frontend-only).
- * EVM addresses are contract trust unless they exactly match the connected wallet.
- * Wallet mode is not inferred from EIP-55 casing or the word "wallet".
+ * Adaptive analysis mode from search input — uses target classifier (sync); full scan refines via API.
  */
 export function detectAnalysisMode(raw, connectedWalletAddress = null) {
   const input = String(raw || '').trim()
-  const lower = input.toLowerCase()
-
   if (!input) return { ...ANALYSIS_MODES.default }
-
-  const looksLikeUrl =
-    /^https?:\/\//i.test(input) ||
-    /^www\./i.test(input) ||
-    /^[a-z0-9][-a-z0-9.]*\.[a-z]{2,}(\/|$|\?)/i.test(lower)
-
-  if (looksLikeUrl) return { ...ANALYSIS_MODES.protocol }
-
-  if (lower.includes('permit') || lower.includes('spender') || lower.includes('approval')) {
-    return { ...ANALYSIS_MODES.approval }
-  }
-
-  if (/^0x[a-fA-F0-9]{40}$/.test(input)) {
-    const inputNorm = normalizeEthAddress(input)
-    const walletNorm = normalizeEthAddress(connectedWalletAddress)
-    if (inputNorm && walletNorm && inputNorm === walletNorm) {
-      return { ...ANALYSIS_MODES.wallet }
-    }
-    return { ...ANALYSIS_MODES.contract }
-  }
-
-  if (input.startsWith('0x')) {
-    return { ...ANALYSIS_MODES.contract }
-  }
-
+  const modeId = recommendedModuleToModeId(classifyTargetSync(input, connectedWalletAddress))
+  if (modeId && ANALYSIS_MODES[modeId]) return { ...ANALYSIS_MODES[modeId] }
   return { ...ANALYSIS_MODES.token }
 }
 
 
-function modeVerdictLead(modeId, { tokenResolution, tokenContractConfirmed, protocolProfile, scannerSignals } = {}) {
+function modeVerdictLead(
+  modeId,
+  { tokenResolution, tokenContractConfirmed, protocolProfile, scannerSignals, isSolanaToken = false } = {},
+) {
   switch (modeId) {
     case 'contract':
       return scannerSignals?.hasScan
         ? 'Contract trust validated via Contract Intelligence Engine — review Contract Trust Evidence.'
         : 'Contract Trust Analysis — Contract Analyzer is the primary proof path before interaction.'
     case 'token':
+      if (isSolanaToken) {
+        return scannerSignals?.hasScan
+          ? 'Solana mint scanned — liquidity, holder concentration, and authority evidence available.'
+          : 'Solana mint resolved — run Solana Token Scan for liquidity, holder concentration, authority, and pool-risk evidence.'
+      }
       if (tokenContractConfirmed) {
         return scannerSignals?.hasScan
           ? 'Token contract scanned — trust proof is scanner-backed via Contract Intelligence Engine.'
@@ -312,11 +388,11 @@ function modeVerdictLead(modeId, { tokenResolution, tokenContractConfirmed, prot
           ? 'Token contract scanned — trust proof is scanner-backed via Contract Intelligence Engine.'
           : 'Token contract resolved — run Contract Analyzer for scanner-backed bytecode and honeypot proof.'
       }
-      return 'Scenario and provider-prepared token intelligence only — contract proof unavailable until the token contract is resolved.'
+      return 'Indexed market observations only — contract proof unavailable until the token contract is resolved.'
     case 'approval':
       return 'Approval-based interaction requires explicit allowance review before signing.'
     case 'wallet':
-      return 'Wallet exposure verdict reflects current connected-wallet risk posture.'
+      return 'Wallet Exposure Analysis — exposure bands, approvals, and risk posture for the target wallet.'
     case 'protocol':
       if (protocolProfile?.matched) {
         return `${protocolProfile.name} — verified domain profile. Scan recommended contract surfaces before signing.`
@@ -328,118 +404,18 @@ function modeVerdictLead(modeId, { tokenResolution, tokenContractConfirmed, prot
 }
 
 
-function buildAnalystCopy(report, aiBrief, scannerReport) {
-  if (report.isPreliminary) {
-    return {
-      summary: 'Preliminary intelligence posture — scanner validation has not completed.',
-      keyConcern: 'Deep contract validation has not yet been executed.',
-      nextMove: 'Run Deep Contract Scan in Contract Analyzer to unlock scanner-backed verdict and proof.',
-    }
+function buildAnalystCopy(report, aiBrief, scannerReport, executive = null) {
+  const assessment = buildInstitutionalAnalystAssessment({ report, scannerReport, executive })
+  if (!report.scannerSignals?.hasScan && aiBrief?.summary) {
+    return { ...assessment, technicalAssessment: aiBrief.summary, summary: aiBrief.summary }
   }
-
-  if (report.modeId === 'token' && report.narrativeElevated && report.scannerSignals?.hasScan) {
-    const contractWord = report.contractRisk || 'Moderate'
-    const summary =
-      report.narrativeCategory === 'meme'
-        ? `Contract scanner ${contractWord} — meme narrative volatility is elevated versus bytecode trust alone.`
-        : `Contract scanner ${contractWord} — narrative risk exceeds contract-trust baseline.`
-    const keyConcern =
-      report.narrativeCategory === 'meme'
-        ? 'Elevated narrative risk — speculative exposure velocity; not a scanner malice signal.'
-        : 'Narrative category risk elevated — cross-check social and behavior evidence.'
-    return {
-      summary,
-      keyConcern,
-      nextMove:
-        report.narrativeCategory === 'meme'
-          ? 'Review approvals, liquidity depth, and position sizing; treat narrative velocity as speculative risk.'
-          : 'Cross-check narrative and behavior panels before discretionary exposure.',
-    }
-  }
-
-  if (report.scannerSignals?.hasScan && scannerReport) {
-    const findings = (scannerReport.findings || []).filter((f) => f.severity === 'HIGH' || f.severity === 'MEDIUM')
-    const top = findings[0] || (scannerReport.findings || [])[0]
-    const summary = top
-      ? `Scanner finding: ${top.title}${top.detail ? ` — ${top.detail}` : ''}`
-      : report.scannerMostlyClean
-        ? 'Scanner validation complete — contract surfaces mostly clean; confirm in Contract Trust Evidence.'
-        : 'Scanner validation complete — review Contract Trust Evidence before interacting.'
-
-    const keyConcern = top
-      ? top.title
-      : report.scannerSignals.honeypotDetected
-        ? 'Honeypot or malicious token signal detected by scanner.'
-        : report.scannerSignals.unlimitedApproval
-          ? 'Unlimited or elevated approval risk flagged.'
-          : report.narrativeCategory === 'meme' && !report.lunarLive
-            ? 'Speculative narrative risk — scenario meme velocity active while LunarCrush live feed is pending.'
-            : 'No severe scanner findings — maintain standard signing hygiene.'
-
-    const nextMove =
-      report.overallRisk === 'Critical' || report.overallRisk === 'High'
-        ? 'Defer interaction until Contract Trust Evidence and approval inventory are reviewed.'
-        : report.modeId === 'token' && report.narrativeCategory === 'meme'
-          ? 'Review approvals, liquidity depth, and position sizing before exposure; treat narrative velocity as speculative risk.'
-          : 'Proceed with caution; expand Contract Trust Evidence for bytecode and admin proof.'
-
-    return { summary, keyConcern, nextMove }
-  }
-
-  const riskWord =
-    report.overallRisk === 'Critical'
-      ? 'Critical'
-      : report.overallRisk === 'High'
-        ? 'Elevated'
-        : report.overallRisk === 'Moderate'
-          ? 'Moderate'
-          : 'Contained'
-
-  const targetLabel =
-    report.modeId === 'token'
-      ? report.displayTarget || formatTokenDisplayLabel(report.target || report.query)
-      : report.target || report.query
-  const modeSummary = {
-    token: report.narrativeElevated
-      ? `${riskWord} token risk for ${targetLabel} — contract trust ${report.contractRisk || 'Moderate'}, narrative and wallet fit elevated composite.`
-      : `${riskWord} token risk for ${targetLabel} — wallet fit and provider readiness applied.`,
-    contract: `${riskWord} contract trust signals from wallet and provider context.`,
-    approval: `${riskWord} approval risk — spender and allowance scope need review.`,
-    wallet: `${riskWord} wallet exposure relative to connected-wallet baseline.`,
-    protocol: `${riskWord} protocol trust — URL and contract surfaces require validation.`,
-    default: `${riskWord} operational risk detected for this target.`,
-  }
-
-  const summary =
-    aiBrief?.summary?.length > 20 && report.modeId === 'default'
-      ? aiBrief.summary.split('.')[0].trim() + '.'
-      : modeSummary[report.modeId] || modeSummary.default
-
-  const keyConcern =
-    report.approvalsAtRisk > 0
-      ? 'Approval surface exceeds healthy baseline for verified wallet.'
-      : report.contractsUnderReview > 0
-        ? 'Contract trust signals require review before new interactions.'
-        : report.modeId === 'token'
-          ? 'Live narrative and behavior feeds may be partial until provider activation.'
-          : aiBrief?.recommendation?.length > 20
-            ? aiBrief.recommendation.split('.')[0].trim() + '.'
-            : 'No critical drivers flagged — maintain disciplined signing posture.'
-
-  const nextMove =
-    report.overallRisk === 'Critical' || report.overallRisk === 'High'
-      ? 'Review active spenders and revoke unnecessary allowances before proceeding.'
-      : report.modeId === 'token'
-        ? 'Cross-check narrative and behavior panels before discretionary exposure.'
-        : 'Run Contract Analyzer when a contract address is in scope.'
-
-  return { summary, keyConcern, nextMove }
+  return assessment
 }
 
 function threatPills(report) {
   const pills = []
-  if (report.isPreliminary && SCANNER_MODES.has(report.modeId)) {
-    pills.push({ label: 'Scanner pending', level: 'LOW' })
+  if (report.isPreliminary && SCANNER_MODES.has(report.modeId) && !report.scannerSignals?.hasScan) {
+    pills.push({ label: 'Coverage pending', level: 'LOW' })
     if (!report.lunarLive) pills.push({ label: 'Narrative partial', level: 'LOW' })
     if (!report.birdeyeLive) pills.push({ label: 'Behavior partial', level: 'LOW' })
     return pills.slice(0, 5)
@@ -497,16 +473,16 @@ function threatPills(report) {
 }
 
 function narrativeSubtitle(primeTrends, targetSymbol) {
-  if (isLiveLunarCrushStatus(primeTrends?.status)) return 'LunarCrush live feed active'
+  if (isPrimeLunarCrushLive(primeTrends)) return 'LunarCrush live feed active'
+  if (primeTrends?.providerStatus === 'subscription_required') return 'Narrative intelligence model active'
   const cat = getTokenNarrativeCategory(targetSymbol)
-  if (cat === 'meme') return 'Scenario Intelligence Active (live feed upgrade available)'
-  if (cat !== 'unknown') return 'Category narrative fallback (live provider upgrade available)'
-  return 'Narrative intelligence pending live provider'
+  if (cat === 'meme') return 'Narrative Intelligence Active (live feed upgrade available)'
+  if (cat !== 'unknown') return 'Category narrative model (live provider upgrade available)'
+  return 'Partial provider coverage'
 }
 
-function behaviorSubtitle(watchlist) {
-  if (watchlist?.status === 'live') return 'Birdeye live feed active'
-  return 'Behavior Engine Ready (live provider activation pending)'
+function behaviorSubtitle(watchlist, assets = []) {
+  return assessBehaviorCoverage(watchlist, assets).subtitle
 }
 
 
@@ -537,14 +513,16 @@ function buildScanReport({
   tokenResolution = null,
   protocolProfile = null,
   confirmedTokenContract = null,
+  targetClassification = null,
+  birdeyeAssets = [],
 }) {
   const trimmed = String(query || '').trim()
   const tokenContractConfirmed = hasTokenContractProof(tokenResolution, confirmedTokenContract)
-  const lunarLive = isLiveLunarCrushStatus(primeTrends?.status)
+  const lunarLive = isPrimeLunarCrushLive(primeTrends)
   const birdeyeLive = watchlist?.status === 'live'
   const providersPending = !lunarLive || !birdeyeLive
   const approvalsAtRisk = approvalsOverride ?? intel?.approvalsAtRisk ?? 0
-  const sig = scannerSignals || {}
+  const sig = mergeScannerSignals(scannerSignals, scannerReport)
 
   const contractRisk = deriveOverallRisk({
     score: canonicalWallet.score,
@@ -558,13 +536,34 @@ function buildScanReport({
     scannerSignals: sig,
   })
 
-  const tokenContractConfirmedEarly = hasTokenContractProof(tokenResolution, confirmedTokenContract)
+  const isSolanaTokenEarly =
+    isSolanaTokenTarget({
+      targetClassification,
+      tokenResolution,
+      chain,
+    }) || solanaScannerReportActive(scannerReport)
+  const solanaCtx = resolveSolanaScanContext({
+    targetClassification,
+    tokenResolution,
+    query: trimmed,
+    chain,
+  })
+  const solanaMintResolvedEarly = solanaCtx.mintResolved
+  const solanaMintAddressEarly = solanaCtx.mint
+  const tokenContractConfirmedEarly =
+    !isSolanaTokenEarly && hasTokenContractProof(tokenResolution, confirmedTokenContract)
   const narrativeCategoryEarly =
     mode.id === 'token' ? getTokenNarrativeCategory(trimmed) : null
   const narrativeRiskLevelEarly =
     mode.id === 'token'
       ? resolveNarrativeRiskLevel(narrativeCategoryEarly, { lunarLive })
       : null
+
+  const liquidityRiskScore = liquidityRiskScoreFromScanner(scannerReport)
+  const walletExposureProfile =
+    intel?.walletExposureProfile ??
+    intel?.riskData?.walletExposureProfile ??
+    null
 
   const composite = computeCompositeRisk({
     contractRiskLevel: contractRisk,
@@ -574,6 +573,8 @@ function buildScanReport({
       activityAnomalies: intel?.activityAnomalies ?? 0,
       watchlistLive: birdeyeLive,
     },
+    liquidityRiskScore,
+    exposureProfile: walletExposureProfile,
     walletInputs: {
       band: canonicalWallet.band,
       score: canonicalWallet.score,
@@ -593,7 +594,7 @@ function buildScanReport({
       walletScore: canonicalWallet.score,
       approvalsAtRisk,
       scannerSignals: sig,
-      tokenUnresolved: !tokenContractConfirmedEarly,
+      tokenUnresolved: isSolanaTokenEarly ? !solanaMintResolvedEarly : !tokenContractConfirmedEarly,
     })
     derivedRisk = composite
       ? compositeScoreToRiskLevel(composite.score)
@@ -608,7 +609,7 @@ function buildScanReport({
         walletScore: canonicalWallet.score,
         approvalsAtRisk,
         scannerSignals: sig,
-        tokenUnresolved: !tokenContractConfirmedEarly,
+        tokenUnresolved: isSolanaTokenEarly ? !solanaMintResolvedEarly : !tokenContractConfirmedEarly,
       })
     }
   } else if (composite) {
@@ -656,26 +657,37 @@ function buildScanReport({
   const confidence = resolveTerminalConfidence({
     modeId: mode.id,
     tokenResolution,
-    tokenContractConfirmed,
+    tokenContractConfirmed: tokenContractConfirmedEarly,
     scannerSignals: sig,
     presentation,
     lunarLive,
     birdeyeLive,
     riskFromApi: intel?.riskFromApi,
     providersPending,
+    isSolanaToken: isSolanaTokenEarly,
+    solanaMintResolved: solanaMintResolvedEarly,
+    scannerReport,
   })
 
   const scannerValidation = resolveScannerValidationLabel({
     modeId: mode.id,
     tokenResolution,
-    tokenContractConfirmed,
+    tokenContractConfirmed: tokenContractConfirmedEarly,
     scannerSignals: sig,
     presentation,
+    isSolanaToken: isSolanaTokenEarly,
+    solanaMintResolved: solanaMintResolvedEarly,
+    scannerReport,
   })
 
   const draft = {
     query: trimmed || '(workspace baseline)',
-    chain: CHAINS.find((c) => c.id === chain)?.label || chain,
+    chain: isSolanaTokenEarly
+      ? 'Solana'
+      : CHAINS.find((c) => c.id === chain)?.label || chain,
+    chainId: isSolanaTokenEarly ? 'solana' : chain,
+    analysisModeId: isSolanaTokenEarly ? 'solana_token' : mode.id,
+    solanaMintAddress: solanaMintAddressEarly,
     modeId: mode.id,
     modeLabel: mode.label,
     modeTone: mode.tone,
@@ -688,9 +700,13 @@ function buildScanReport({
     overallRiskDisplay: presentation.overallRiskDisplay || presentation.derivedRisk || 'Moderate',
     confidence: confidence || 'Partial provider coverage',
     scannerValidation,
+    isSolanaToken: isSolanaTokenEarly,
+    solanaMintResolved: solanaMintResolvedEarly,
     isPreliminary:
       mode.id === 'token'
-        ? !tokenContractConfirmed || !sig.hasScan
+        ? isSolanaTokenEarly
+          ? !solanaMintResolvedEarly || !sig.hasScan
+          : !tokenContractConfirmed || !sig.hasScan
         : mode.id === 'protocol'
           ? !sig.hasScan
           : presentation.isPreliminary,
@@ -699,15 +715,25 @@ function buildScanReport({
       tokenContractConfirmed,
       protocolProfile,
       scannerSignals: sig,
+      isSolanaToken: isSolanaTokenEarly,
     }),
     tokenResolution: tokenResolution || null,
-    tokenContractConfirmed,
+    tokenContractConfirmed: tokenContractConfirmedEarly,
     confirmedTokenContract: confirmedTokenContract || null,
     protocolProfile: protocolProfile || null,
-    resolvedContractAddress: tokenContractConfirmed
-      ? confirmedTokenContract?.address || tokenResolution?.address
-      : null,
-    evidencePreview: MODE_EVIDENCE_PREVIEW[mode.id] || MODE_EVIDENCE_PREVIEW.default,
+    resolvedContractAddress:
+      tokenContractConfirmedEarly && !isSolanaTokenEarly
+        ? confirmedTokenContract?.address || tokenResolution?.address
+        : null,
+    evidencePreview: isSolanaTokenEarly
+              ? [
+                  'Narrative risk',
+                  'Liquidity intelligence',
+                  'Holder concentration',
+                  'Mint / freeze authority',
+                  'Liquidity & pools',
+                ]
+      : MODE_EVIDENCE_PREVIEW[mode.id] || MODE_EVIDENCE_PREVIEW.default,
     lunarLive,
     birdeyeLive,
     providersPending,
@@ -716,7 +742,11 @@ function buildScanReport({
     contractsUnderReview: intel?.contractsUnderReview ?? 0,
     approvalsAtRisk,
     walletSnapshot: canonicalWallet,
+    targetClassification: targetClassification || null,
+    analysisWalletAddress:
+      mode.id === 'wallet' && targetClassification?.address ? targetClassification.address : null,
     composite: composite || null,
+    walletExposureProfile: walletExposureProfile || null,
     institutionalReasoning: institutionalVerdict?.reasoning || null,
     recommendation: '',
     analyst: null,
@@ -737,9 +767,43 @@ function buildScanReport({
   draft.target = trimmed || draft.query
   draft.displayTarget = mode.id === 'token' ? formatTokenDisplayLabel(trimmed) : trimmed
 
+  if (solanaScannerReportActive(scannerReport)) {
+    draft.chain = 'Solana'
+    draft.chainId = 'solana'
+    draft.analysisModeId = 'solana_token'
+    draft.isSolanaToken = true
+    draft.solanaMintResolved = true
+    draft.solanaMintAddress =
+      scannerReport.address || solanaMintAddressEarly || draft.solanaMintAddress
+    draft.liquidityIntelligence = scannerReport.liquidityIntelligence || null
+    draft.scannerReport = scannerReport
+    draft.isPreliminary = false
+    draft.isFallback = false
+  }
+
+  applySolanaScannerBackedVerdict(draft, scannerReport)
+
   if (mode.id === 'token') {
     draft.narrativeCategory = getTokenNarrativeCategory(trimmed)
-    if (tokenContractConfirmed) {
+    const solanaToken = Boolean(draft.isSolanaToken || isSolanaTokenEarly)
+    if (solanaToken) {
+      const scanned = Boolean(scannerReport?.success === true && draft.analysisModeId === 'solana_token')
+      draft.contractProofNote = scanned
+        ? 'Solana mint scanned — scanner-backed liquidity, holder concentration, authority, and routing evidence available.'
+        : solanaMintResolvedEarly
+          ? 'Solana mint resolved — run Solana Token Scan for scanner-backed mint, liquidity, holder, and routing evidence.'
+          : 'Solana mint pending — paste a valid SPL mint or use a known symbol (BONK, WIF, JUP).'
+      draft.mintProofTitle = scanned ? 'Solana mint scanned' : solanaMintResolvedEarly ? 'Solana mint resolved' : 'Solana token pending'
+      const catPanel = buildCategoryNarrativeFallback(trimmed)
+      draft.scenarioTitle = lunarLive ? null : catPanel.scenarioTitle
+      draft.narrativeContext =
+        lunarLive ? null : catPanel.narrativeText || buildTokenNarrativeContext(primeTrends, trimmed)
+      draft.behaviorContext = sig.hasScan
+        ? birdeyeLive
+          ? 'Solana scanner-backed mint evidence plus Birdeye behavior feed.'
+          : 'Solana scanner-backed mint evidence — behavior feed partial.'
+        : 'Solana mint resolved — run Solana Token Scan; narrative may use category fallback until live feeds.'
+    } else if (tokenContractConfirmed) {
       draft.contractProofNote = 'Contract proof available'
       const catPanel = buildCategoryNarrativeFallback(trimmed)
       draft.scenarioTitle = lunarLive ? null : catPanel.scenarioTitle
@@ -750,8 +814,8 @@ function buildScanReport({
             buildTokenNarrativeContext(primeTrends, trimmed)
       draft.behaviorContext = sig.hasScan
         ? birdeyeLive
-          ? 'Scanner-backed contract trust plus Birdeye behavior feed — narrative layer may still use scenario fallback.'
-          : 'Scanner-backed contract trust — behavior feed partial; narrative may use category scenario fallback.'
+          ? 'Scanner-backed contract trust plus Birdeye behavior feed — narrative layer may still use intelligence model fallback.'
+          : 'Scanner-backed contract trust — behavior feed partial; narrative may use category intelligence model.'
         : 'Contract confirmed — run Contract Analyzer for scanner-backed proof; narrative uses category fallback until live feeds.'
     } else if (tokenResolution?.confirmationRequired && tokenResolution.candidates?.length) {
       draft.contractProofNote = tokenResolution.message
@@ -766,9 +830,11 @@ function buildScanReport({
         ? 'Birdeye behavior feed active for watchlist context.'
         : 'Behavior Engine Ready — live Birdeye activation pending.'
       draft.scenarioTitle = lunarLive ? null : buildTokenScenarioTitle(trimmed)
-      draft.contractProofNote =
-        tokenResolution?.message ||
-        'Contract proof unavailable until token contract is resolved.'
+      if (!isSolanaScannerBacked(draft, scannerReport)) {
+        draft.contractProofNote =
+          tokenResolution?.message ||
+          'Contract proof unavailable until token contract is resolved.'
+      }
     }
   }
 
@@ -778,34 +844,49 @@ function buildScanReport({
     draft.scenarioTitle = null
   }
 
-  return draft
+  draft.executiveIntelligence = resolveExecutiveIntelligence({
+    report: draft,
+    scannerReport,
+    primeTrends,
+    watchlist,
+    birdeyeAssets,
+    walletExposureProfile,
+  })
+  draft.analyst = buildAnalystCopy(draft, aiBrief, scannerReport, draft.executiveIntelligence) || {
+    summary: 'Intelligence synthesis complete.',
+    keyConcern: 'Review evidence layers for provider context.',
+    nextMove: 'Expand narrative and behavior evidence before discretionary exposure.',
+  }
+
+  return enrichSolanaScannerBackedReport(draft, scannerReport)
 }
 
 function safeBuildScanReport(params) {
+  const fallbackParams = {
+    query: params.query,
+    chain: params.chain,
+    mode: params.mode,
+    canonicalWallet: params.canonicalWallet,
+    primeTrends: params.primeTrends,
+    targetClassification: params.targetClassification,
+    tokenResolution: params.tokenResolution,
+  }
   try {
     const report = buildScanReport(params)
     if (!isValidReport(report)) {
+      const fb = buildFallbackScanReport(fallbackParams)
+      fb.executiveIntelligence = buildPendingExecutiveIntel(fb)
       return {
-        report: buildFallbackScanReport({
-          query: params.query,
-          chain: params.chain,
-          mode: params.mode,
-          canonicalWallet: params.canonicalWallet,
-          primeTrends: params.primeTrends,
-        }),
+        report: enrichSolanaScannerBackedReport(fb, params.scannerReport),
         failed: true,
       }
     }
     return { report, failed: false }
   } catch {
+    const fb = buildFallbackScanReport(fallbackParams)
+    fb.executiveIntelligence = buildPendingExecutiveIntel(fb)
     return {
-      report: buildFallbackScanReport({
-        query: params.query,
-        chain: params.chain,
-        mode: params.mode,
-        canonicalWallet: params.canonicalWallet,
-        primeTrends: params.primeTrends,
-      }),
+      report: enrichSolanaScannerBackedReport(fb, params.scannerReport),
       failed: true,
     }
   }
@@ -814,7 +895,30 @@ function safeBuildScanReport(params) {
 /**
  * Adaptive multi-mode threat intelligence terminal (frontend-only).
  */
+function buildTokenResolutionFromClassification(classification, trimmed) {
+  if (!classification?.address || classification.recommendedModule !== 'token') return null
+  const chainSlug = classification.chain === 'solana' ? 'solana' : 'ethereum'
+  return {
+    resolved: true,
+    autoSelected: true,
+    confirmationRequired: false,
+    symbol: classification.symbol || trimmed,
+    address:
+      chainSlug === 'ethereum'
+        ? String(classification.address).toLowerCase()
+        : String(classification.address),
+    source: 'classifier',
+    chainSlug,
+    chainLabel: chainSlug === 'solana' ? 'Solana' : 'Ethereum',
+    candidates: [],
+    ambiguousNative: false,
+    manualOnly: false,
+    message: 'Target resolved by intelligence classifier',
+  }
+}
+
 export default function PreInteractionIntelligenceTerminal({
+  api,
   profile,
   walletSnapshot: walletSnapshotProp,
   intel,
@@ -848,8 +952,11 @@ export default function PreInteractionIntelligenceTerminal({
   const [resolveBusy, setResolveBusy] = useState(false)
   const [confirmedTokenContract, setConfirmedTokenContract] = useState(null)
   const [protocolActiveScanAddress, setProtocolActiveScanAddress] = useState(null)
+  const [targetClassification, setTargetClassification] = useState(null)
+  const [chainOverride, setChainOverride] = useState(false)
   const searchInputRef = useRef(null)
   const searchZoneRef = useRef(null)
+  const classifyPreviewRef = useRef(0)
 
   const canonicalWallet = walletSnapshotProp?.compact
     ? walletSnapshotProp
@@ -865,9 +972,30 @@ export default function PreInteractionIntelligenceTerminal({
   const connectedWalletAddress = useMemo(() => getConnectedWalletAddress(profile), [profile])
 
   const activeMode = useMemo(
-    () => resolveActiveMode(query, forcedModeId, connectedWalletAddress),
-    [query, forcedModeId, connectedWalletAddress],
+    () => resolveActiveMode(query, forcedModeId, connectedWalletAddress, targetClassification),
+    [query, forcedModeId, connectedWalletAddress, targetClassification],
   )
+
+  useEffect(() => {
+    const trimmed = String(query || '').trim()
+    if (!trimmed || forcedModeId) {
+      setTargetClassification(null)
+      return undefined
+    }
+    const sync = classifyTargetSync(trimmed, connectedWalletAddress)
+    setTargetClassification(sync)
+    const ticket = ++classifyPreviewRef.current
+    const timer = setTimeout(async () => {
+      if (!api) return
+      try {
+        const full = await classifyIntelligenceTarget(trimmed, { api, connectedWalletAddress })
+        if (classifyPreviewRef.current === ticket) setTargetClassification(full)
+      } catch {
+        /* keep sync */
+      }
+    }, 450)
+    return () => clearTimeout(timer)
+  }, [query, forcedModeId, connectedWalletAddress, api])
   const activeChipId = activeMode.chipId
   const modeFromModule = Boolean(forcedModeId && query.trim())
   const canRunScan = Boolean(String(query || '').trim())
@@ -898,7 +1026,7 @@ export default function PreInteractionIntelligenceTerminal({
   }, [onClearScanner])
 
   const reportBuildParams = useCallback(
-    (reportQuery, mode) => ({
+    (reportQuery, mode, overrides = {}) => ({
       query: reportQuery,
       chain,
       mode,
@@ -910,7 +1038,12 @@ export default function PreInteractionIntelligenceTerminal({
       aiBrief,
       recommendedActions,
       scannerSignals,
-      scannerReport,
+      scannerReport: overrides.scannerReport ?? scannerReport,
+      birdeyeAssets,
+      targetClassification: overrides.targetClassification ?? targetClassification,
+      tokenResolution: overrides.tokenResolution,
+      protocolProfile: overrides.protocolProfile,
+      confirmedTokenContract: overrides.confirmedTokenContract,
     }),
     [
       chain,
@@ -923,6 +1056,8 @@ export default function PreInteractionIntelligenceTerminal({
       recommendedActions,
       scannerSignals,
       scannerReport,
+      birdeyeAssets,
+      targetClassification,
     ],
   )
 
@@ -930,57 +1065,122 @@ export default function PreInteractionIntelligenceTerminal({
     const trimmed = String(query || '').trim()
     if (!trimmed) return
 
-    const mode = resolveActiveMode(query, forcedModeId, connectedWalletAddress)
     setResolveBusy(true)
     setConfirmedTokenContract(null)
     resetScannerTargetState()
+
+    let classification = classifyTargetSync(trimmed, connectedWalletAddress)
+    try {
+      classification = await classifyIntelligenceTarget(trimmed, { api, connectedWalletAddress })
+      setTargetClassification(classification)
+      if (classification?.chain) {
+        const supported = ['ethereum', 'solana', 'base', 'arbitrum', 'polygon']
+        if (supported.includes(classification.chain)) setChain(classification.chain)
+      }
+    } catch {
+      setTargetClassification(classification)
+    }
+
+    const mode = resolveActiveMode(query, forcedModeId, connectedWalletAddress, classification)
     let tokenResolution = null
     let protocolProfile = null
 
     try {
       if (mode.id === 'token') {
-        tokenResolution = await resolveTokenSymbol(trimmed, chain)
+        tokenResolution =
+          buildTokenResolutionFromClassification(classification, trimmed) ||
+          (await resolveTokenSymbol(trimmed, classification?.chain || chain))
       } else if (mode.id === 'protocol') {
-        protocolProfile = resolveProtocolUrl(trimmed)
+        protocolProfile = resolveProtocolUrl(classification?.url || trimmed)
       }
 
-      const { report: nextReport, failed } = safeBuildScanReport({
-        ...reportBuildParams(trimmed, mode),
+      const solanaCtx = resolveSolanaScanContext({
+        targetClassification: classification,
         tokenResolution,
-        protocolProfile,
-        confirmedTokenContract: null,
+        query: trimmed,
+        chain,
       })
+
+      let scannerBody = null
+      if (onRunDeepScan) {
+        if (mode.id === 'wallet') {
+          /* Wallet Exposure Analysis — no contract scanner */
+        } else if (solanaCtx.shouldScanSolana) {
+          const scanResult = await onRunDeepScan(
+            solanaCtx.mint,
+            SOLANA_CHAIN_ID,
+            solanaCtx.symbol || classification?.symbol || trimmed,
+          )
+          if (scanResult?.ok && scanResult.body) scannerBody = scanResult.body
+        } else if (mode.id === 'contract' && classification?.address && classification.chain === 'ethereum') {
+          const scanResult = await onRunDeepScan(classification.address, 1)
+          if (scanResult?.ok && scanResult.body) scannerBody = scanResult.body
+        } else if (mode.id === 'token' && tokenResolution?.autoSelected && tokenResolution.address) {
+          const chainKey = tokenResolution.chainSlug || classification?.chain || chain
+          if (chainKey !== 'solana') {
+            const chainIdMap = { ethereum: 1, base: 8453, arbitrum: 42161, polygon: 137 }
+            const scanResult = await onRunDeepScan(
+              tokenResolution.address,
+              chainIdMap[chainKey] ?? 1,
+            )
+            if (scanResult?.ok && scanResult.body) scannerBody = scanResult.body
+          }
+        }
+      }
+
+      const { report: nextReport, failed } = safeBuildScanReport(
+        reportBuildParams(trimmed, mode, {
+          targetClassification: classification,
+          tokenResolution,
+          protocolProfile,
+          confirmedTokenContract: null,
+          scannerReport: scannerBody ?? scannerReport,
+        }),
+      )
       setReport(nextReport)
-      setScanFailed(failed)
+      setScanFailed(failed && !scannerBody)
     } catch {
-      const { report: nextReport, failed } = safeBuildScanReport({
-        ...reportBuildParams(trimmed, mode),
-        tokenResolution: null,
-        protocolProfile: null,
-      })
+      const { report: nextReport, failed } = safeBuildScanReport(
+        reportBuildParams(trimmed, mode, {
+          tokenResolution,
+          protocolProfile,
+          targetClassification: classification,
+        }),
+      )
       setReport(nextReport)
       setScanFailed(failed)
     } finally {
       setResolveBusy(false)
     }
-  }, [query, forcedModeId, chain, connectedWalletAddress, reportBuildParams, resetScannerTargetState])
+  }, [
+    query,
+    forcedModeId,
+    chain,
+    connectedWalletAddress,
+    api,
+    reportBuildParams,
+    resetScannerTargetState,
+    onRunDeepScan,
+  ])
 
   useEffect(() => {
-    if (!report || report.isFallback) return
+    if (!report) return
     const modeKey = report.modeId && ANALYSIS_MODES[report.modeId] ? report.modeId : forcedModeId
     const mode = modeKey
       ? { ...ANALYSIS_MODES[modeKey] }
-      : resolveActiveMode(report.query, forcedModeId, connectedWalletAddress)
+      : resolveActiveMode(report.query, forcedModeId, connectedWalletAddress, report.targetClassification)
     const reportQuery = report.query === '(workspace baseline)' ? query : report.query
-    const { report: nextReport, failed } = safeBuildScanReport({
-      ...reportBuildParams(reportQuery, mode),
-      tokenResolution: report.tokenResolution,
-      protocolProfile: report.protocolProfile,
-      confirmedTokenContract,
-    })
+    const { report: nextReport, failed } = safeBuildScanReport(
+      reportBuildParams(reportQuery, mode, {
+        tokenResolution: report.tokenResolution,
+        protocolProfile: report.protocolProfile,
+        confirmedTokenContract,
+        targetClassification: report.targetClassification ?? targetClassification,
+      }),
+    )
     if (isValidReport(nextReport)) {
       setReport(nextReport)
-      setScanFailed(failed)
+      setScanFailed(failed && !solanaScannerReportActive(scannerReport))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refresh verdict when scanner completes
   }, [scannerSignals, scannerReport, connectedWalletAddress, confirmedTokenContract])
@@ -1078,18 +1278,102 @@ export default function PreInteractionIntelligenceTerminal({
     setScanFailed(failed)
   }
 
-  const lunarLivePreview = isLiveLunarCrushStatus(primeTrends?.status)
+  const lunarLivePreview = isPrimeLunarCrushLive(primeTrends)
   const birdeyeLivePreview = watchlist?.status === 'live'
 
-  const tokenContractConfirmed = hasTokenContractProof(
-    report?.tokenResolution,
-    confirmedTokenContract,
+  const isSolanaTokenReport = Boolean(report?.isSolanaToken)
+  const verdictReport = useMemo(
+    () => (report ? enrichSolanaScannerBackedReport(report, scannerReport) : null),
+    [report, scannerReport],
   )
+  const topVerdictReport = verdictReport || report
+  const resolvedExecutive = useMemo(
+    () =>
+      report
+        ? resolveExecutiveIntelligence({
+            report,
+            scannerReport,
+            primeTrends,
+            watchlist,
+            birdeyeAssets,
+            walletExposureProfile:
+              report?.walletExposureProfile ??
+              intel?.walletExposureProfile ??
+              intel?.riskData?.walletExposureProfile ??
+              null,
+          })
+        : null,
+    [report, scannerReport, primeTrends, watchlist, birdeyeAssets, intel?.walletExposureProfile, intel?.riskData?.walletExposureProfile],
+  )
+  const executiveSummary = useMemo(
+    () =>
+      buildExecutiveSummary({
+        report,
+        executive: resolvedExecutive,
+        scannerReport,
+        topVerdictReport,
+      }),
+    [report, resolvedExecutive, scannerReport, topVerdictReport],
+  )
+  const resolvedAnalyst = useMemo(() => {
+    if (!topVerdictReport) return null
+    return (
+      topVerdictReport.analyst ||
+      buildInstitutionalAnalystAssessment({
+        report: topVerdictReport,
+        scannerReport,
+        executive: resolvedExecutive,
+      })
+    )
+  }, [topVerdictReport, scannerReport, resolvedExecutive])
+  const intelligenceCoverage = useMemo(
+    () =>
+      buildIntelligenceCoverageSources({
+        report,
+        scannerReport,
+        primeTrends,
+        watchlist,
+        birdeyeAssets,
+      }),
+    [report, scannerReport, primeTrends, watchlist, birdeyeAssets],
+  )
+  const { setHeroMetrics, clearHeroMetrics } = usePrimeIntelligenceHero()
+  useEffect(() => {
+    if (!report) {
+      clearHeroMetrics()
+      return
+    }
+    const metrics = resolveHeroIntelligenceMetrics({
+      report,
+      executive: resolvedExecutive,
+      scannerReport,
+      birdeyeAssets,
+      primeTrends,
+    })
+    if (metrics) setHeroMetrics(metrics)
+    else clearHeroMetrics()
+    return () => clearHeroMetrics()
+  }, [report, resolvedExecutive, scannerReport, birdeyeAssets, primeTrends, setHeroMetrics, clearHeroMetrics])
+  const tokenContractConfirmed =
+    !isSolanaTokenReport &&
+    hasTokenContractProof(report?.tokenResolution, confirmedTokenContract)
+  const solanaMintResolved = Boolean(report?.solanaMintResolved)
+
+  const solanaMintAddress = resolveSolanaMintAddress({
+    targetClassification: report?.targetClassification,
+    tokenResolution: report?.tokenResolution,
+    confirmedTokenContract,
+    query: report?.query,
+  })
+
+  const showSolanaTokenPanel =
+    report?.modeId === 'token' && isSolanaTokenReport && solanaMintResolved
 
   const showContractAnalyzer =
-    report?.modeId === 'contract' ||
-    (report?.modeId === 'token' && tokenContractConfirmed) ||
-    (report?.modeId === 'protocol' && protocolActiveScanAddress && scannerSignals?.hasScan)
+    !isSolanaTokenReport &&
+    (report?.modeId === 'contract' ||
+      (report?.modeId === 'token' && tokenContractConfirmed) ||
+      (report?.modeId === 'protocol' && protocolActiveScanAddress && scannerSignals?.hasScan))
 
   const contractScanTarget =
     confirmedTokenContract?.address ||
@@ -1122,12 +1406,14 @@ export default function PreInteractionIntelligenceTerminal({
   useEffect(() => {
     if (!report || report.modeId !== 'token' || !confirmedTokenContract) return
     const mode = ANALYSIS_MODES.token
-    const { report: nextReport, failed } = safeBuildScanReport({
-      ...reportBuildParams(report.query, mode),
-      tokenResolution: report.tokenResolution,
-      protocolProfile: report.protocolProfile,
-      confirmedTokenContract,
-    })
+    const { report: nextReport, failed } = safeBuildScanReport(
+      reportBuildParams(report.query, mode, {
+        tokenResolution: report.tokenResolution,
+        protocolProfile: report.protocolProfile,
+        confirmedTokenContract,
+        targetClassification: report.targetClassification ?? targetClassification,
+      }),
+    )
     if (isValidReport(nextReport)) {
       setReport(nextReport)
       setScanFailed(failed)
@@ -1142,6 +1428,22 @@ export default function PreInteractionIntelligenceTerminal({
     const chainId = { ethereum: 1, base: 8453, arbitrum: 42161, polygon: 137 }[chainKey] ?? 1
     onRunDeepScan(addr, chainId)
   }, [contractScanTarget, confirmedTokenContract?.chainId, chain, onRunDeepScan])
+
+  const handleRunSolanaTokenScan = useCallback(() => {
+    const addr = solanaMintAddress
+    if (!addr || !onRunDeepScan) return
+    const sym =
+      report?.targetClassification?.symbol ||
+      report?.tokenResolution?.symbol ||
+      report?.displayTarget
+    onRunDeepScan(addr, SOLANA_CHAIN_ID, sym)
+  }, [
+    solanaMintAddress,
+    onRunDeepScan,
+    report?.targetClassification?.symbol,
+    report?.tokenResolution?.symbol,
+    report?.displayTarget,
+  ])
 
   const handleProtocolTargetScan = useCallback(
     (address) => {
@@ -1214,18 +1516,41 @@ export default function PreInteractionIntelligenceTerminal({
               data-1p-ignore
             />
           </div>
-          <select
-            value={chain}
-            onChange={(e) => setChain(e.target.value)}
-            className="prime-preinteract-chain-select"
-            aria-label="Chain"
-          >
-            {CHAINS.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          <div className="prime-preinteract-chain-wrap">
+            {targetClassification?.chain && !chainOverride ? (
+              <div className="prime-preinteract-chain-detected" title="Auto-detected network">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-slate-500">Network</span>
+                <span className="text-sm font-medium text-slate-200">
+                  {CHAINS.find((c) => c.id === targetClassification.chain)?.label ||
+                    targetClassification.chain}
+                </span>
+                <button
+                  type="button"
+                  className="text-[10px] text-violet-300/90 underline underline-offset-2"
+                  onClick={() => setChainOverride(true)}
+                >
+                  Override
+                </button>
+              </div>
+            ) : (
+              <select
+                value={chain}
+                onChange={(e) => {
+                  setChain(e.target.value)
+                  setChainOverride(true)
+                }}
+                className="prime-preinteract-chain-select"
+                aria-label="Override network (optional)"
+                title="Optional — target network is auto-detected when possible"
+              >
+                {CHAINS.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <div className="prime-preinteract-analyze-wrap">
             <button
               type="button"
@@ -1266,12 +1591,32 @@ export default function PreInteractionIntelligenceTerminal({
           </p>
         ) : null}
 
-        {query.trim() || forcedModeId ? (
-          <div className="prime-terminal-mode-detect mt-3">
-            <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">
-              {modeFromModule || forcedModeId ? 'Selected mode' : 'Detected mode'}
-            </span>
-            <span className={modeBadgeClass(activeMode.tone)}>{activeMode.label}</span>
+        {query.trim() ? (
+          <div className="prime-terminal-mode-detect mt-3 space-y-2">
+            {targetClassification && !modeFromModule ? (
+              <div className="prime-terminal-target-classify flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">
+                  Detected
+                </span>
+                <span className="text-sm font-semibold text-white">{targetClassification.displayLabel}</span>
+                {targetClassification.symbol ? (
+                  <span className="text-sm font-mono text-violet-200">{targetClassification.symbol}</span>
+                ) : null}
+                {targetClassification.protocolName && targetClassification.type === 'protocol' ? (
+                  <span className="text-sm text-cyan-200">{targetClassification.protocolName}</span>
+                ) : null}
+                <span className="text-[10px] font-mono text-slate-400">
+                  Confidence: {targetClassification.confidence}%
+                  {targetClassification.syncOnly ? ' · confirming' : ''}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-[0.16em] text-slate-500">
+                {modeFromModule || forcedModeId ? 'Selected module' : 'Recommended module'}
+              </span>
+              <span className={modeBadgeClass(activeMode.tone)}>{activeMode.label}</span>
+            </div>
           </div>
         ) : null}
 
@@ -1340,28 +1685,28 @@ export default function PreInteractionIntelligenceTerminal({
             </button>
           ))}
           <button type="button" onClick={loadExampleThreat} className="prime-preinteract-example-chip">
-            Load example threat
+            Reference intelligence target
           </button>
         </div>
 
         {!report ? (
           <div className="prime-provider-compact-preview mt-4">
             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mb-2">
-              Provider-ready snapshot
+              Intelligence coverage snapshot
             </p>
             <div className="flex flex-wrap gap-2">
               <span className="prime-provider-compact-preview__chip">
-                Narrative · {lunarLivePreview ? 'Live' : 'Scenario showcase'}
+                Narrative · {lunarLivePreview ? 'Live' : 'Model active'}
               </span>
               <span className="prime-provider-compact-preview__chip">
-                Behavior · {birdeyeLivePreview ? 'Live' : 'Engine ready'}
+                Behavior · {birdeyeLivePreview ? 'Live' : 'Coverage pending'}
               </span>
               <span className="prime-provider-compact-preview__chip">
                 Scanner · {showRiskScanner ? 'Available' : 'Verify wallet'}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-              Run an intelligence scan to open executive verdict, AI analyst interpretation, and evidence proof layers.
+              Run an intelligence scan to open executive verdict, analyst assessment, and supporting evidence.
             </p>
           </div>
         ) : null}
@@ -1373,22 +1718,29 @@ export default function PreInteractionIntelligenceTerminal({
           animate={{ opacity: 1, y: 0 }}
           className="prime-preinteract-report"
         >
-          {report.isFallback || scanFailed ? (
+          {(report.isFallback || scanFailed) &&
+          !(isSolanaTokenReport && solanaMintResolved) ? (
             <div className="prime-scan-fallback" role="alert">
               <p className="prime-scan-fallback__title">
                 {report.modeId === 'token' ? 'Token intelligence fallback active' : 'Scan fallback active'}
               </p>
               <p className="prime-scan-fallback__copy">
                 {report.fallbackMessage ||
-                  'Intelligence scan could not complete. Provider fallback is active. Try again or run Contract Analyzer.'}
+                  (isSolanaTokenReport
+                    ? 'Intelligence scan could not complete. Provider fallback is active. Try again or run Solana Token Scan.'
+                    : 'Intelligence scan could not complete. Provider fallback is active. Try again or run Contract Analyzer.')}
               </p>
             </div>
           ) : null}
 
-          {report.modeId === 'token' && report.contractProofNote ? (
+          {topVerdictReport.modeId === 'token' && topVerdictReport.contractProofNote ? (
             <div
               className={`prime-token-resolution-banner ${
-                tokenContractConfirmed
+                isSolanaTokenReport || isSolanaScannerBacked(topVerdictReport, scannerReport)
+                  ? solanaMintResolved
+                    ? 'prime-token-resolution-banner--resolved prime-token-resolution-banner--solana'
+                    : 'prime-token-resolution-banner--scenario'
+                  : tokenContractConfirmed
                   ? 'prime-token-resolution-banner--resolved'
                   : report.tokenResolution?.manualOnly
                     ? 'prime-token-resolution-banner--manual'
@@ -1399,39 +1751,53 @@ export default function PreInteractionIntelligenceTerminal({
               role="status"
             >
               <p className="prime-token-resolution-banner__title">
-                {tokenContractConfirmed
-                  ? 'Contract proof available'
+                {isSolanaScannerBacked(topVerdictReport, scannerReport)
+                  ? topVerdictReport.mintProofTitle || scannerProofBannerTitle(report, scannerReport)
+                  : isSolanaTokenReport
+                  ? solanaMintResolved
+                    ? topVerdictReport.mintProofTitle || 'Mint resolved'
+                    : 'Partial provider coverage'
+                  : tokenContractConfirmed
+                  ? 'Evidence verified'
                   : report.tokenResolution?.manualOnly && !report.tokenResolution?.candidates?.length
                     ? report.tokenResolution.bannerTitle || 'Manual contract required'
                     : report.tokenResolution?.confirmationRequired
                       ? report.tokenResolution.bannerTitle || 'Candidate contract found'
-                      : 'Scenario-only token analysis'}
+                      : 'Partial provider coverage'}
               </p>
-              <p className="prime-token-resolution-banner__copy">{report.contractProofNote}</p>
+              <p className="prime-token-resolution-banner__copy">{topVerdictReport.contractProofNote}</p>
 
-              {tokenContractConfirmed ? (
+              {(tokenContractConfirmed || (isSolanaTokenReport && solanaMintResolved)) ? (
                 <>
                   <p className="prime-token-resolution-banner__address font-mono text-xs mt-1">
-                    {confirmedTokenContract?.address || report.tokenResolution?.address}
+                    {isSolanaTokenReport
+                      ? solanaMintAddress
+                      : confirmedTokenContract?.address || report.tokenResolution?.address}
                     <span className="text-slate-500">
                       {' '}
-                      · via {confirmedTokenContract?.source || report.tokenResolution?.source || 'registry'}
+                      · via{' '}
+                      {isSolanaTokenReport
+                        ? report.tokenResolution?.source || report.targetClassification?.type || 'classifier'
+                        : confirmedTokenContract?.source || report.tokenResolution?.source || 'registry'}
                     </span>
                   </p>
                   {showRiskScanner && !scannerSignals?.hasScan ? (
                     <button
                       type="button"
                       className="prime-token-resolution-banner__cta"
-                      onClick={handleRunResolvedContractScan}
+                      onClick={
+                        isSolanaTokenReport ? handleRunSolanaTokenScan : handleRunResolvedContractScan
+                      }
                       disabled={scannerBusy}
                     >
-                      Run Contract Analyzer
+                      {isSolanaTokenReport ? 'Run Solana Token Scan' : 'Run Contract Analyzer'}
                     </button>
                   ) : null}
                 </>
               ) : null}
 
-              {report.tokenResolution?.confirmationRequired &&
+              {!isSolanaTokenReport &&
+              report.tokenResolution?.confirmationRequired &&
               report.tokenResolution.candidates?.length &&
               !tokenContractConfirmed ? (
                 <div className="prime-token-candidates">
@@ -1474,7 +1840,7 @@ export default function PreInteractionIntelligenceTerminal({
             <div className="prime-token-intel-context">
               {report.scenarioTitle ? (
                 <p className="prime-token-intel-context__scenario">
-                  {report.narrativeCategory === 'meme' ? 'Scenario' : 'Narrative'} · {report.scenarioTitle}
+                  {report.narrativeCategory === 'meme' ? 'Narrative' : 'Market structure'} · {report.scenarioTitle}
                 </p>
               ) : null}
               {report.narrativeContext ? (
@@ -1546,7 +1912,7 @@ export default function PreInteractionIntelligenceTerminal({
             ) : null}
           </div>
 
-          <p className="prime-terminal-mode-lead">{report.modeVerdict}</p>
+          <p className="prime-terminal-mode-lead">{topVerdictReport.modeVerdict}</p>
 
           <div className="prime-terminal-evidence-preview">
             <p className="prime-terminal-evidence-preview__label">What we checked</p>
@@ -1557,7 +1923,7 @@ export default function PreInteractionIntelligenceTerminal({
             </ul>
           </div>
 
-          <div className={`prime-verdict-panel ${panelToneClass(report.overallRisk, report.isPreliminary)}`}>
+          <div className={`prime-verdict-panel ${panelToneClass(topVerdictReport.overallRisk, topVerdictReport.isPreliminary)}`}>
             <div className="prime-verdict-panel__layout">
               <div className="prime-verdict-panel__left">
                 <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-slate-400 mb-3">
@@ -1569,21 +1935,21 @@ export default function PreInteractionIntelligenceTerminal({
                     <div>
                       <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Overall risk</p>
                       <p
-                        className={`prime-verdict-panel__risk ${riskClass(report.overallRisk, report.isPreliminary)}`}
+                        className={`prime-verdict-panel__risk ${riskClass(topVerdictReport.overallRisk, topVerdictReport.isPreliminary)}`}
                       >
-                        {report.overallRiskDisplay || report.overallRisk}
+                        {topVerdictReport.overallRiskDisplay || topVerdictReport.overallRisk}
                       </p>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       <div>
-                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Confidence</p>
-                        <p className="text-xs text-white font-medium mt-1 leading-snug">{report.confidence}</p>
+                        <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Intelligence confidence</p>
+                        <p className="text-xs text-white font-medium mt-1 leading-snug">{topVerdictReport.confidence}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
                           Scanner validation
                         </p>
-                        <p className="text-xs text-white font-medium mt-1 leading-snug">{report.scannerValidation}</p>
+                        <p className="text-xs text-white font-medium mt-1 leading-snug">{topVerdictReport.scannerValidation}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Target type</p>
@@ -1591,25 +1957,36 @@ export default function PreInteractionIntelligenceTerminal({
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">Wallet index</p>
-                      <p className="text-sm font-mono text-violet-200 mt-1">
-                        {report.walletSnapshot?.compact || 'Awaiting snapshot'}
+                      <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
+                        {report.modeId === 'wallet' ? 'Wallet target' : 'Wallet index'}
                       </p>
+                      <p className="text-sm font-mono text-violet-200 mt-1 break-all">
+                        {report.modeId === 'wallet' && report.analysisWalletAddress
+                          ? report.analysisWalletAddress
+                          : report.walletSnapshot?.compact || 'Awaiting snapshot'}
+                      </p>
+                      {report.modeId === 'wallet' ? (
+                        <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                          Exposure bands and approval inventory reflect your verified wallet when linked;
+                          target wallet drives module routing and verdict framing.
+                        </p>
+                      ) : null}
                     </div>
-                    {report.composite ? (
+                    {topVerdictReport.composite ? (
                       <div className="space-y-1.5 pt-1">
                         <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
                           Composite risk
                         </p>
                         <p className="text-xs font-mono text-slate-300">
-                          {report.composite.score}/100 · {report.composite.verdictLabel}
+                          {topVerdictReport.composite.score}/100 · {topVerdictReport.composite.verdictLabel}
                         </p>
                         <p className="text-[10px] font-mono text-slate-500 leading-relaxed">
-                          Contract {report.composite.subscores.contractRisk}/100 · Narrative{' '}
-                          {report.composite.subscores.narrativeRisk}/100 · Behavior{' '}
-                          {report.composite.subscores.behaviorRisk}/100
-                          {report.composite.subscores.walletExposureRisk != null
-                            ? ` · Wallet exposure ${report.composite.subscores.walletExposureRisk}/100`
+                          Technical {topVerdictReport.composite.subscores.contractRisk}/100 · Narrative{' '}
+                          {topVerdictReport.composite.subscores.narrativeRisk}/100 · Behavior{' '}
+                          {topVerdictReport.composite.subscores.behaviorRisk}/100 · Liquidity{' '}
+                          {topVerdictReport.composite.subscores.liquidityRisk}/100
+                          {topVerdictReport.composite.subscores.walletExposureRisk != null
+                            ? ` · Wallet Exposure ${topVerdictReport.composite.subscores.walletExposureRisk}/100`
                             : ''}
                         </p>
                       </div>
@@ -1627,12 +2004,12 @@ export default function PreInteractionIntelligenceTerminal({
 
               <div className="prime-verdict-panel__right">
                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mb-2">Recommendation</p>
-                <p className="text-sm text-slate-100 leading-relaxed">{report.recommendation}</p>
+                <p className="text-sm text-slate-100 leading-relaxed">{topVerdictReport.recommendation}</p>
                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mt-4 mb-2">
                   Threat indicators
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {report.threats.map((t) => (
+                  {topVerdictReport.threats.map((t) => (
                     <span key={t.label} className="prime-verdict-panel__pill">
                       {t.label}
                       <PriorityBadge level={t.level} />
@@ -1643,43 +2020,57 @@ export default function PreInteractionIntelligenceTerminal({
             </div>
           </div>
 
+          <div className="mt-5">
+            <ExecutiveSummaryCard summary={executiveSummary} variant="embed" />
+          </div>
+
+          <div className="mt-5">
+            <ExecutiveIntelligenceCard
+              executive={resolvedExecutive}
+              coverageSources={intelligenceCoverage}
+              variant="embed"
+            />
+          </div>
+
           <div className="prime-analyst-panel mt-5">
-            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-violet-200/90 mb-3">AI analyst</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-violet-200/90 mb-3">
+              AI analyst assessment
+            </p>
             <dl className="prime-analyst-panel__grid">
               <div>
-                <dt>Summary</dt>
-                <dd>{report.analyst?.summary || 'Intelligence synthesis available in evidence layers.'}</dd>
+                <dt>Technical assessment</dt>
+                <dd>
+                  {resolvedAnalyst?.technicalAssessment ||
+                    resolvedAnalyst?.summary ||
+                    'Intelligence synthesis available in supporting evidence.'}
+                </dd>
               </div>
               <div>
-                <dt>Key concern</dt>
-                <dd>{report.analyst?.keyConcern || 'Review provider readiness before exposure decisions.'}</dd>
+                <dt>Primary risk driver</dt>
+                <dd>{resolvedAnalyst?.primaryRiskDriver || resolvedAnalyst?.keyConcern || '—'}</dd>
               </div>
               <div>
-                <dt>Recommended next move</dt>
-                <dd>{report.analyst?.nextMove || 'Run Intelligence Scan again or expand evidence layers.'}</dd>
+                <dt>Market structure assessment</dt>
+                <dd>{resolvedAnalyst?.marketStructureAssessment || '—'}</dd>
+              </div>
+              <div>
+                <dt>Recommended monitoring action</dt>
+                <dd>
+                  {resolvedAnalyst?.recommendedMonitoringAction ||
+                    resolvedAnalyst?.nextMove ||
+                    'Run Intelligence Scan again or expand supporting evidence.'}
+                </dd>
               </div>
             </dl>
           </div>
 
-          {showContractAnalyzer ? (
-            <div className="mt-5">
-              <PrimeContractAnalyzerPanel
-                scanTarget={contractScanTarget}
-                terminalChain={chain}
-                scannerReport={scannerReport}
-                approvalRows={approvalRows}
-                showRiskScanner={showRiskScanner}
-                onRunDeepScan={onRunDeepScan}
-                busy={scannerBusy}
-                scanError={scanError}
-              />
-            </div>
-          ) : null}
-
           <div className="prime-evidence-proof-header mt-6">
-            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-slate-400">Evidence proof layers</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-slate-400">Supporting evidence</p>
             <p className="text-[11px] text-slate-500 mt-1">
-              Wallet, narrative, behavior, and timeline proof — contract trust evidence when in contract mode.
+              Wallet, narrative, behavior, and timeline proof
+              {isSolanaTokenReport
+                ? ' — market structure evidence for Solana SPL targets.'
+                : ' — contract trust evidence when in contract mode.'}
             </p>
           </div>
 
@@ -1703,15 +2094,108 @@ export default function PreInteractionIntelligenceTerminal({
                   ? report.query
                   : null
               }
-              behaviorSubtitle={behaviorSubtitle(watchlist)}
+              behaviorSubtitle={behaviorSubtitle(watchlist, birdeyeAssets)}
               analysisModeId={
-                report.modeId === 'token' && tokenContractConfirmed ? 'contract' : report.modeId
+                isSolanaTokenReport
+                  ? 'solana_token'
+                  : report.modeId === 'token' && tokenContractConfirmed
+                    ? 'contract'
+                    : report.modeId
               }
+              solanaMintAddress={isSolanaTokenReport ? solanaMintAddress : null}
+              solanaSymbol={
+                report.targetClassification?.symbol || report.tokenResolution?.symbol || report.displayTarget
+              }
+              solanaTokenName={report.targetClassification?.name}
               primeTrends={primeTrends}
               watchlist={watchlist}
               birdeyeAssets={birdeyeAssets}
+              riskData={intel?.riskData ?? null}
+              walletExposureProfile={
+                report.walletExposureProfile ??
+                intel?.walletExposureProfile ??
+                intel?.riskData?.walletExposureProfile ??
+                null
+              }
+              approvalRowsForExposure={approvalRows}
+              report={report}
             />
           </div>
+
+          <div className="prime-evidence-proof-header mt-8">
+            <p className="text-[10px] font-mono uppercase tracking-[0.28em] text-slate-400">
+              Detailed intelligence modules
+            </p>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Liquidity, wallet exposure, and scanner modules for extended review.
+            </p>
+          </div>
+
+          {(scannerReport?.tokenConcentration ||
+            scannerReport?.liquidityIntelligence ||
+            report?.liquidityIntelligence) &&
+          (report.modeId === 'token' || isSolanaTokenReport) ? (
+            <div className="mt-5">
+              <LiquidityIntelligenceCard
+                scannerReport={
+                  scannerReport?.liquidityIntelligence
+                    ? scannerReport
+                    : report?.liquidityIntelligence
+                      ? {
+                          chain: 'solana',
+                          liquidityIntelligence: report.liquidityIntelligence,
+                        }
+                      : scannerReport
+                }
+                variant="embed"
+              />
+            </div>
+          ) : null}
+
+          {canonicalWallet.hasWallet ? (
+            <div className="mt-5">
+              <WalletExposureIntelligenceCard
+                riskData={intel?.riskData ?? null}
+                approvalRows={approvalRows}
+                hasWallet={canonicalWallet.hasWallet}
+                variant="embed"
+              />
+            </div>
+          ) : null}
+
+          {showSolanaTokenPanel ? (
+            <div className="mt-5">
+              <PrimeSolanaTokenPanel
+                mintAddress={solanaMintAddress}
+                symbol={
+                  report.targetClassification?.symbol ||
+                  report.tokenResolution?.symbol ||
+                  report.displayTarget
+                }
+                tokenName={report.targetClassification?.name}
+                scannerReport={scannerReport?.chain === 'solana' ? scannerReport : null}
+                showRiskScanner={showRiskScanner}
+                onRunSolanaScan={handleRunSolanaTokenScan}
+                busy={scannerBusy}
+                scanError={scanError}
+              />
+            </div>
+          ) : null}
+
+          {showContractAnalyzer ? (
+            <div className="mt-5">
+              <PrimeContractAnalyzerPanel
+                scanTarget={contractScanTarget}
+                terminalChain={chain}
+                scannerReport={scannerReport?.chain === 'solana' ? null : scannerReport}
+                approvalRows={approvalRows}
+                showRiskScanner={showRiskScanner}
+                onRunDeepScan={onRunDeepScan}
+                busy={scannerBusy}
+                scanError={scanError}
+              />
+            </div>
+          ) : null}
 
           <p className="prime-preinteract-compliance mt-5">
             <Shield size={14} className="shrink-0 text-violet-300/80" aria-hidden />

@@ -1,3 +1,5 @@
+import { SYMBOL_REGISTRY } from '@/services/intelligenceTargetClassifier.js'
+
 /**
  * Lightweight EVM token symbol → contract address resolver.
  * Registry auto-selects; DexScreener returns candidates requiring user confirmation.
@@ -216,6 +218,22 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
   }
 
   if (terminalChainId === 'solana') {
+    const reg = SYMBOL_REGISTRY[symbol]
+    if (reg?.chain === 'solana' && reg.address) {
+      return {
+        resolved: true,
+        autoSelected: true,
+        confirmationRequired: false,
+        symbol: reg.symbol,
+        address: reg.address,
+        source: 'registry',
+        chainSlug: 'solana',
+        candidates: [],
+        ambiguousNative: false,
+        manualOnly: false,
+        message: 'Solana mint resolved from registry',
+      }
+    }
     return {
       resolved: false,
       autoSelected: false,
@@ -227,7 +245,7 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
       confirmationRequired: false,
       ambiguousNative,
       manualOnly: manualOnlySymbol,
-      message: 'EVM contract resolution not available on Solana — use mint address for scanner.',
+      message: 'Paste the SPL mint address or use a known symbol (BONK, WIF, JUP) for scanner-backed proof.',
     }
   }
 

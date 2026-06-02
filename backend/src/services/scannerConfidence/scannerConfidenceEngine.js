@@ -104,6 +104,8 @@ export function solanaProviderCoverageFromReport(report) {
           report?.freezeAuthority != null ||
           report?.addressType === 'SPL_TOKEN_MINT'),
     ),
+    helius: Boolean(process.env.SOLANA_RPC_URL && rpcOk),
+    birdeye: Boolean(tc.dataSources?.birdeye || tc.provenance?.birdeye),
     dexscreener: Boolean(tc.dataSources?.dexscreener || tc.provenance?.dexscreener),
     jupiter: Boolean(
       tc.dataSources?.jupiter ||
@@ -112,7 +114,8 @@ export function solanaProviderCoverageFromReport(report) {
         tc.jupiterClassification === 'LIMITED_ROUTING',
     ),
     holders: Boolean(
-      tc.top10HolderPct != null ||
+      tc.holderCount != null ||
+        tc.top10HolderPct != null ||
         (holderText.includes('%') && !/unavailable/i.test(holderText)),
     ),
     largestWallet: Boolean(
@@ -120,8 +123,41 @@ export function solanaProviderCoverageFromReport(report) {
         (largestText.includes('%') && !/unavailable/i.test(largestText)),
     ),
     metadata: Boolean(report?.metadataPresent || report?.archetypeLabel),
-    mintAuthority: Boolean(!report?.partialMarketScan && report?.mintAuthority != null),
-    freezeAuthority: Boolean(!report?.partialMarketScan && report?.freezeAuthority != null),
+    mintAuthority: Boolean(
+      !report?.partialMarketScan &&
+        (report?.mintAuthority != null || report?.mintAuthority === null),
+    ),
+    freezeAuthority: Boolean(
+      !report?.partialMarketScan &&
+        (report?.freezeAuthority != null || report?.freezeAuthority === null),
+    ),
+  }
+}
+
+/**
+ * Human-readable scanner confidence label for Solana UI.
+ * @param {Record<string, boolean>} coverage
+ * @param {number} score
+ */
+export function buildSolanaScannerConfidenceLabel(coverage, score) {
+  const parts = []
+  if (coverage.rpc || coverage.helius) parts.push('Scanner')
+  if (coverage.birdeye) parts.push('Birdeye')
+  if (coverage.dexscreener) parts.push('DexScreener')
+  if (coverage.jupiter) parts.push('Jupiter')
+  if (coverage.helius && !parts.includes('Helius')) parts.push('Helius')
+
+  let tier = 'Classification only'
+  if (score >= 90) tier = 'Scanner + Birdeye + Helius + Jupiter'
+  else if (score >= 75) tier = 'Scanner + Birdeye + DexScreener'
+  else if (score >= 50) tier = 'Scanner + market providers'
+  else if (score >= 25) tier = 'Scanner only'
+  else tier = 'Classification only'
+
+  return {
+    score,
+    tier,
+    providersLabel: parts.length ? parts.join(' + ') : 'Classification only',
   }
 }
 
@@ -153,9 +189,32 @@ export function applyConfidenceCalibration(report, platform) {
   }
 
   const confidence = computeScannerConfidence(report, platform)
-  const cap = TRUST_SCORE_CAP[confidence.band]
   const rawTrust = Number(report.trustScore)
-  const cappedTrust = Math.min(rawTrust, cap)
+  const tc = report?.tokenConcentration || {}
+
+  let cappedTrust = rawTrust
+  if (platform === 'solana') {
+    const strongMarket =
+      (tc.liquidityUsd != null && tc.liquidityUsd >= 100_000) ||
+      (tc.marketCapUsd != null && tc.marketCapUsd >= 1_000_000) ||
+      tc.liquidityConfidence === 'HIGH'
+    const marketProvidersLive =
+      confidence.providerCoverage.dexscreener && confidence.providerCoverage.jupiter
+
+    if (strongMarket && marketProvidersLive) {
+      cappedTrust = rawTrust
+    } else {
+      const dataPenalty = tc.dataConfidencePenalty ?? 0
+      const cap = TRUST_SCORE_CAP[confidence.band]
+      cappedTrust = Math.min(rawTrust, cap + Math.min(dataPenalty, 8))
+    }
+
+    const solanaLabel = buildSolanaScannerConfidenceLabel(confidence.providerCoverage, confidence.score)
+    confidence.solanaLabel = solanaLabel
+  } else {
+    const cap = TRUST_SCORE_CAP[confidence.band]
+    cappedTrust = Math.min(rawTrust, cap)
+  }
 
   const trustBand =
     platform === 'solana'
@@ -164,7 +223,7 @@ export function applyConfidenceCalibration(report, platform) {
 
   let nextVerdictFrame = report.verdictActionFrame
   if (report.tokenConcentration) {
-    const isCanonical = Boolean(report.archetypeId)
+    const isCanonical = Boolean(report.archetypeId) || Boolean(tc.isMajorAsset)
     nextVerdictFrame =
       platform === 'solana'
         ? solanaVerdictActionFrame(trustBand, report.tokenConcentration, isCanonical)
@@ -180,7 +239,10 @@ export function applyConfidenceCalibration(report, platform) {
       score: confidence.score,
       band: confidence.band,
       providerCoverage: confidence.providerCoverage,
+      solanaLabel: confidence.solanaLabel || null,
+      dataConfidence: tc.dataConfidence || null,
     },
+    scannerConfidenceScore: confidence.score,
     ...(rawTrust !== cappedTrust ? { trustScoreUncapped: rawTrust } : {}),
   }
 }

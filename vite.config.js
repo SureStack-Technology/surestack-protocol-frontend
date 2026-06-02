@@ -4,6 +4,7 @@ import path from "node:path";
 
 export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const proxyTarget = env.VITE_DEV_API_PROXY_TARGET || "http://localhost:5001";
 
   return defineConfig({
     root: ".",
@@ -11,6 +12,24 @@ export default ({ mode }) => {
 
     define: {
       "process.env": env,
+    },
+
+    server: {
+      proxy: {
+        "^/api": {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
+      },
+    },
+
+    preview: {
+      proxy: {
+        "^/api": {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
+      },
     },
 
     optimizeDeps: {

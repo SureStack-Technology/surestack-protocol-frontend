@@ -33,7 +33,7 @@ const backendEnv = join(__dirname, '..', '.env');
 const rootEnv = join(__dirname, '..', '..', '.env');
 const rootLocalEnv = join(__dirname, '..', '..', '.env.local');
 dotenv.config({ path: backendEnv });
-dotenv.config({ path: rootEnv });
+dotenv.config({ path: rootEnv, override: true });
 dotenv.config({ path: rootLocalEnv, override: true });
 
 const app = express();
@@ -57,6 +57,13 @@ console.log('[env] loaded', {
     process.env.NODE_ENV === 'development' && process.env.DEV_FORCE_MEMBERSHIP_TIER
       ? process.env.DEV_FORCE_MEMBERSHIP_TIER
       : null,
+  solana: {
+    hasRpcUrl: Boolean(process.env.SOLANA_RPC_URL),
+    hasHeliusKey: Boolean(process.env.HELIUS_API_KEY),
+    hasBirdeye: Boolean(
+      process.env.BIRDEYE_API_KEY && process.env.BIRDEYE_API_KEY !== 'real_key_here',
+    ),
+  },
 });
 
 const DEFAULT_DEV_ORIGINS = [

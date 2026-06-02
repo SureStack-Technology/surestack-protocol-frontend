@@ -2,20 +2,22 @@
 
 # Phase 4 Verification Report – SureStack Protocol
 
-**Functional Integration: Policy → Claim → Audit Trail**
+**Functional Integration: Protection program → Incident support → Audit trail**
 
 **Date:** January 2025  
 **Network:** Sepolia Testnet  
 **Status:** ✅ **COMPLETED**
 
+> **2026 documentation note:** SureStack’s public positioning is **AI-powered digital asset risk intelligence and incident support**. This archived report uses legacy “policy / claim / payout” language in places; interpret as **protection program / incident request / member assistance** unless referring to an immutable contract or event name (`PolicyManager`, `processClaim`, `ClaimProcessed`, etc.). SureStack is **not** a licensed **insurer** or **carrier** in this POC.
+
 ---
 
 ## Executive Summary
 
-Phase 4 successfully implements end-to-end policy lifecycle management with real-time event tracking and comprehensive audit capabilities. The system now supports:
+Phase 4 successfully implements end-to-end **protection program** lifecycle management with real-time event tracking and comprehensive audit capabilities. The system now supports:
 
-- ✅ **Policy Creation** with dynamic premium calculation
-- ✅ **Claim Processing** with automatic payout distribution
+- ✅ **Protection program creation** with dynamic program-contribution calculation
+- ✅ **Incident support processing** with automatic **member assistance** distribution (within **incident protection limits**)
 - ✅ **Real-time Audit Trail** with multi-contract event monitoring
 - ✅ **Validator Staking** with tier-based rewards
 - ✅ **Treasury Management** with APY tracking
@@ -28,10 +30,10 @@ Phase 4 successfully implements end-to-end policy lifecycle management with real
 
 | Contract | Address | Status | Purpose |
 |----------|---------|--------|---------|
-| **PolicyManager** | `VITE_POLICY_MANAGER_ADDRESS` | ✅ Deployed | Policy creation, premium calculation, claim processing |
+| **PolicyManager** | `VITE_POLICY_MANAGER_ADDRESS` | ✅ Deployed | Protection programs, program contributions, incident support (`processClaim`) |
 | **OracleReaderV2** | `VITE_ORACLE_READER_V2_ADDRESS` | ✅ Deployed | Multi-oracle price feeds, volatility calculation |
 | **ConsensusAndStakingV2** | `VITE_CONSENSUS_STAKING_V2_ADDRESS` | ✅ Deployed | Validator staking, consensus rounds, rewards/slashing |
-| **RewardPoolAndSlasher** | `VITE_REWARD_POOL_ADDRESS` | ✅ Deployed | Reward distribution, claim funding, penalty pool |
+| **RewardPoolAndSlasher** | `VITE_REWARD_POOL_ADDRESS` | ✅ Deployed | Reward distribution, incident support liquidity, penalty pool |
 | **DAOGovernance** | `VITE_DAO_GOVERNANCE_ADDRESS` | ✅ Deployed | Governance parameters, timelock controls |
 | **SureStackToken** | `VITE_SURE_STACK_TOKEN_ADDRESS` | ✅ Deployed | ERC20 token (SST) for staking and premiums |
 
@@ -39,8 +41,8 @@ Phase 4 successfully implements end-to-end policy lifecycle management with real
 
 | Module | Component | Status | Features |
 |--------|-----------|--------|----------|
-| **Policy Management** | `PolicyPanel.jsx` | ✅ Complete | Create policies, view policy list, calculate premiums |
-| **Claim Processing** | `ClaimPanel.jsx` | ✅ Complete | Process claims, view claim history, policy selection |
+| **Protection program UI** | `PolicyPanel.jsx` | ✅ Complete | Create protection programs, program list, contribution calculation |
+| **Incident support** | `ClaimPanel.jsx` | ✅ Complete | Submit incident requests, assistance history, program selection |
 | **Audit Trail** | `AuditTrail.jsx` | ✅ Complete | Real-time event logs, filter by contract, timestamps |
 | **Validator Console** | `ValidatorConsole.jsx` | ✅ Complete | Staking UI, tier visualization, leaderboard |
 | **Dashboard** | `Dashboard.jsx` | ✅ Complete | Treasury balances, APY metrics, price charts |
@@ -57,9 +59,9 @@ Phase 4 successfully implements end-to-end policy lifecycle management with real
 
 ---
 
-## 2. Policy Flow Verification
+## 2. Protection program flow verification
 
-### 2.1 Policy Creation Flow
+### 2.1 Protection program creation flow
 
 **Function:** `PolicyManager.createPolicy(uint256 _coverageLimitUSD, uint8 _coveragePercent)`
 
@@ -71,8 +73,8 @@ Phase 4 successfully implements end-to-end policy lifecycle management with real
 5. Contract validates inputs and oracle data freshness
 6. Premium calculated: `premium = baseCoverage * (baseRate + volatilityFactor)`
 7. SST tokens transferred from user to PolicyManager
-8. Premium deposited into RewardPool for claim funding
-9. Policy struct created and added to user's policy list
+8. Premium deposited into RewardPool for **incident support** liquidity
+9. Program struct created and added to member's program list
 10. `PolicyCreated` event emitted
 
 **Event Structure:**
@@ -88,13 +90,13 @@ event PolicyCreated(
 ```
 
 **Verification:**
-- ✅ Policy appears in user's policy list immediately
+- ✅ Program appears in the member's program list immediately
 - ✅ `PolicyCreated` event captured in Audit Trail
 - ✅ Premium correctly calculated and deposited
-- ✅ Policy active status set to `true`
+- ✅ Program active status set to `true`
 - ✅ Claimable amount = `coverageLimitUSD * coveragePercent / 100`
 
-### 2.2 Policy Data Structure
+### 2.2 On-chain program data structure
 
 ```javascript
 {
@@ -112,25 +114,25 @@ event PolicyCreated(
 
 ---
 
-## 3. Claim Flow Verification
+## 3. Incident support flow verification
 
-### 3.1 Claim Processing Flow
+### 3.1 Incident support processing flow
 
 **Function:** `PolicyManager.processClaim(uint256 _policyId, uint256 _lossEventValueUSD)`
 
 **Process:**
-1. User selects active policy from dropdown
-2. User inputs loss event value (USD)
+1. Member selects an active **protection program** from dropdown
+2. Member inputs loss event value (USD)
 3. Transaction submitted to `PolicyManager.processClaim()`
 4. Contract validates:
-   - Policy exists and is active
-   - Policy owner matches caller
+   - Program exists and is active
+   - Program owner matches caller
    - Oracle data is fresh
-   - Price drop exceeds claim trigger threshold (20%)
-5. Payout calculated: `payout = min(lossValue, claimableAmount)`
-6. Payout distributed via `RewardPool.distributeClaim()`
-7. Policy remains active (can process multiple claims up to coverage limit)
-8. `ClaimProcessed` event emitted
+   - Price drop exceeds **incident request** trigger threshold (20%)
+5. **Member assistance** amount calculated: `min(lossValue, claimableAmount)` *(incident protection limit)*
+6. Assistance distributed via `RewardPool.distributeClaim()` *(on-chain name)*
+7. Program may remain active for further eligible **incident requests** up to the **incident protection limit**
+8. `ClaimProcessed` event emitted *(event name retained)*
 
 **Event Structure:**
 ```solidity
@@ -143,18 +145,18 @@ event ClaimProcessed(
 ```
 
 **Verification:**
-- ✅ Claim appears in claim history immediately
+- ✅ Case appears in **assistance history** immediately
 - ✅ `ClaimProcessed` event captured in Audit Trail
-- ✅ Payout correctly calculated and distributed
-- ✅ Policy remains active for future claims
+- ✅ **Member assistance** correctly calculated and distributed
+- ✅ Program remains active for future eligible **incident requests**
 - ✅ Oracle round ID recorded for audit
 
-### 3.2 Claim History Structure
+### 3.2 Member assistance history structure
 
 ```javascript
 {
   policyId: "1",
-  payoutAmount: "250.00",  // SST tokens
+  payoutAmount: "250.00",  // SST — member assistance amount
   oracleRoundId: "12345",
   lossEventValueUSD: "500.00",
   txHash: "0x...",
@@ -298,8 +300,8 @@ event ClaimProcessed(
 | Component | Status | Features |
 |-----------|--------|----------|
 | **Dashboard** | ✅ Complete | Oracle price, pool balances, APY metrics, charts |
-| **PolicyPanel** | ✅ Complete | Policy creation form, policy list table, premium calculation |
-| **ClaimPanel** | ✅ Complete | Policy dropdown, claim form, claim history |
+| **PolicyPanel** | ✅ Complete | Protection program form, program list, contribution calculation |
+| **ClaimPanel** | ✅ Complete | Program dropdown, incident request form, assistance history |
 | **ValidatorConsole** | ✅ Complete | Staking UI, tier cards, leaderboard, round data |
 | **AuditTrail** | ✅ Complete | Event logs, filter tabs, timestamps, Etherscan links |
 | **GovernancePanel** | ✅ Complete | DAO parameters, voting interface |
@@ -322,8 +324,9 @@ event ClaimProcessed(
 
 ```
 ┌─────────────────┐
-│  User Creates   │
-│     Policy       │
+│ Member opens   │
+│ protection      │
+│ program         │
 └────────┬────────┘
          │
          ▼
@@ -340,13 +343,13 @@ event ClaimProcessed(
          │
          ▼
 ┌─────────────────┐     ┌──────────────────┐
-│ Policy Active   │     │ Audit Trail      │
-│ in User List    │────▶│ Event Logged     │
+│ Program active  │     │ Audit Trail      │
+│ in member list  │────▶│ Event Logged     │
 └─────────────────┘     └──────────────────┘
 
 ┌─────────────────┐
-│  User Files    │
-│     Claim       │
+│ Member files    │
+│ incident req.   │
 └────────┬────────┘
          │
          ▼
@@ -357,13 +360,13 @@ event ClaimProcessed(
          │
          ▼
 ┌─────────────────┐     ┌──────────────────┐
-│ RewardPool      │     │ Claim            │
-│ .distributeClaim│────▶│ Distributed      │
+│ RewardPool      │     │ Member assist.  │
+│ .distributeClaim│────▶│ distributed      │
 └────────┬────────┘     └──────────────────┘
          │
          ▼
 ┌─────────────────┐     ┌──────────────────┐
-│ Claim History   │     │ Audit Trail      │
+│ Assistance hist.│     │ Audit Trail      │
 │ Updated         │────▶│ Event Logged     │
 └─────────────────┘     └──────────────────┘
 ```
@@ -381,35 +384,35 @@ event ClaimProcessed(
 - ✅ **Input Validation**: Coverage limits and percentages validated
 - ✅ **SafeERC20**: Safe token transfers
 
-### 9.2 Claim Processing Security
+### 9.2 Incident support security
 
-- ✅ **Policy Ownership Verification**: Only policy owner can claim
-- ✅ **Active Policy Check**: Only active policies can process claims
-- ✅ **Oracle Freshness Check**: Price data must be recent
-- ✅ **Price Drop Validation**: Claim trigger threshold enforced
-- ✅ **Payout Limits**: Cannot exceed coverage limit
+- ✅ **Program ownership verification**: Only program owner can submit `processClaim`
+- ✅ **Active program check**: Only active programs can process **incident requests**
+- ✅ **Oracle freshness check**: Price data must be recent
+- ✅ **Price drop validation**: **Incident request** trigger threshold enforced
+- ✅ **Member assistance limits**: Cannot exceed **incident protection limit**
 
 ---
 
 ## 10. Testing Checklist
 
-### 10.1 Policy Creation Tests
+### 10.1 Protection program creation tests
 
-- [x] Create policy with valid inputs
+- [x] Create **protection program** with valid inputs
 - [x] Verify premium calculation
 - [x] Verify token approval and transfer
 - [x] Verify PolicyCreated event emission
-- [x] Verify policy appears in user list
+- [x] Verify program appears in user list
 - [x] Verify claimable amount calculation
 
-### 10.2 Claim Processing Tests
+### 10.2 Incident support tests
 
-- [x] Process claim for active policy
-- [x] Verify payout calculation
-- [x] Verify ClaimProcessed event emission
-- [x] Verify claim appears in history
-- [x] Verify policy remains active
-- [x] Verify payout distribution
+- [x] Process **incident request** for active program
+- [x] Verify **member assistance** calculation
+- [x] Verify `ClaimProcessed` event emission
+- [x] Verify case appears in assistance history
+- [x] Verify program remains active
+- [x] Verify **member assistance** distribution
 
 ### 10.3 Audit Trail Tests
 
@@ -447,7 +450,7 @@ event ClaimProcessed(
 
 ![Policies](../screenshots/policies.png)
 
-*Policy Panel showing policy creation form and policy list table*
+*Protection program panel showing program form and program list table*
 
 ### 11.4 Audit Trail
 
@@ -465,8 +468,8 @@ event ClaimProcessed(
 
 | Operation | Estimated Gas | Status |
 |-----------|---------------|--------|
-| Create Policy | ~XXX,XXX | ✅ Optimized |
-| Process Claim | ~XXX,XXX | ✅ Optimized |
+| Create protection program | ~XXX,XXX | ✅ Optimized |
+| Process incident request (`processClaim`) | ~XXX,XXX | ✅ Optimized |
 | Stake Tokens | ~XXX,XXX | ✅ Optimized |
 | Unstake Tokens | ~XXX,XXX | ✅ Optimized |
 
@@ -486,24 +489,24 @@ event ClaimProcessed(
 1. **Oracle Dependency**: System requires fresh oracle data for all operations
 2. **Gas Costs**: Transaction costs may be high during high network congestion
 3. **Cooling Period**: Unstaking requires cooling period before withdrawal
-4. **Claim Limits**: Claims cannot exceed coverage limit
+4. **Incident protection limits**: **Incident requests** cannot exceed the configured **incident protection limit**
 
 ### 13.2 Future Enhancements
 
 1. **Multi-Asset Support**: Extend beyond ETH/USD to other assets
 2. **Advanced Analytics**: Enhanced charts and metrics
 3. **Mobile App**: Native mobile application
-4. **Insurance Pools**: Shared risk pools for better coverage
+4. **Shared capital / risk pools (future):** May involve **licensed carrier** or reinsurance partners if regulated products are offered—**not** implied by this Sepolia POC.
 5. **Governance Voting**: On-chain voting for parameter changes
 
 ---
 
 ## 14. Conclusion
 
-Phase 4 successfully implements end-to-end policy lifecycle management with:
+Phase 4 successfully implements end-to-end **protection program** lifecycle management with:
 
-✅ **Complete Policy Flow**: Creation → Premium Payment → Active Status  
-✅ **Complete Claim Flow**: Selection → Processing → Payout Distribution  
+✅ **Complete program flow**: Creation → program contribution → active status  
+✅ **Complete incident support flow**: Selection → processing → **member assistance** distribution  
 ✅ **Real-time Audit Trail**: Multi-contract event monitoring with filtering  
 ✅ **Validator Integration**: Staking, tiers, leaderboard  
 ✅ **Treasury Management**: Pool balances, APY tracking  
@@ -519,7 +522,7 @@ The system is now **production-ready** for investor demonstrations and can be de
 ║                                                                ║
 ║          ✅  PHASE 4 COMPLETED SUCCESSFULLY  ✅                ║
 ║                                                                ║
-║     Policy → Claim → Audit Trail Integration                  ║
+║     Protection program → Incident support → Audit trail         ║
 ║     All Systems Operational                                    ║
 ║     Ready for Investor Demo                                   ║
 ║                                                                ║

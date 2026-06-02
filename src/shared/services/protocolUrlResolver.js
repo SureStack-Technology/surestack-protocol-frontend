@@ -79,6 +79,46 @@ const PROTOCOL_CATALOG = [
     },
   },
   {
+    hosts: ['jup.ag', 'www.jup.ag'],
+    profile: {
+      name: 'Jupiter',
+      verifiedDomain: 'jup.ag',
+      scanTargets: [],
+      summary:
+        'Verified Jupiter aggregator domain. Confirm mint and program addresses from the official app before signing swaps.',
+    },
+  },
+  {
+    hosts: ['raydium.io', 'www.raydium.io'],
+    profile: {
+      name: 'Raydium',
+      verifiedDomain: 'raydium.io',
+      scanTargets: [],
+      summary:
+        'Verified Raydium domain. Pool and program addresses vary — use official UI contracts for scanner-backed proof.',
+    },
+  },
+  {
+    hosts: ['hyperliquid.xyz', 'app.hyperliquid.xyz'],
+    profile: {
+      name: 'Hyperliquid',
+      verifiedDomain: 'hyperliquid.xyz',
+      scanTargets: [],
+      summary:
+        'Verified Hyperliquid domain. Review official documentation for contract surfaces before discretionary exposure.',
+    },
+  },
+  {
+    hosts: ['bitfinex.com', 'www.bitfinex.com'],
+    profile: {
+      name: 'Bitfinex',
+      verifiedDomain: 'bitfinex.com',
+      scanTargets: [],
+      summary:
+        'Exchange domain detected — verify withdrawal addresses and contract surfaces independently before transferring assets.',
+    },
+  },
+  {
     hosts: ['app.lido.fi', 'lido.fi'],
     profile: {
       name: 'Lido',

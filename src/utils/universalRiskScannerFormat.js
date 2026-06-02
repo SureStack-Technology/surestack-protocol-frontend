@@ -55,6 +55,7 @@ export function recommendationFromTrustBand(trustBand, isContract = true) {
  */
 export function verdictToneClass(verdict) {
   if (verdict === 'LOW RISK') return 'prime-scanner-verdict--low'
+  if (verdict === 'MODERATE WATCH') return 'prime-scanner-verdict--moderate'
   if (verdict === 'MODERATE RISK') return 'prime-scanner-verdict--moderate'
   if (verdict === 'HIGH RISK') return 'prime-scanner-verdict--high'
   if (verdict === 'CRITICAL RISK') return 'prime-scanner-verdict--critical'

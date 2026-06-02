@@ -3,6 +3,36 @@ import { holderMetricsFromBirdeyeHolders } from './tokenConcentration/birdeyePro
 const BASE = 'https://public-api.birdeye.so'
 const CACHE_TTL_MS = 90_000
 const FETCH_TIMEOUT_MS = 12_000
+const DEFAULT_BIRDEYE_CHAINS = new Set(['solana'])
+
+function birdeyeSupportedChains() {
+  const raw = process.env.BIRDEYE_SUPPORTED_CHAINS
+  if (raw && String(raw).trim()) {
+    return new Set(
+      String(raw)
+        .split(',')
+        .map((c) => normalizeChain(c.trim()))
+        .filter(Boolean),
+    )
+  }
+  return DEFAULT_BIRDEYE_CHAINS
+}
+
+function isEthereumHexAddress(address) {
+  return /^0x[a-fA-F0-9]{40}$/.test(String(address || '').trim())
+}
+
+function shouldSkipBirdeye(chain, address) {
+  const ch = normalizeChain(chain)
+  const addr = String(address || '').trim()
+  if (isEthereumHexAddress(addr) && (ch === 'ethereum' || ch === 'eth' || ch === 'mainnet')) {
+    return true
+  }
+  if (ch === 'ethereum' && addr.startsWith('0x')) {
+    return true
+  }
+  return !birdeyeSupportedChains().has(ch)
+}
 
 /** @type {Map<string, { at: number, payload: unknown }>} */
 const cache = new Map()
@@ -264,6 +294,64 @@ function fallbackTokenDto(address, chain) {
   }
 }
 
+function skippedChainTokenDto(address, chain, meta = {}) {
+  const ch = normalizeChain(chain)
+  return {
+    source: 'birdeye',
+    status: 'unsupported',
+    tokenAddress: address,
+    chain: ch,
+    symbol: meta.symbol || null,
+    name: meta.name || null,
+    liquidityHealth: 'Pending provider coverage',
+    liquidityBand: 'unknown',
+    holderConcentration: 'Provider data unavailable',
+    holderTop10Pct: null,
+    tradeVelocity: 'Provider data unavailable',
+    tradeVelocityBand: 'unknown',
+    whaleActivity: 'Provider data unavailable',
+    whaleBand: 'unknown',
+    smartMoneySignal: 'Provider data unavailable',
+    riskInterpretation:
+      'Birdeye behavior intelligence is limited to supported chains. Solana assets use Birdeye; EVM assets use contract and wallet intelligence layers.',
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function isBehaviorFieldPopulated(value) {
+  const v = String(value || '').trim()
+  if (!v || v === '—') return false
+  return !/^(pending|provider data unavailable|pending provider coverage|provider not configured|awaiting live feed)/i.test(
+    v,
+  )
+}
+
+function isBehaviorAssetComplete(asset) {
+  if (!asset || asset.status !== 'live') return false
+  return (
+    isBehaviorFieldPopulated(asset.holderConcentration) &&
+    isBehaviorFieldPopulated(asset.whaleActivity) &&
+    isBehaviorFieldPopulated(asset.tradeVelocity) &&
+    isBehaviorFieldPopulated(asset.smartMoneySignal)
+  )
+}
+
+function resolveWatchlistStatus(assets) {
+  const supported = assets.filter((a) => a.status !== 'unsupported')
+  if (!supported.length) return 'fallback'
+
+  const liveAssets = supported.filter((a) => a.status === 'live')
+  const complete = supported.filter(isBehaviorAssetComplete)
+
+  if (complete.length > 0 && complete.length === liveAssets.length && complete.length === supported.length) {
+    return 'live'
+  }
+  if (complete.length > 0 || liveAssets.length > 0) {
+    return 'partial'
+  }
+  return 'fallback'
+}
+
 /**
  * @param {string} address
  * @param {string} [chain]
@@ -272,6 +360,11 @@ export async function getTokenBehaviorIntelligence(address, chain = 'solana') {
   const tokenAddress = String(address || '').trim()
   if (!tokenAddress) {
     return { ...fallbackTokenDto('', chain), status: 'unavailable' }
+  }
+
+  if (shouldSkipBirdeye(chain, tokenAddress)) {
+    console.info('[birdeye:skip] unsupported chain', normalizeChain(chain))
+    return skippedChainTokenDto(tokenAddress, chain)
   }
 
   if (!hasApiKey()) {
@@ -312,6 +405,16 @@ export async function getWatchlistBehaviorIntelligence() {
 
   const assets = await Promise.all(
     BIRDEYE_WATCHLIST.map(async (asset) => {
+      if (shouldSkipBirdeye(asset.chain, asset.address)) {
+        console.info('[birdeye:skip] unsupported chain', normalizeChain(asset.chain))
+        return {
+          ...skippedChainTokenDto(asset.address, asset.chain, {
+            symbol: asset.symbol,
+            name: asset.name,
+          }),
+          watchlistSymbol: asset.symbol,
+        }
+      }
       const intel = await getTokenBehaviorIntelligence(asset.address, asset.chain)
       return {
         ...intel,
@@ -322,8 +425,7 @@ export async function getWatchlistBehaviorIntelligence() {
     }),
   )
 
-  const liveCount = assets.filter((a) => a.status === 'live').length
-  const status = liveCount > 0 ? 'live' : 'fallback'
+  const status = resolveWatchlistStatus(assets)
 
   return {
     source: 'birdeye',
@@ -332,7 +434,9 @@ export async function getWatchlistBehaviorIntelligence() {
     message:
       status === 'live'
         ? 'Major asset on-chain behavior snapshot (Birdeye).'
-        : 'Watchlist returned partial Birdeye data.',
+        : status === 'partial'
+          ? 'Partial Birdeye behavior coverage — some fields pending provider data.'
+          : 'Watchlist returned partial Birdeye data.',
     assets,
   }
 }

@@ -10,7 +10,7 @@ async function probeQuote(probe) {
       inputMint: probe.inputMint,
       outputMint: probe.outputMint,
       amount: probe.amount,
-      slippageBps: '800',
+      slippageBps: String(probe.slippageBps ?? 800),
     })
     const res = await fetch(`https://lite-api.jup.ag/swap/v1/quote?${params}`, {
       headers: { Accept: 'application/json' },
@@ -34,10 +34,23 @@ async function probeQuote(probe) {
 }
 
 /**
+ * @param {number} decimals
+ * @returns {string[]}
+ */
+function sellAmountCandidates(decimals) {
+  const d = Number.isFinite(decimals) ? decimals : 6
+  const one = BigInt(10) ** BigInt(d)
+  const ten = one * 10n
+  const thousand = one * 1000n
+  return [String(one), String(ten), String(thousand)]
+}
+
+/**
  * Public Jupiter quote probes — routing / tradability confidence.
  * @param {string} mint
+ * @param {{ decimals?: number }} [options]
  */
-export async function fetchJupiterRoutingSignal(mint) {
+export async function fetchJupiterRoutingSignal(mint, options = {}) {
   if (!mint || mint === WSOL) {
     return {
       classification: 'ROUTABLE',
@@ -48,13 +61,28 @@ export async function fetchJupiterRoutingSignal(mint) {
       sparse: false,
       venues: ['Jupiter'],
       source: 'JUPITER',
+      routingLabel: 'Jupiter Routing Available',
     }
   }
 
-  const [solToToken, tokenToUsdc] = await Promise.all([
-    probeQuote({ inputMint: WSOL, outputMint: mint, amount: '50000000' }),
-    probeQuote({ inputMint: mint, outputMint: USDC, amount: '1000000' }),
-  ])
+  const decimals = options.decimals ?? 6
+  const sellAmounts = sellAmountCandidates(decimals)
+
+  const solToToken = await probeQuote({
+    inputMint: WSOL,
+    outputMint: mint,
+    amount: '50000000',
+  })
+
+  let tokenToUsdc = { ok: false }
+  for (const amount of sellAmounts) {
+    const attempt = await probeQuote({ inputMint: mint, outputMint: USDC, amount })
+    if (attempt.ok) {
+      tokenToUsdc = attempt
+      break
+    }
+    tokenToUsdc = attempt
+  }
 
   const venues = new Set()
   if (solToToken.ok) for (const v of solToToken.venues || []) venues.add(v)
@@ -80,5 +108,11 @@ export async function fetchJupiterRoutingSignal(mint) {
     sparse: classification === 'LIMITED_ROUTING',
     venues: [...venues],
     source: 'JUPITER',
+    routingLabel:
+      classification === 'ROUTABLE'
+        ? 'Jupiter Routing Available'
+        : classification === 'LIMITED_ROUTING'
+          ? 'Jupiter Routing Limited'
+          : 'Jupiter Routing Unavailable',
   }
 }

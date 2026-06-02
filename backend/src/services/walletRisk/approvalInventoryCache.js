@@ -1,8 +1,8 @@
 import { fetchApprovalSignalsFromLogs } from './walletApprovalSignals.js'
 import { AlchemyRateLimitError, isAlchemyRateLimitError } from './alchemyRateLimit.js'
 
-/** Successful inventory TTL (5–10 min window). */
-export const INVENTORY_SUCCESS_TTL_MS = 7 * 60 * 1000
+/** Successful inventory TTL — serve from memory without re-hitting Alchemy. */
+export const INVENTORY_SUCCESS_TTL_MS = 90_000
 
 /** Short backoff after rate limit — avoids hammering Alchemy during one session. */
 export const ALCHEMY_BACKOFF_MS = 3 * 60 * 1000

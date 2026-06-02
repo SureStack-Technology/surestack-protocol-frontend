@@ -104,17 +104,18 @@ export default function PrimeCommandCenter({ profile, profileLoading, profileErr
   )
 
   const handleRunDeepScan = useCallback(
-    async (address, chainId = 1) => {
+    async (address, chainId = 1, symbol = null) => {
       const addr = String(address || '').trim()
-      if (!addr) return
+      if (!addr) return { ok: false, error: 'Address required' }
       const inventoryMatches =
         showRiskScanner &&
         chainId !== 'solana' &&
         approvalRows?.length &&
         Number(intel.approvalInventory?.chainId ?? 1) === Number(chainId)
-      await scannerHook.analyze({
+      return scannerHook.analyze({
         address: addr,
         chainId,
+        symbol: chainId === 'solana' ? symbol : null,
         approvalInventory: inventoryMatches ? intel.approvalInventory : null,
       })
     },
@@ -149,6 +150,7 @@ export default function PrimeCommandCenter({ profile, profileLoading, profileErr
             />
 
             <PreInteractionIntelligenceTerminal
+              api={intel.api}
               profile={profile}
               walletSnapshot={walletSnapshot}
               intel={{
@@ -156,8 +158,11 @@ export default function PrimeCommandCenter({ profile, profileLoading, profileErr
                 band: walletSnapshot.band,
                 hasWallet: walletSnapshot.hasWallet,
                 riskFromApi: walletSnapshot.riskFromApi,
+                assessmentPending: walletSnapshot.assessmentPending,
                 contractsUnderReview,
                 approvalsAtRisk,
+                riskData: intel.riskData,
+                walletExposureProfile: intel.walletExposureProfile,
               }}
               primeTrends={lunar.primeTrends}
               watchlist={birdeye.watchlist}

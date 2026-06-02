@@ -1,9 +1,32 @@
 const API_BASE = 'https://lunarcrush.com/api4'
 const CACHE_TTL_MS = 90_000
 const FETCH_TIMEOUT_MS = 12_000
+const SUBSCRIPTION_COOLDOWN_MS = 10 * 60 * 1000
 
 /** @type {Map<string, { at: number, payload: unknown }>} */
 const cache = new Map()
+
+let subscriptionCooldownUntil = 0
+
+function isSubscriptionCooldownActive() {
+  return Date.now() < subscriptionCooldownUntil
+}
+
+function markSubscriptionRequired() {
+  subscriptionCooldownUntil = Date.now() + SUBSCRIPTION_COOLDOWN_MS
+  cache.clear()
+  console.info('[lunarCrush] subscription_required — 10m cooldown, using scenario fallback')
+}
+
+function subscriptionFallbackPayload(kind) {
+  const base = kind === 'prime' ? FALLBACK_PRIME : FALLBACK_EXPLORER
+  return {
+    ...base,
+    status: 'fallback',
+    providerStatus: 'subscription_required',
+    updatedAt: new Date().toISOString(),
+  }
+}
 
 const FALLBACK_EXPLORER = {
   source: 'lunarcrush',
@@ -51,6 +74,10 @@ function moodFromTrend(trend) {
 }
 
 async function fetchJson(path, searchParams = {}) {
+  if (isSubscriptionCooldownActive()) {
+    return { __subscriptionRequired: true }
+  }
+
   const key = process.env.LUNARCRUSH_API_KEY?.trim()
   if (!key) return null
 
@@ -67,6 +94,25 @@ async function fetchJson(path, searchParams = {}) {
       headers: { Authorization: `Bearer ${key}`, Accept: 'application/json' },
       signal: controller.signal,
     })
+    if (res.status === 402) {
+      const text = await res.text().catch(() => '')
+      let body = {}
+      try {
+        body = JSON.parse(text)
+      } catch {
+        body = {}
+      }
+      const subscriptionRequired =
+        text.includes('subscription_required') ||
+        body?.error === 'subscription_required' ||
+        body?.message?.includes?.('subscription')
+      if (subscriptionRequired) {
+        markSubscriptionRequired()
+      } else {
+        console.warn('[lunarCrush] HTTP 402', path, text.slice(0, 120))
+      }
+      return { __subscriptionRequired: true }
+    }
     if (!res.ok) {
       const text = await res.text().catch(() => '')
       console.warn('[lunarCrush] HTTP', res.status, path, text.slice(0, 120))
@@ -82,18 +128,25 @@ async function fetchJson(path, searchParams = {}) {
 }
 
 async function cachedFetch(cacheKey, loader) {
+  if (isSubscriptionCooldownActive()) {
+    return { __subscriptionRequired: true }
+  }
   const hit = cache.get(cacheKey)
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
     return hit.payload
   }
   const payload = await loader()
-  if (payload != null) {
+  if (payload != null && !payload?.__subscriptionRequired) {
     cache.set(cacheKey, { at: Date.now(), payload })
   }
   return payload
 }
 
 async function loadMarketBundle() {
+  if (isSubscriptionCooldownActive()) {
+    return { __subscriptionRequired: true }
+  }
+
   const [btcTopic, topics, coins] = await Promise.all([
     cachedFetch('topic:bitcoin', () => fetchJson('/public/topic/bitcoin/v1')),
     cachedFetch('topics:list', () => fetchJson('/public/topics/list/v1')),
@@ -101,6 +154,15 @@ async function loadMarketBundle() {
       fetchJson('/public/coins/list/v2', { sort: 'interactions_24h', limit: 8, desc: 'true' }),
     ),
   ])
+
+  if (
+    btcTopic?.__subscriptionRequired ||
+    topics?.__subscriptionRequired ||
+    coins?.__subscriptionRequired
+  ) {
+    return { __subscriptionRequired: true }
+  }
+
   return { btcTopic, topics, coins }
 }
 
@@ -238,8 +300,15 @@ export async function getExplorerMarketSentiment() {
     return { ...FALLBACK_EXPLORER, status: 'unavailable', updatedAt: new Date().toISOString() }
   }
 
+  if (isSubscriptionCooldownActive()) {
+    return subscriptionFallbackPayload('explorer')
+  }
+
   try {
     const bundle = await loadMarketBundle()
+    if (bundle?.__subscriptionRequired) {
+      return subscriptionFallbackPayload('explorer')
+    }
     if (!bundle?.btcTopic?.data) {
       return { ...FALLBACK_EXPLORER, updatedAt: new Date().toISOString() }
     }
@@ -255,8 +324,15 @@ export async function getPrimeSocialTrends() {
     return { ...FALLBACK_PRIME, status: 'unavailable', updatedAt: new Date().toISOString() }
   }
 
+  if (isSubscriptionCooldownActive()) {
+    return subscriptionFallbackPayload('prime')
+  }
+
   try {
     const bundle = await loadMarketBundle()
+    if (bundle?.__subscriptionRequired) {
+      return subscriptionFallbackPayload('prime')
+    }
     if (!bundle?.btcTopic?.data && !bundle?.topics?.data?.length) {
       return { ...FALLBACK_PRIME, updatedAt: new Date().toISOString() }
     }

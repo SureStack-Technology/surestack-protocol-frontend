@@ -2,9 +2,7 @@
  * @param {object} tc
  */
 function buildSolanaTokenConcentrationRows(tc) {
-  const limited = !tc?.available || tc?.limitedMarketIntelligence
-
-  if (limited && !tc?.liquidityConfirmed && !tc?.holderConcentration?.includes('%')) {
+  if (!tc?.available && !tc?.liquidityConfirmed) {
     return [
       { label: 'Holder concentration', value: 'Holder distribution estimate unavailable' },
       { label: 'Largest wallet', value: 'Unavailable' },
@@ -19,22 +17,28 @@ function buildSolanaTokenConcentrationRows(tc) {
       { label: 'FDV', value: 'Unavailable' },
       { label: 'Active DEX', value: 'Unknown' },
       { label: 'Pair count', value: '—' },
+      { label: 'Jupiter routing', value: tc?.jupiterRoutingLabel || 'Unknown' },
+      { label: 'Holder count', value: 'Unavailable' },
     ]
   }
 
   return [
-    { label: 'Holder concentration', value: tc.holderConcentration },
-    { label: 'Largest wallet', value: tc.largestWallet },
-    { label: 'Liquidity status', value: tc.liquidityStatus },
+    { label: 'Market cap', value: tc.marketCap || 'Unavailable' },
+    { label: 'FDV', value: tc.fdv || 'Unavailable' },
     { label: 'Liquidity depth', value: tc.liquidityDepth || 'Unavailable' },
+    { label: '24h volume', value: tc.volume24h || tc.tradingActivity || 'Unavailable' },
+    { label: 'Holder count', value: tc.holderCountDisplay || (tc.holderCount != null ? String(tc.holderCount) : 'Unavailable') },
+    { label: 'Holder concentration', value: tc.holderConcentration },
+    { label: 'Top holder %', value: tc.largestWallet },
+    { label: 'Top 10 holder %', value: tc.top10HolderPct != null ? `${tc.top10HolderPct.toFixed(1)}%` : 'Unavailable' },
+    { label: 'Jupiter routing', value: tc.jupiterRoutingLabel || tc.marketRouting || 'Unknown' },
+    { label: 'DEX listings', value: tc.dexListings || tc.activeDex || 'Unknown' },
+    { label: 'LP status', value: tc.lpStatusLabel || tc.lpStatus || 'Unknown' },
+    { label: 'Liquidity status', value: tc.liquidityStatus },
     { label: 'Liquidity confidence', value: tc.liquidityConfidence || 'Unknown' },
-    { label: 'Market routing', value: tc.marketRouting },
     { label: 'Trading activity', value: tc.tradingActivity || tc.tradingBehavior },
     { label: 'Token age', value: tc.tokenAge || tc.deploymentAge || 'Unknown' },
     { label: 'Whale risk', value: tc.whaleRisk },
-    { label: 'Market cap', value: tc.marketCap || 'Unavailable' },
-    { label: 'FDV', value: tc.fdv || 'Unavailable' },
-    { label: 'Active DEX', value: tc.activeDex || 'Unknown' },
     {
       label: 'Pair count',
       value: tc.pairCount != null ? String(tc.pairCount) : '—',

@@ -43,6 +43,20 @@ export function computePrimeScannerScope({
   }
 
   if (modeId === 'token') {
+    const isSolana = tokenResolution?.chainSlug === 'solana'
+    if (isSolana) {
+      const solAddr =
+        (confirmedTokenContract?.address && String(confirmedTokenContract.address).trim()) ||
+        (tokenResolution?.autoSelected && tokenResolution?.address
+          ? String(tokenResolution.address).trim()
+          : null)
+      return {
+        allowScannerEvidence: Boolean(solAddr),
+        activeContractAddress: solAddr,
+        scopeKey: `token-sol:${q.toUpperCase()}:${solAddr || 'pending'}`,
+        chain: 'solana',
+      }
+    }
     const registryAddr =
       tokenResolution?.autoSelected && tokenResolution?.address
         ? normalizeEthAddress(tokenResolution.address)
@@ -53,6 +67,7 @@ export function computePrimeScannerScope({
       allowScannerEvidence: Boolean(addr),
       activeContractAddress: addr,
       scopeKey: `token:${q.toUpperCase()}:${addr || 'pending'}`,
+      chain: 'ethereum',
     }
   }
 
@@ -92,6 +107,9 @@ function extractEthAddressFromText(text) {
  */
 export function isScannerReportInScope(report, scope) {
   if (!report || !scope?.allowScannerEvidence || !scope.activeContractAddress) return false
+  if (report.chain === 'solana' || scope.chain === 'solana') {
+    return String(report.address || '').trim() === String(scope.activeContractAddress || '').trim()
+  }
   const reportAddr = normalizeEthAddress(report.address)
   return reportAddr === scope.activeContractAddress
 }

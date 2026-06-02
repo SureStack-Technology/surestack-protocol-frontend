@@ -52,13 +52,20 @@ export function verdictActionFrame(band, concentration, isCanonical = false) {
  */
 export function solanaVerdictActionFrame(band, concentration, isCanonical = false) {
   if (isCanonical && (band === 'TRUSTED' || band === 'MODERATE')) return 'STRUCTURALLY SOUND'
-  if (concentration?.limitedMarketIntelligence) return 'LIMITED MARKET INTELLIGENCE'
+  if (
+    concentration?.limitedMarketIntelligence &&
+    !concentration?.liquidityConfirmed &&
+    concentration?.liquidityConfidence === 'UNKNOWN'
+  ) {
+    return 'LIMITED MARKET INTELLIGENCE'
+  }
 
   const whale = concentration?.whaleRisk
   const top10 = concentration?.top10HolderPct
   const top1 = concentration?.largestWalletPct
   const liq = concentration?.liquidityUsd
   const routing = concentration?.jupiterClassification
+  const major = concentration?.isMajorAsset
 
   if (band === 'HIGH_RISK' || whale === 'CRITICAL') return 'AVOID INTERACTION'
   if (
@@ -76,7 +83,15 @@ export function solanaVerdictActionFrame(band, concentration, isCanonical = fals
     return 'SPECULATIVE — LOW LIQUIDITY'
   }
   if (band === 'TRUSTED') return 'STRUCTURALLY SOUND'
-  if (band === 'MODERATE') return 'SPECULATIVE — LOW LIQUIDITY'
+  if (band === 'MODERATE') {
+    if (major && (liq >= 100_000 || concentration?.liquidityConfidence === 'HIGH')) {
+      return 'MODERATE RISK — MAJOR ASSET'
+    }
+    if (routing === 'ROUTABLE' && liq != null && liq >= 50_000) {
+      return 'MODERATE RISK — VERIFY HOLDER DISTRIBUTION'
+    }
+    return 'SPECULATIVE — LOW LIQUIDITY'
+  }
   return 'LIMITED MARKET INTELLIGENCE'
 }
 

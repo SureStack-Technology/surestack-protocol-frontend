@@ -16,6 +16,8 @@ The SureStack Protocol Proof of Concept (POC) has been successfully deployed, co
 **Core Functionality:** ✅ **Fully Operational**  
 **Next Phase:** V2 contract enhancements + Interactive Validator UI
 
+> **2026 documentation note:** Public positioning: **AI-powered digital asset risk intelligence and incident support**. Legacy terms like “policy,” “claim,” or “coverage” in this archived POC refer to **protection programs**, **incident requests**, and **incident protection limits** unless naming an on-chain contract or function. SureStack is **not** a licensed **insurer** or **carrier** in this POC.
+
 ---
 
 ## 1️⃣ Core Smart Contracts & Deployment Status
@@ -27,7 +29,7 @@ The SureStack Protocol Proof of Concept (POC) has been successfully deployed, co
 | **RewardPoolAndSlasher** | `0xC89F9F6E1BBB8084FBeD30717fEfda2f349a67a9` | Rewards, slashing, treasury routing | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0xC89F9F6E1BBB8084FBeD30717fEfda2f349a67a9) |
 | **DAOGovernance** | `0xAD9fC360E128531d765D59ee0567D5390C4AacBE` | DAO governance, proposals | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0xAD9fC360E128531d765D59ee0567D5390C4AacBE) |
 | **OracleReaderV2** | `0x1B081326b7C36f949F7EE4d801361E1d2c9E67d1` | Chainlink feed, volatility, freshness | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x1B081326b7C36f949F7EE4d801361E1d2c9E67d1) |
-| **PolicyManager** | `0xe14D40A5FDae199C7e148aAfD0793A7ac335f28E` | Policy creation, premium logic | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0xe14D40A5FDae199C7e148aAfD0793A7ac335f28E) |
+| **PolicyManager** | `0xe14D40A5FDae199C7e148aAfD0793A7ac335f28E` | Protection programs, program-contribution logic | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0xe14D40A5FDae199C7e148aAfD0793A7ac335f28E) |
 | **OracleReader (V1)** | `0x67369fEB3f658402702D214BA28d0165a93B3453` | Legacy oracle (backward compatibility) | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0x67369fEB3f658402702D214BA28d0165a93B3453) |
 | **TimelockController** | `0xc21AA00ea234b27e53416D8279239088B8d51a28` | DAO timelock | ✅ Deployed | [View](https://sepolia.etherscan.io/address/0xc21AA00ea234b27e53416D8279239088B8d51a28) |
 
@@ -50,7 +52,7 @@ The SureStack Protocol Proof of Concept (POC) has been successfully deployed, co
 | **Early Investors** | 15% | Milestone-based vesting | Reserved allocation, no release yet | 🔄 Planned |
 | **Treasury (DAO-controlled)** | 10% | Fund audits, ops, R&D | DAO Governance + RewardPool routing (5–10%) | ✅ **Implemented** |
 | **Ecosystem Incentives** | 25% | Grants, staking, integrations | RewardPool + Consensus modules | ✅ **Implemented** |
-| **Public & Community** | 25% | Open staking + coverage | Live via frontend staking dashboard | ✅ **Implemented** |
+| **Public & Community** | 25% | Open staking + **protection program** participation | Live via frontend staking dashboard | ✅ **Implemented** |
 | **Liquidity & Market Ops** | 10% | Market stability, exchange ops | Not yet integrated with DEX | ⚙️ Upcoming |
 
 ### Token Distribution Status
@@ -126,8 +128,8 @@ Annual APY = Monthly APY × 12 = 488.57%
 | **Price History Chart** | Dashboard.jsx | ✅ Live | Recharts LineChart with live data |
 | **Pool Balances Chart** | Dashboard.jsx | ✅ Live | Recharts BarChart |
 | **APY & Revenue Metrics** | Dashboard.jsx | ✅ Live | Connected to simulation JSON |
-| **Policy Panel** | PolicyPanel.jsx | ✅ Functional | Policy creation UI |
-| **Claim Panel** | ClaimPanel.jsx | ✅ Functional | Claim processing UI |
+| **Protection program panel** | PolicyPanel.jsx | ✅ Functional | Protection program UI |
+| **Incident support panel** | ClaimPanel.jsx | ✅ Functional | Incident request / member assistance UI |
 | **Validator Console** | ValidatorConsole.jsx | ✅ Functional | Validator management |
 | **Stress Test Panel** | StressTestPanel.jsx | ✅ Functional | Price drop simulation |
 | **Governance Panel** | GovernancePanel.jsx | ✅ Functional | DAO parameters display |
@@ -166,7 +168,7 @@ Annual APY = Monthly APY × 12 = 488.57%
 | **Oracle Service** | `backend/src/services/oracleService.js` | ✅ Operational | Chainlink price feed integration |
 | **Validator Service** | `backend/src/services/validatorService.js` | ✅ Operational | ConsensusAndStakingV2 integration |
 | **Reward Pool Service** | `backend/src/services/rewardPoolService.js` | ✅ Operational | Pool balance queries |
-| **Policy Service** | `backend/src/services/policyService.js` | ✅ Operational | PolicyManager integration |
+| **Policy Service** | `backend/src/services/policyService.js` | ✅ Operational | PolicyManager integration *(service filename historical)* |
 | **Governance Service** | `backend/src/services/governanceService.js` | ✅ Operational | DAO parameter queries |
 
 ### Contract ABIs
@@ -207,7 +209,7 @@ Annual APY = Monthly APY × 12 = 488.57%
 |-------------|------------------|-------------------------|--------|
 | **Institutions / Funds** | Transparent risk data for compliance & exposure | Oracle + Dashboard metrics | ✅ **Live** |
 | **DeFi Protocols** | Volatility-aware pricing & protection | OracleReaderV2 integration | ✅ **Live** |
-| **Retail Users** | Coverage against systemic events | PolicyManager UI | ✅ **Functional** |
+| **Retail Users** | **Incident protection** context for systemic events | PolicyManager UI | ✅ **Functional** |
 | **Validators / Stakers** | Passive income via accuracy rewards | Consensus + RewardPool | ✅ **Live** |
 | **Investors** | Deflationary token + DAO growth | Governance + fee burn | ⚙️ **Upcoming** |
 
@@ -222,7 +224,7 @@ Annual APY = Monthly APY × 12 = 488.57%
 - ✅ **RewardPoolAndSlasher:** Pool balances queryable
 - ✅ **DAOGovernance:** Governance parameters accessible
 - ✅ **OracleReaderV2:** Price feed returning live data
-- ✅ **PolicyManager:** Policy creation functions operational
+- ✅ **PolicyManager:** Protection program functions operational
 
 ### Integration Tests
 

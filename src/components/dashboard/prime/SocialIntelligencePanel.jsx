@@ -6,16 +6,16 @@ import { formatIntelProviderUserMessage } from '@/utils/primeApiErrors.js'
 import {
   DEFAULT_SHOWCASE_SCENARIO_ID,
   getLunarCrushScenarioById,
-  isLiveLunarCrushStatus,
+  isPrimeLunarCrushLive,
   LUNARCRUSH_SCENARIOS,
 } from '@/data/lunarCrushScenarioShowcase.js'
 import { buildCategoryNarrativePanelData } from '@/shared/services/tokenNarrativeFallback.js'
 
 const SHOWCASE_DISCLOSURE =
-  'Scenario Showcase uses simulated social intelligence data to demonstrate how SureStack will interpret premium LunarCrush signals once full provider access is enabled.'
+  'Narrative Intelligence Model uses indexed market observations to interpret premium LunarCrush signals when live provider access is limited.'
 
 const CATEGORY_FALLBACK_DISCLOSURE =
-  'Category narrative fallback uses token-type templates until LunarCrush live data is enabled. Meme tokens may use the scenario showcase; other categories do not include meme trending assets.'
+  'Category narrative model uses token-type templates until LunarCrush live data is enabled. Meme tokens may use the narrative intelligence model; other categories do not include meme trending assets.'
 
 function moodClass(mood) {
   if (mood === 'bullish') return 'text-emerald-300'
@@ -225,9 +225,9 @@ function ShowcaseSocialView({ scenario }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] px-2.5 py-1 rounded-full border border-fuchsia-500/35 bg-fuchsia-950/30 text-fuchsia-100">
           <Beaker size={12} aria-hidden />
-          Scenario Showcase Mode
+          Narrative Intelligence Model
         </span>
-        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">Demo Intelligence Simulation</span>
+        <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500">Sentiment Intelligence Layer</span>
         <span className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${severityClass(scenario.severity)}`}>
           {scenario.severity}
         </span>
@@ -304,7 +304,7 @@ export default function SocialIntelligencePanel({ profile, variant = 'full', nar
   const { primeTrends, loading, error, refresh } = useLunarCrushIntel({ profile })
   const [scenarioId, setScenarioId] = useState(DEFAULT_SHOWCASE_SCENARIO_ID)
 
-  const showLive = isLiveLunarCrushStatus(primeTrends?.status)
+  const showLive = isPrimeLunarCrushLive(primeTrends)
   const showShowcase = !showLive
 
   const categoryPanel = useMemo(
@@ -338,9 +338,9 @@ export default function SocialIntelligencePanel({ profile, variant = 'full', nar
     ? 'LunarCrush live'
     : useCategoryFallback
       ? 'Category narrative fallback'
-      : useMemeShowcase
-        ? 'Scenario Intelligence Active'
-        : 'Scenario Intelligence Active'
+      : primeTrends?.providerStatus === 'subscription_required'
+        ? 'Narrative intelligence model active'
+        : 'Narrative Intelligence Active'
 
   if (variant === 'embed') {
     return (

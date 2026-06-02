@@ -1,11 +1,12 @@
 import deployments from '@shared/deployments/sepolia.json'
+import { getWalletAddChainRpcUrl } from '@/shared/rpc/sepoliaRpcEnv.js'
 
 // Network configuration
 export const NETWORK_CONFIG = {
   chainIdHex: '0xaa36a7',
   chainIdDec: 11155111,
   chainName: 'Sepolia',
-  rpcUrl: import.meta.env.VITE_SEPOLIA_RPC || 'https://rpc.sepolia.org',
+  rpcUrl: getWalletAddChainRpcUrl(),
   explorer: 'https://sepolia.etherscan.io',
   nativeCurrency: {
     name: 'Ether',

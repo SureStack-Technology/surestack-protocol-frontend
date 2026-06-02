@@ -5,7 +5,6 @@ const BACKEND_CANDIDATES = [
   import.meta.env.VITE_SERVER_URL,
   import.meta.env.VITE_API_URL,
   import.meta.env.VITE_APP_BACKEND_URL,
-  "http://localhost:5001",
 ];
 
 function normalizeBaseUrl(base) {
@@ -13,9 +12,20 @@ function normalizeBaseUrl(base) {
   return String(base).replace(/\/+$/, "");
 }
 
+/**
+ * Backend base URL for API calls.
+ * - Dev: if no VITE_* backend URL is set, use same-origin "" so Vite proxies `/api` → backend (avoids CORS / wrong port).
+ * - Prod: require an env URL or fall back to localhost:5001 for self-hosted demos.
+ */
 export function getBackendBaseUrl() {
-  const candidate = BACKEND_CANDIDATES.find((value) => value && String(value).trim().length > 0);
-  return normalizeBaseUrl(candidate || "http://localhost:5001");
+  const explicit = BACKEND_CANDIDATES.find((value) => value && String(value).trim().length > 0);
+  if (explicit) {
+    return normalizeBaseUrl(explicit);
+  }
+  if (import.meta.env.DEV) {
+    return "";
+  }
+  return normalizeBaseUrl("http://localhost:5001");
 }
 
 export async function fetchActiveValidatorsFromBackend(options = {}) {
@@ -27,7 +37,7 @@ export async function fetchActiveValidatorsFromBackend(options = {}) {
   }
 
   try {
-    const response = await fetch(`${baseUrl}/validators/active`, {
+    const response = await fetch(`${baseUrl}/api/validators/active`, {
       method: "GET",
       headers: { Accept: "application/json" },
       signal,

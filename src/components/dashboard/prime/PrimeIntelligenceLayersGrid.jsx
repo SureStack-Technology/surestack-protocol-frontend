@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
-import { Activity, ArrowRight, FileSearch, Shield, Sparkles } from 'lucide-react'
+import { Activity, ArrowRight, Droplets, FileSearch, Shield, Sparkles } from 'lucide-react'
 import {
   buildBehaviorLayer,
   buildContractTrustLayer,
+  buildLiquidityLayer,
   buildNarrativeLayer,
   buildWalletExposureLayer,
 } from '@/components/dashboard/prime/primeIntelligenceLayersBuild.js'
@@ -12,6 +13,7 @@ const LAYER_META = {
   behavior: { icon: Activity, tone: 'behavior' },
   contract: { icon: FileSearch, tone: 'contract' },
   wallet: { icon: Shield, tone: 'wallet' },
+  liquidity: { icon: Droplets, tone: 'liquidity' },
 }
 
 function statusChipClass(tone) {
@@ -139,7 +141,13 @@ export default function PrimeIntelligenceLayersGrid({
         query,
         analysisModeId,
       }),
-      wallet: buildWalletExposureLayer(walletSnapshot, intel, riskDrivers),
+      wallet: buildWalletExposureLayer(
+        walletSnapshot,
+        intel,
+        riskDrivers,
+        intel?.walletExposureProfile ?? intel?.riskData?.walletExposureProfile ?? null,
+      ),
+      liquidity: buildLiquidityLayer(scannerReport),
     }),
     [
       primeTrends,
@@ -163,7 +171,7 @@ export default function PrimeIntelligenceLayersGrid({
           Threat Investigation Modules
         </p>
         <p className="prime-intel-layers__subtitle">
-          Launch narrative, behavior, contract, or wallet investigations into the terminal.
+          Launch narrative, behavior, contract, liquidity, or wallet investigations into the terminal.
         </p>
       </div>
       <div className="prime-intel-layers__grid">
@@ -183,6 +191,12 @@ export default function PrimeIntelligenceLayersGrid({
           id="contract"
           title="Contract Trust"
           layer={layers.contract}
+          onLayerAction={onLayerAction}
+        />
+        <LayerCard
+          id="liquidity"
+          title="Liquidity Intelligence"
+          layer={layers.liquidity}
           onLayerAction={onLayerAction}
         />
         <LayerCard

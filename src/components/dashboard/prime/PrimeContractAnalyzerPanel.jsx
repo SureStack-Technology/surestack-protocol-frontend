@@ -5,6 +5,7 @@ import {
   contractAddressFromQuery,
   TERMINAL_CHAIN_TO_SCAN_ID,
 } from '@/components/dashboard/prime/primeContractAnalyzerFields.js'
+import { scannerFieldValue } from '@/utils/scannerProofStatus.mjs'
 
 const SCAN_CHAINS = [
   { id: 'ethereum', label: 'Ethereum' },
@@ -17,7 +18,9 @@ function FieldCell({ label, value, pending, tone }) {
   return (
     <div className={`prime-contract-analyzer__cell prime-contract-analyzer__cell--${tone || 'pending'}`}>
       <p className="prime-contract-analyzer__cell-label">{label}</p>
-      <p className="prime-contract-analyzer__cell-value">{pending ? 'Pending scan' : value || '—'}</p>
+      <p className="prime-contract-analyzer__cell-value">
+        {pending ? scannerFieldValue(false, value) : value || '—'}
+      </p>
     </div>
   )
 }
@@ -129,7 +132,7 @@ export default function PrimeContractAnalyzerPanel({
               <span className="text-slate-500 font-normal text-sm"> / 100</span>
             </>
           ) : (
-            <span className="text-slate-500 text-sm font-normal">Pending scan</span>
+            <span className="text-slate-500 text-sm font-normal">Coverage pending</span>
           )}
         </p>
       </div>

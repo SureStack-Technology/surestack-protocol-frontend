@@ -236,33 +236,50 @@ export function useEthUsdFeed() {
           console.warn("[Stream][Diag] _waitUntilReady not available, using event listeners")
         }
 
-        // Listen for lifecycle events
-        wsProvider.current.on("connect", () => {
-          if (!mounted.current) return
-          // Check if we're reconnecting (state might be "reconnecting" or "disconnected")
-          setConnectionState(prev => {
-            if (prev !== "connected") {
-              console.info("[Stream] WS reconnect successful")
-              retries.current = 0
-              reconnectAttempts.current = 0
-              setIsStreaming(true)
-              setSource({ providerName: "Alchemy", url: WS_URL })
-              return "connected"
-            }
-            return prev
-          })
-        })
+        // Listen for lifecycle via native WebSocket events (ethers v6 has no connect/disconnect ProviderEvents)
+        try {
+          const socket =
+            wsProvider.current?._websocket ??
+            wsProvider.current?.websocket ??
+            (typeof wsProvider.current?._getConnection === "function"
+              ? wsProvider.current._getConnection()
+              : null)
 
-        wsProvider.current.on("disconnect", (err) => {
-          if (!mounted.current) return
-          setConnectionState(prev => {
-            if (prev === "reconnecting") return prev
-            console.warn("[Stream] WebSocket disconnected:", err?.code || err)
-            setIsStreaming(false)
-            attemptReconnect()
-            return "reconnecting"
-          })
-        })
+          if (socket?.addEventListener) {
+            socket.addEventListener("open", () => {
+              if (!mounted.current) return
+              setConnectionState((prev) => {
+                if (prev !== "connected") {
+                  console.info("[Stream] WS reconnect successful")
+                  retries.current = 0
+                  reconnectAttempts.current = 0
+                  setIsStreaming(true)
+                  setSource({ providerName: "Alchemy", url: WS_URL })
+                  return "connected"
+                }
+                return prev
+              })
+            })
+
+            socket.addEventListener("close", () => {
+              if (!mounted.current) return
+              setConnectionState((prev) => {
+                if (prev === "reconnecting") return prev
+                console.warn("[Stream] WebSocket disconnected")
+                setIsStreaming(false)
+                attemptReconnect()
+                return "reconnecting"
+              })
+            })
+
+            socket.addEventListener("error", (evt) => {
+              if (!mounted.current) return
+              console.warn("[Stream] WebSocket error", evt)
+            })
+          }
+        } catch (wsErr) {
+          console.warn("[Stream] WebSocket lifecycle binding skipped", wsErr)
+        }
 
         // Subscribe to block events for price updates
         wsProvider.current.on("block", async (blockNumber) => {

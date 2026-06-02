@@ -1,4 +1,4 @@
-import { resolveSolanaArchetype } from '../solanaRiskScanner/solanaArchetypes.js'
+import { isMajorSolanaAsset, resolveSolanaArchetype } from '../solanaRiskScanner/solanaArchetypes.js'
 import { safeProviderCall } from '../solanaRiskScanner/solanaProviderLog.js'
 import { fetchTokenLargestAccounts } from '../solanaRiskScanner/solanaRpc.js'
 import {
@@ -71,6 +71,7 @@ async function fetchOptionalBirdeye(mintAddress) {
 export async function analyzeSolanaTokenConcentration(mintAddress, largestAccounts = null) {
   const archetype = resolveSolanaArchetype(mintAddress)
   const isCanonical = Boolean(archetype?.regulatedStablecoin || archetype?.kind === 'canonical_mint')
+  const isMajorAsset = isMajorSolanaAsset(archetype)
 
   const dexR = await safeProviderCall(
     mintAddress,
@@ -78,10 +79,17 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
     () => fetchDexScreenerSolanaMarket(mintAddress),
     (d) => d?.status || 'null',
   )
+  const dexMarketPre = dexR.ok ? dexR.data : null
+  const birdeyePre = await fetchOptionalBirdeye(mintAddress)
+  const tokenDecimals =
+    dexMarketPre?.primaryPool?.baseToken?.decimals ??
+    birdeyePre.overview?.decimals ??
+    null
+
   const jupiterR = await safeProviderCall(
     mintAddress,
     'Jupiter',
-    () => fetchJupiterRoutingSignal(mintAddress),
+    () => fetchJupiterRoutingSignal(mintAddress, { decimals: tokenDecimals ?? 6 }),
     (d) => d?.classification || 'null',
   )
   const goPlusR = await safeProviderCall(
@@ -102,7 +110,7 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
     rpcLargest = rpcR.ok ? rpcR.data : []
   }
 
-  const birdeye = await fetchOptionalBirdeye(mintAddress)
+  const birdeye = birdeyePre
 
   const dexMarket = dexR.ok
     ? dexR.data
@@ -116,13 +124,7 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
   let holderMetrics = null
   let holderProvenance = null
 
-  if (goPlusParsed?.top10HolderPct != null) {
-    holderMetrics = goPlusParsed
-    holderProvenance = 'GOPLUS'
-  } else if (rpcMetrics) {
-    holderMetrics = rpcMetrics
-    holderProvenance = 'RPC ESTIMATE'
-  } else if (birdeye.holders?.length) {
+  if (birdeye.holders?.length) {
     const birdeyeMetrics = holderMetricsFromBirdeyeHolders(
       birdeye.holders,
       birdeye.overview?.totalSupply ?? null,
@@ -133,6 +135,16 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
     }
   }
 
+  if (goPlusParsed?.top10HolderPct != null) {
+    holderMetrics = goPlusParsed
+    holderProvenance = 'GOPLUS'
+  } else if (!holderMetrics && rpcMetrics) {
+    holderMetrics = rpcMetrics
+    holderProvenance = 'RPC ESTIMATE'
+  }
+
+  const holderCount = birdeye.overview?.holderCount ?? goPlusParsed?.holderCount ?? null
+
   if (birdeye.overview && dexMarket.status === 'indexed') {
     if (dexMarket.volume24hUsd == null || dexMarket.volume24hUsd === 0) {
       dexMarket.volume24hUsd = birdeye.overview.volume24hUsd ?? dexMarket.volume24hUsd
@@ -141,7 +153,10 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
       dexMarket.marketCapUsd = birdeye.overview.marketCapUsd ?? null
     }
     if (dexMarket.fdvUsd == null) {
-      dexMarket.fdvUsd = birdeye.overview.marketCapUsd ?? null
+      dexMarket.fdvUsd = birdeye.overview.fdvUsd ?? birdeye.overview.marketCapUsd ?? null
+    }
+    if (dexMarket.totalLiquidityUsd == null || dexMarket.totalLiquidityUsd === 0) {
+      dexMarket.totalLiquidityUsd = birdeye.overview.liquidityUsd ?? dexMarket.totalLiquidityUsd
     }
   }
 
@@ -168,10 +183,13 @@ export async function analyzeSolanaTokenConcentration(mintAddress, largestAccoun
   return buildSolanaTokenConcentrationIntel({
     holderMetrics,
     holderProvenance,
+    holderCount,
     dexMarket,
     routing: jupiter,
     goPlusParsed,
     isCanonical,
+    isMajorAsset,
     providerStatus,
+    birdeyeOverview: birdeye.overview,
   })
 }

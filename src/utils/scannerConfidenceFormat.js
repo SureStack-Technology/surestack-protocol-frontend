@@ -17,11 +17,19 @@ export function confidenceHelperText(band) {
  */
 export function buildConfidenceView(report) {
   const c = report?.confidence
-  if (!c?.band) return null
+  if (!c?.band && report?.scannerConfidenceScore == null) return null
+
+  const solanaLabel = c?.solanaLabel
+  const score = report?.scannerConfidenceScore ?? c?.score
+
   return {
-    score: c.score,
-    band: c.band,
-    providerCoverage: c.providerCoverage || {},
-    helperText: confidenceHelperText(c.band),
+    score,
+    band: c?.band,
+    providerCoverage: c?.providerCoverage || {},
+    helperText: confidenceHelperText(c?.band),
+    scannerConfidencePct: score,
+    scannerConfidenceTier: solanaLabel?.tier || null,
+    providersLabel: solanaLabel?.providersLabel || null,
+    dataConfidence: c?.dataConfidence || report?.tokenConcentration?.dataConfidence || null,
   }
 }

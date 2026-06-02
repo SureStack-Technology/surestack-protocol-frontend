@@ -2,36 +2,31 @@ import { motion } from 'framer-motion'
 import { Activity, Loader2, RefreshCw } from 'lucide-react'
 import { useBirdeyeIntel } from '@/hooks/useBirdeyeIntel.js'
 import { formatIntelProviderUserMessage } from '@/utils/primeApiErrors.js'
+import {
+  assessBehaviorCoverage,
+  behaviorFieldDisplay,
+  isBehaviorFieldPopulated,
+} from '@/utils/behaviorIntelligenceStatus.js'
 
 const PROVIDER_READY_BANNER_HEADLINE = 'Provider Ready — Live Feed Pending'
 const PROVIDER_READY_BANNER_BODY =
   'Live Birdeye feed is pending provider activation. SureStack behavior intelligence layer is ready.'
 
-const PENDING_ASSET_FIELDS = {
-  liquidityHealth: 'Provider Ready',
-  holderConcentration: 'Pending',
-  tradeVelocity: 'Pending',
-  whaleActivity: 'Pending',
-  smartMoneySignal: 'Awaiting live feed',
-}
-
 function isPendingProviderStatus(status) {
   return status === 'fallback' || status === 'unavailable'
 }
 
-function isWatchlistProviderPending(watchlist) {
-  if (!watchlist) return false
-  return watchlist.status !== 'live'
-}
-
 function statusBadgeClass(status) {
   if (status === 'live') return 'text-emerald-300/90 border-emerald-500/30 bg-emerald-950/20'
+  if (status === 'partial') return 'text-amber-200/90 border-amber-500/30 bg-amber-950/20'
   if (isPendingProviderStatus(status)) return 'text-amber-200/90 border-amber-500/30 bg-amber-950/20'
   return 'text-slate-400 border-slate-500/30 bg-slate-900/40'
 }
 
 function statusLabel(status) {
-  if (status === 'live') return 'Live feed'
+  if (status === 'live') return 'Live feed active'
+  if (status === 'partial') return 'Partial live feed'
+  if (status === 'unsupported') return 'Unsupported chain'
   if (isPendingProviderStatus(status)) return 'Provider pending'
   return 'Provider pending'
 }
@@ -45,16 +40,21 @@ function MetricRow({ label, value }) {
   )
 }
 
-function AssetCard({ asset, providerPending }) {
-  const fields = providerPending
-    ? PENDING_ASSET_FIELDS
-    : {
-        liquidityHealth: asset.liquidityHealth,
-        holderConcentration: asset.holderConcentration,
-        tradeVelocity: asset.tradeVelocity,
-        whaleActivity: asset.whaleActivity,
-        smartMoneySignal: asset.smartMoneySignal,
-      }
+function AssetCard({ asset, coverageMode }) {
+  const assetPending = asset.status !== 'live' || coverageMode !== 'full'
+  const fields = {
+    liquidityHealth: behaviorFieldDisplay(asset, 'liquidityHealth', assetPending),
+    holderConcentration: behaviorFieldDisplay(asset, 'holderConcentration', assetPending),
+    tradeVelocity: behaviorFieldDisplay(asset, 'tradeVelocity', assetPending),
+    whaleActivity: behaviorFieldDisplay(asset, 'whaleActivity', assetPending),
+    smartMoneySignal: behaviorFieldDisplay(asset, 'smartMoneySignal', assetPending),
+  }
+  const assetComplete =
+    asset.status === 'live' &&
+    ['holderConcentration', 'whaleActivity', 'tradeVelocity', 'smartMoneySignal'].every((field) =>
+      isBehaviorFieldPopulated(asset[field]),
+    )
+  const badgeStatus = asset.status === 'unsupported' ? 'unsupported' : assetComplete ? 'live' : asset.status === 'live' ? 'partial' : asset.status
 
   return (
     <div className="rounded-xl border border-cyan-500/15 bg-cyan-950/10 p-4 space-y-3">
@@ -67,9 +67,9 @@ function AssetCard({ asset, providerPending }) {
           <p className="text-[10px] font-mono text-slate-500 mt-0.5 uppercase tracking-wider">{asset.chain}</p>
         </div>
         <span
-          className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${statusBadgeClass(asset.status)}`}
+          className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${statusBadgeClass(badgeStatus)}`}
         >
-          {statusLabel(asset.status)}
+          {statusLabel(badgeStatus)}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -82,7 +82,7 @@ function AssetCard({ asset, providerPending }) {
         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-violet-200/80 mb-1">Smart money signal</p>
         <p className="text-xs text-slate-200 leading-relaxed">{fields.smartMoneySignal}</p>
       </div>
-      {!providerPending && asset.riskInterpretation ? (
+      {!assetPending && asset.riskInterpretation ? (
         <p className="text-[11px] text-slate-500 leading-relaxed">{asset.riskInterpretation}</p>
       ) : null}
     </div>
@@ -102,8 +102,8 @@ export default function OnChainBehaviorPanel({ profile, variant = 'full' }) {
     return null
   }
 
-  const providerPending =
-    isUnavailable || isWatchlistProviderPending(watchlist) || assets.some((a) => isPendingProviderStatus(a.status))
+  const coverage = assessBehaviorCoverage(watchlist, assets)
+  const providerPending = coverage.mode === 'pending' || isUnavailable
 
   const safeError = formatIntelProviderUserMessage(error)
 
@@ -131,7 +131,7 @@ export default function OnChainBehaviorPanel({ profile, variant = 'full' }) {
               <span
                 className={`text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded border ${statusBadgeClass(watchlist.status)}`}
               >
-                {statusLabel(watchlist.status)}
+                {coverage.watchlistLabel}
               </span>
             </div>
           ) : null}
@@ -140,7 +140,7 @@ export default function OnChainBehaviorPanel({ profile, variant = 'full' }) {
               <AssetCard
                 key={`${asset.chain}-${asset.tokenAddress}`}
                 asset={asset}
-                providerPending={providerPending || isPendingProviderStatus(asset.status)}
+                coverageMode={coverage.mode}
               />
             ))}
           </div>
@@ -155,7 +155,11 @@ export default function OnChainBehaviorPanel({ profile, variant = 'full' }) {
       <div className="prime-behavior-embed max-h-[420px] overflow-y-auto pr-1">
         <div className="flex items-center justify-between gap-2 mb-3">
           <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-cyan-200/80">
-            {providerPending ? 'Behavior Engine Ready' : 'Birdeye live'}
+            {coverage.mode === 'full'
+              ? 'Birdeye live feed active'
+              : coverage.mode === 'partial'
+                ? 'Partial live feed'
+                : 'Behavior Engine Ready'}
           </p>
           <button
             type="button"

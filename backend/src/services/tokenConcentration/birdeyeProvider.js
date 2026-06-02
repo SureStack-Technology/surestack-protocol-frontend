@@ -28,12 +28,14 @@ export async function fetchBirdeyeTokenOverview(mint) {
     const d = json.data
     return {
       liquidityUsd: Number(d.liquidity || 0) || null,
-      marketCapUsd: Number(d.marketCap || d.fdv || 0) || null,
+      marketCapUsd: Number(d.marketCap || 0) || null,
+      fdvUsd: Number(d.fdv || d.marketCap || 0) || null,
       priceUsd: Number(d.price || 0) || null,
       holderCount: Number(d.holder || 0) || null,
       totalSupply: Number(d.totalSupply || d.circulatingSupply || 0) || null,
       volume24hUsd: Number(d.v24hUSD || 0) || null,
       trade24h: Number(d.trade24h || 0) || null,
+      decimals: d.decimals != null ? Number(d.decimals) : null,
       lastTradeUnixTime: d.lastTradeUnixTime ? Number(d.lastTradeUnixTime) : null,
       symbol: d.symbol || null,
       name: d.name || null,

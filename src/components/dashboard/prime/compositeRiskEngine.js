@@ -6,10 +6,11 @@ const RISK_LEVEL_SCORE = {
 }
 
 const COMPOSITE_WEIGHTS = {
-  contract: 0.35,
-  narrative: 0.2,
-  behavior: 0.15,
-  walletExposure: 0.3,
+  contract: 0.24,
+  narrative: 0.22,
+  behavior: 0.12,
+  liquidity: 0.22,
+  walletExposure: 0.2,
 }
 
 /**
@@ -55,7 +56,12 @@ export function walletExposureRiskScore({
   score,
   assessmentPending,
   exposureIntelligence,
+  exposureProfile,
 } = {}) {
+  if (Number.isFinite(Number(exposureProfile?.exposureScore))) {
+    return Math.max(0, Math.min(100, Math.round(Number(exposureProfile.exposureScore))))
+  }
+
   if (assessmentPending || band === 'PENDING') return null
 
   if (Number.isFinite(Number(score))) {
@@ -98,28 +104,47 @@ export function behaviorRiskScore({ birdeyeLive, activityAnomalies = 0, watchlis
  *   score: number,
  *   verdictLabel: string,
  *   executiveRiskLevel: string,
- *   subscores: { contractRisk: number, narrativeRisk: number, behaviorRisk: number, walletExposureRisk: number | null },
+ *   subscores: {
+ *     contractRisk: number,
+ *     narrativeRisk: number,
+ *     behaviorRisk: number,
+ *     liquidityRisk: number,
+ *     walletExposureRisk: number | null,
+ *   },
  * }}
  */
 export function computeCompositeRisk({
   contractRiskLevel = 'Moderate',
   narrativeRiskLevel = 'Moderate',
   behaviorInputs = {},
+  liquidityRiskScore = null,
   walletInputs = {},
+  exposureProfile = null,
 } = {}) {
   const contractRisk = riskLevelToScore(contractRiskLevel)
   const narrativeRisk = riskLevelToScore(narrativeRiskLevel)
   const behaviorRisk = behaviorRiskScore(behaviorInputs)
-  const walletExposureRisk = walletExposureRiskScore(walletInputs)
+  const liquidityRisk = Number.isFinite(Number(liquidityRiskScore))
+    ? Math.max(0, Math.min(100, Math.round(Number(liquidityRiskScore))))
+    : 48
+  const walletExposureRisk = walletExposureRiskScore({ ...walletInputs, exposureProfile })
 
   const parts = [
     { value: contractRisk, weight: COMPOSITE_WEIGHTS.contract },
     { value: narrativeRisk, weight: COMPOSITE_WEIGHTS.narrative },
     { value: behaviorRisk, weight: COMPOSITE_WEIGHTS.behavior },
+    { value: liquidityRisk, weight: COMPOSITE_WEIGHTS.liquidity },
   ]
 
   if (Number.isFinite(walletExposureRisk)) {
     parts.push({ value: walletExposureRisk, weight: COMPOSITE_WEIGHTS.walletExposure })
+    const tokenOnlyWeight =
+      COMPOSITE_WEIGHTS.contract +
+      COMPOSITE_WEIGHTS.narrative +
+      COMPOSITE_WEIGHTS.behavior +
+      COMPOSITE_WEIGHTS.liquidity
+    const scale = (1 - COMPOSITE_WEIGHTS.walletExposure) / tokenOnlyWeight
+    for (const p of parts.slice(0, 4)) p.weight *= scale
   } else {
     const redistributed = parts.reduce((s, p) => s + p.weight, 0)
     for (const p of parts) p.weight = p.weight / redistributed
@@ -136,6 +161,7 @@ export function computeCompositeRisk({
       contractRisk,
       narrativeRisk,
       behaviorRisk,
+      liquidityRisk,
       walletExposureRisk: Number.isFinite(walletExposureRisk) ? walletExposureRisk : null,
     },
   }

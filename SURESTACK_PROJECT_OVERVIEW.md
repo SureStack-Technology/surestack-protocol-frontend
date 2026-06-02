@@ -6,9 +6,15 @@
 
 ---
 
+## Positioning & disclaimer (2026)
+
+SureStack is an **AI-powered digital asset risk intelligence and incident support** platform. This overview describes on-chain **membership protection programs**, **incident support**, and **member assistance** mechanics on Sepolia. SureStack is **not** positioned as a licensed **insurer** or **carrier** until underwriting / reinsurance structures and any **licensed carrier** partnerships are finalized and disclosed. Contract names such as `PolicyManager`, `processClaim`, and events like `ClaimProcessed` appear for **technical traceability** only.
+
+---
+
 ## 📋 Executive Summary
 
-SureStack Protocol is a **decentralized risk coverage and governance network** built on Ethereum (Sepolia testnet). The platform combines smart contract-based insurance policies, validator staking, DAO governance, and real-time oracle price feeds into a unified DeFi ecosystem.
+SureStack Protocol is a **decentralized risk intelligence, incident support, and governance network** built on Ethereum (Sepolia testnet). The platform combines smart contract-based **membership protection programs** (on-chain `PolicyManager`), validator staking, DAO governance, and real-time oracle price feeds into a unified DeFi stack—**not** a licensed **carrier** product until separately structured and disclosed.
 
 > ℹ️ Historical reports and earlier versions have been moved to [`docs/archive/`](docs/ARCHIVE_INDEX.md).
 
@@ -18,7 +24,7 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 - ✅ **Real-time Chainlink Oracle** integration with live price feeds
 - ✅ **DAO Governance** with WebSocket + polling fallback
 - ✅ **Validator Staking System** with tier-based rewards
-- ✅ **Policy Management** with dynamic premium calculation
+- ✅ **Protection program management** with dynamic program-contribution calculation
 - ✅ **Futuristic UI** with Three.js animations and glassmorphic design
 
 ---
@@ -33,7 +39,7 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 | **ConsensusAndStakingV2** | `0xE4FDE3D1017758E5b32e8010B0843398bDFF9C57` | Validator registration, staking, consensus | ✅ Deployed |
 | **RewardPoolAndSlasher V2** | `0x6fCc339Af4439e76C788493FaF48cA969B63d1a5` | Rewards distribution, slashing, treasury | ✅ Deployed |
 | **DAOGovernance** | `0xAD9fC360E128531d765D59ee0567D5390C4AacBE` | OpenZeppelin Governor-based DAO | ✅ Deployed |
-| **PolicyManager** | `0xc958Eb5C6076F666452c0B8233134648b048A7ca` | Policy creation, premium calculation, claims | ✅ Deployed |
+| **PolicyManager** | `0xc958Eb5C6076F666452c0B8233134648b048A7ca` | Protection program lifecycle, program contributions, incident support (`processClaim`) | ✅ Deployed |
 | **OracleReaderV2** | `0x1B081326b7C36f949F7EE4d801361E1d2c9E67d1` | Chainlink integration, volatility, freshness | ✅ Deployed |
 | **TimelockController** | `0xc21AA00ea234b27e53416D8279239088B8d51a28` | DAO proposal execution delay | ✅ Deployed |
 
@@ -45,10 +51,10 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 
 ### Smart Contract Features
 
-**PolicyManager:**
-- Dynamic premium calculation based on risk factors
-- On-chain claim processing
-- Integration with RewardPool for payouts
+**PolicyManager** *(on-chain contract name):*
+- Dynamic program-contribution calculation based on risk factors
+- On-chain **incident support** processing (`processClaim`)
+- Integration with RewardPool for **member assistance** transfers (within **incident protection limits**)
 - Oracle-based risk assessment
 
 **ConsensusAndStakingV2:**
@@ -61,7 +67,7 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 - Reward distribution to validators
 - Slashing mechanism for misbehavior
 - Treasury management
-- Policy claim payouts
+- **Protection-program** member assistance routing (within limits)
 
 **DAOGovernance:**
 - OpenZeppelin Governor pattern
@@ -114,8 +120,8 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 src/
 ├── components/
 │   ├── Dashboard.jsx              # Main dashboard with live metrics
-│   ├── PolicyPanel.jsx            # Policy creation and management
-│   ├── ClaimPanel.jsx             # Claim processing
+│   ├── PolicyPanel.jsx            # Protection program creation and management
+│   ├── ClaimPanel.jsx             # Incident support / member assistance UI
 │   ├── ValidatorConsole.jsx       # Validator staking interface
 │   ├── GovernancePanel.jsx       # DAO governance dashboard
 │   ├── StressTestPanel.jsx       # Risk simulation
@@ -124,7 +130,7 @@ src/
 │   │   ├── BusinessDashboard.jsx
 │   │   ├── PolicyOps.jsx
 │   │   ├── RiskPoolManager.jsx
-│   │   └── UnderwritingPanel.jsx
+│   │   └── UnderwritingPanel.jsx  # Institutional risk review (UI label)
 │   ├── governance/               # Governance sub-components
 │   │   ├── ProposalForm.jsx
 │   │   ├── ProposalList.jsx
@@ -169,8 +175,8 @@ src/
 
 **User Portal (`/`):**
 - Dashboard with live metrics
-- Policy creation and management
-- Claim submission
+- Protection program creation and management
+- **Incident support** / member assistance requests
 - Validator staking console
 - DAO governance participation
 - Stress testing tools
@@ -178,9 +184,9 @@ src/
 
 **Business Portal (`/business`):**
 - Business dashboard
-- Policy operations (RBAC)
+- Protection program operations (RBAC)
 - Risk pool management
-- Underwriting panel
+- Institutional risk review panel (`UnderwritingPanel.jsx`)
 - Governance audit
 - Advanced analytics
 
@@ -190,7 +196,7 @@ src/
 - ✅ Chainlink ETH/USD price feed (30s polling)
 - ✅ DAO governance events (WebSocket + polling fallback)
 - ✅ Validator staking metrics (live updates)
-- ✅ Policy and claim tracking (event-based)
+- ✅ **Protection program** and **incident support** tracking (event-based)
 - ✅ Treasury balance monitoring
 
 **Visual Design:**
@@ -226,7 +232,7 @@ backend/
 │   ├── services/
 │   │   ├── oracleService.js      # Oracle data fetching
 │   │   ├── governanceService.js  # Governance data aggregation
-│   │   ├── coverageService.js    # Coverage/policy data
+│   │   ├── coverageService.js    # Protection limit / program data (API naming may say “coverage”)
 │   │   └── validatorService.js   # Validator data
 │   ├── routes/
 │   │   ├── oracle.js             # Oracle API endpoints
@@ -251,7 +257,7 @@ backend/
 **Backend API Endpoints:**
 - `/api/oracle` — Oracle data endpoints
 - `/api/governance` — Governance data endpoints
-- `/api/coverage` — Policy/coverage endpoints
+- `/api/coverage` — Protection program / limit aggregation endpoints *(route name historical)*
 - `/api/validators` — Validator data endpoints
 
 **Note:** The frontend primarily interacts directly with smart contracts via ethers.js. The backend serves as an API layer for aggregated data, caching, and future features like analytics and reporting.
@@ -262,17 +268,17 @@ backend/
 
 ### ✅ Core Functionality
 
-1. **Policy Management**
-   - Create insurance policies
-   - Dynamic premium calculation
-   - On-chain policy storage
-   - Policy tracking and history
+1. **Protection program management**
+   - Create **membership protection programs** (on-chain `createPolicy`)
+   - Dynamic program-contribution calculation
+   - On-chain program storage
+   - Program tracking and history
 
-2. **Claim Processing**
-   - Submit claims with loss values
-   - On-chain claim verification
-   - Automatic payout from RewardPool
-   - Claim history tracking
+2. **Incident support**
+   - Submit **incident requests** with loss values (`processClaim`)
+   - On-chain verification of eligible **member assistance**
+   - Automatic **member assistance** from RewardPool within **incident protection limits**
+   - Assistance history tracking
 
 3. **Validator Staking**
    - Stake SST tokens as validator
@@ -294,7 +300,7 @@ backend/
    - Price chart visualization
 
 6. **Dashboard Metrics**
-   - Total coverage amount
+   - Total **protection limit** exposure (protocol view)
    - Total staked tokens
    - DAO treasury balance
    - Oracle price feed
@@ -360,8 +366,8 @@ VITE_NETWORK=sepolia
 - [x] Real-time Chainlink oracle integration
 - [x] DAO governance with live event sync
 - [x] Validator staking interface
-- [x] Policy creation and management
-- [x] Claim processing
+- [x] Protection program creation and management
+- [x] Incident support processing
 - [x] Dashboard with live metrics
 - [x] Futuristic UI with animations
 - [x] Dual portal architecture (User + Business)
@@ -532,7 +538,7 @@ npm run generate:report          # Generate deployment report
 
 ## 🎯 Presentation Summary for Grok
 
-**SureStack Protocol** is a production-ready DeFi insurance platform with:
+**SureStack Protocol** is a production-ready **risk intelligence and incident support** stack (Sepolia POC) with:
 
 ✅ **Fully deployed smart contracts** on Sepolia testnet  
 ✅ **Modern React frontend** with Vite, Tailwind, and Three.js  

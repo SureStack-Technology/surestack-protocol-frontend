@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Activity } from 'lucide-react'
+import { assessBehaviorCoverage, isBehaviorFieldPopulated } from '@/utils/behaviorIntelligenceStatus.js'
 
 function MetricCell({ label, value }) {
   return (
@@ -19,11 +20,11 @@ function pickLeadAsset(assets) {
  * Compact Birdeye behavior layer — not the full OnChainBehaviorPanel watchlist.
  */
 export default function PrimeBehaviorIntelligencePreview({ watchlist, assets = [] }) {
-  const live = watchlist?.status === 'live'
+  const coverage = useMemo(() => assessBehaviorCoverage(watchlist, assets), [watchlist, assets])
   const lead = useMemo(() => pickLeadAsset(assets), [assets])
 
   const metrics = useMemo(() => {
-    if (live && lead) {
+    if (coverage.mode === 'full' && lead) {
       return {
         whale: lead.whaleActivity || 'Balanced footprint',
         liquidity: lead.liquidityHealth || lead.holderConcentration || 'Indexed',
@@ -32,20 +33,29 @@ export default function PrimeBehaviorIntelligencePreview({ watchlist, assets = [
           : 'Smart-money heuristics active',
       }
     }
-    return {
-      whale: 'Pending provider feed',
-      liquidity: 'Pending provider feed',
-      smartMoney: 'Pending provider feed',
+    if (coverage.mode === 'partial' && lead) {
+      return {
+        whale: isBehaviorFieldPopulated(lead.whaleActivity)
+          ? lead.whaleActivity
+          : 'Provider data unavailable',
+        liquidity: isBehaviorFieldPopulated(lead.holderConcentration)
+          ? lead.holderConcentration
+          : 'Pending provider coverage',
+        smartMoney: isBehaviorFieldPopulated(lead.smartMoneySignal)
+          ? String(lead.smartMoneySignal).slice(0, 72)
+          : 'Provider data unavailable',
+      }
     }
-  }, [live, lead])
-
-  const statusLine = live
-    ? 'Birdeye live feed active'
-    : 'Behavior Engine Ready — provider activation pending.'
+    return {
+      whale: 'Pending provider coverage',
+      liquidity: 'Pending provider coverage',
+      smartMoney: 'Pending provider coverage',
+    }
+  }, [coverage.mode, lead])
 
   return (
     <section className="prime-intel-preview prime-intel-preview--behavior" aria-labelledby="prime-behavior-preview-title">
-      <div className="prime-intel-preview__header">
+      <div className="prime-intel-preview__head">
         <div className="prime-intel-preview__icon prime-intel-preview__icon--behavior" aria-hidden>
           <Activity size={16} />
         </div>
@@ -54,10 +64,12 @@ export default function PrimeBehaviorIntelligencePreview({ watchlist, assets = [
           <h3 id="prime-behavior-preview-title" className="text-sm font-heading text-white mt-0.5">
             Behavior Intelligence Preview
           </h3>
-          <p className="text-[11px] text-slate-500 mt-1 leading-snug">{statusLine}</p>
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">{coverage.subtitle}</p>
         </div>
-        <span className={`prime-intel-preview__badge ${live ? 'prime-intel-preview__badge--live' : ''}`}>
-          {live ? 'Live' : 'Ready'}
+        <span
+          className={`prime-intel-preview__badge ${coverage.mode === 'full' ? 'prime-intel-preview__badge--live' : ''}`}
+        >
+          {coverage.badge}
         </span>
       </div>
       <div className="prime-intel-preview__metrics">

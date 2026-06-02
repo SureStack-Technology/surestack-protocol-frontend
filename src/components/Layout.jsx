@@ -5,6 +5,7 @@ import { useWeb3 } from '../contexts/Web3Context'
 import { formatAddress } from '../utils/formatters'
 import NeuroGridBackground from './visuals/NeuroGridBackground'
 import RiskTicker from './ui/RiskTicker'
+import { PrimeIntelligenceHeroProvider } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
 
 const LOGO_SRC = '/assets/logo/surestack-logo.png'
 
@@ -25,7 +26,9 @@ export default function Layout() {
   return (
     <div className="flex min-h-screen bg-void text-foreground">
       <NeuroGridBackground />
-      <RiskTicker />
+      <PrimeIntelligenceHeroProvider>
+        <RiskTicker />
+      </PrimeIntelligenceHeroProvider>
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -80, opacity: 0 }}

@@ -1,11 +1,13 @@
 import {
   DEFAULT_SHOWCASE_SCENARIO_ID,
   getLunarCrushScenarioById,
-  isLiveLunarCrushStatus,
+  resolveLunarCrushFeedMode,
 } from '@/data/lunarCrushScenarioShowcase.js'
+import { assessBehaviorCoverage, isBehaviorFieldPopulated } from '@/utils/behaviorIntelligenceStatus.js'
 import { buildContractAnalyzerSummary } from '@/components/dashboard/prime/primeContractAnalyzerFields.js'
 import { walletRiskBandLabel } from '@/hooks/useWalletRiskIndex.js'
 import { LAYER_ACTION_TYPES, LAYER_BUTTON_LABELS } from '@/components/dashboard/prime/primeIntelligenceLayerActions.js'
+import { buildLiquidityIntelFromScanner } from '@/lib/liquidityIntelligence/buildLiquidityIntelFromScanner.js'
 
 const VIEW_AFTER_SCAN = 'Launch via button or enter a target above'
 const CONTRACT_CHECK_CHIPS = ['Source', 'Proxy', 'Ownership', 'Approvals', 'Honeypot']
@@ -47,9 +49,9 @@ function shortenAddress(addr) {
 
 /** @returns {{ status: string, statusTone: string, statusNote?: string, story: StoryLine[], footerHint: string }} */
 export function buildNarrativeLayer(primeTrends) {
-  const live = isLiveLunarCrushStatus(primeTrends?.status)
+  const feedMode = resolveLunarCrushFeedMode(primeTrends)
 
-  if (live && primeTrends) {
+  if (feedMode === 'live' && primeTrends) {
     const trending =
       (primeTrends.trendingAssets || [])
         .slice(0, 3)
@@ -91,14 +93,17 @@ export function buildNarrativeLayer(primeTrends) {
   const narrative =
     firstSentence(scenario?.intelligenceBrief) ||
     firstSentence(scenario?.riskInterpretation) ||
-    'Scenario intelligence active for pre-scan orientation.'
+    'Narrative intelligence model active for pre-scan orientation.'
 
   return {
-    status: 'Scenario Active',
+    status: 'Model active',
     statusTone: 'scenario',
-    statusNote: 'Live provider activation pending.',
+    statusNote:
+      primeTrends?.providerStatus === 'subscription_required'
+        ? 'Narrative intelligence model active'
+        : 'Partial provider coverage',
     story: [
-      { kind: 'headline', label: 'Current scenario', value: scenario?.title || scenario?.label || 'Showcase' },
+      { kind: 'headline', label: 'Intelligence model', value: scenario?.title || scenario?.label || 'Narrative model' },
       { kind: 'prose', label: 'Narrative', value: narrative },
       { kind: 'row', label: 'Trending', value: trending },
       { kind: 'row', label: 'Signal', value: signal },
@@ -112,10 +117,10 @@ export function buildNarrativeLayer(primeTrends) {
 
 /** @returns {{ status: string, statusTone: string, statusNote?: string, story: StoryLine[], footerHint: string }} */
 export function buildBehaviorLayer(watchlist, assets = []) {
-  const live = watchlist?.status === 'live'
+  const coverage = assessBehaviorCoverage(watchlist, assets)
   const lead = pickLeadAsset(assets)
 
-  if (live && lead) {
+  if (coverage.mode === 'full' && lead) {
     const topAsset = lead.watchlistSymbol || lead.symbol || 'Watchlist'
     return {
       status: 'Live',
@@ -137,6 +142,34 @@ export function buildBehaviorLayer(watchlist, assets = []) {
           kind: 'row',
           label: 'Action',
           value: 'Confirm holder concentration before discretionary exposure',
+        },
+      ],
+      footerHint: VIEW_AFTER_SCAN,
+      actionType: LAYER_ACTION_TYPES.BEHAVIOR,
+      buttonLabel: LAYER_BUTTON_LABELS.behavior,
+    }
+  }
+
+  if (coverage.mode === 'partial' && lead) {
+    const topAsset = lead.watchlistSymbol || lead.symbol || 'Watchlist'
+    return {
+      status: 'Partial',
+      statusTone: 'ready',
+      statusNote: 'Partial live feed',
+      story: [
+        { kind: 'headline', label: 'Feed', value: 'Partial live feed' },
+        { kind: 'row', label: 'Top asset', value: `${topAsset} · ${lead.chain || 'on-chain'}` },
+        {
+          kind: 'row',
+          label: 'Coverage',
+          value: isBehaviorFieldPopulated(lead.holderConcentration)
+            ? 'Some behavior fields populated'
+            : 'Pending provider coverage on key behavior fields',
+        },
+        {
+          kind: 'row',
+          label: 'Action',
+          value: 'Treat behavior signals as partial until all provider fields populate',
         },
       ],
       footerHint: VIEW_AFTER_SCAN,
@@ -239,8 +272,48 @@ export function buildContractTrustLayer({
 }
 
 /** @returns {{ status: string, statusTone: string, statusNote?: string, story: StoryLine[], footerHint: string }} */
-export function buildWalletExposureLayer(walletSnapshot, intel, riskDrivers = []) {
+export function buildWalletExposureLayer(walletSnapshot, intel, riskDrivers = [], walletExposureProfile = null) {
   const hasWallet = Boolean(walletSnapshot?.hasWallet)
+  const profile = walletExposureProfile
+
+  if (profile?.exposureScore != null && hasWallet) {
+    const primary = profile.exposureDrivers?.[0]
+    return {
+      status: profile.exposureBand?.includes('HIGH') || profile.exposureBand?.includes('CRITICAL') ? 'Elevated' : 'Indexed',
+      statusTone: 'live',
+      story: [
+        {
+          kind: 'headline',
+          label: 'Exposure score',
+          value: `${profile.exposureScore}/100 · ${profile.exposureBand}`,
+        },
+        {
+          kind: 'row',
+          label: 'Primary driver',
+          value: primary?.label || 'Exposure drivers pending',
+        },
+        {
+          kind: 'row',
+          label: 'Concentration',
+          value: `${profile.assetConcentration} · ${profile.sectorRisk} sector risk`,
+        },
+        {
+          kind: 'row',
+          label: 'Contract surface',
+          value: `${profile.contractExposureScore}/100 · ${profile.contractExposureLabel}`,
+        },
+        {
+          kind: 'row',
+          label: 'Note',
+          value: 'Educational exposure analysis — not portfolio advice',
+        },
+      ],
+      footerHint: VIEW_AFTER_SCAN,
+      actionType: LAYER_ACTION_TYPES.WALLET,
+      buttonLabel: LAYER_BUTTON_LABELS.wallet,
+    }
+  }
+
   if (walletSnapshot?.assessmentPending || walletSnapshot?.band === 'PENDING') {
     return {
       status: 'Pending',
@@ -300,5 +373,59 @@ export function buildWalletExposureLayer(walletSnapshot, intel, riskDrivers = []
     footerHint: VIEW_AFTER_SCAN,
     actionType: LAYER_ACTION_TYPES.WALLET,
     buttonLabel: LAYER_BUTTON_LABELS.wallet,
+  }
+}
+
+/** @returns {{ status: string, statusTone: string, statusNote?: string, story: StoryLine[], footerHint: string }} */
+export function buildLiquidityLayer(scannerReport) {
+  const intel = buildLiquidityIntelFromScanner(scannerReport)
+  const hasMarket =
+    Boolean(scannerReport?.liquidityIntelligence) ||
+    Boolean(scannerReport?.tokenConcentration?.liquidityUsd) ||
+    Boolean(scannerReport?.tokenConcentration?.liquidityConfirmed)
+
+  if (hasMarket) {
+    return {
+      status: 'Indexed',
+      statusTone: 'live',
+      story: [
+        { kind: 'headline', label: 'Liquidity intelligence', value: `${intel.intelligenceScore}/100 · ${intel.intelligenceBand}` },
+        { kind: 'row', label: 'Depth', value: intel.liquidityDepthLabel },
+        { kind: 'row', label: 'Market impact (est.)', value: intel.estimatedMarketImpactSummary },
+        { kind: 'row', label: 'Venue diversity', value: intel.venueDiversity },
+        { kind: 'row', label: 'Stability', value: intel.liquidityStability },
+        {
+          kind: 'row',
+          label: 'Note',
+          value: 'Estimates from public market data — not execution advice',
+        },
+      ],
+      footerHint: VIEW_AFTER_SCAN,
+      actionType: LAYER_ACTION_TYPES.LIQUIDITY,
+      buttonLabel: LAYER_BUTTON_LABELS.liquidity,
+    }
+  }
+
+  return {
+    status: 'Pending scan',
+    statusTone: 'ready',
+    statusNote: 'Run token scan for depth and impact estimates.',
+    story: [
+      { kind: 'headline', label: 'Liquidity intelligence', value: 'Awaiting market scan' },
+      {
+        kind: 'prose',
+        label: 'Will unlock',
+        value:
+          'Liquidity depth, estimated market impact tiers, venue diversity, and stability signals from indexed DEX and routing data.',
+      },
+      {
+        kind: 'row',
+        label: 'Action',
+        value: 'Run Intelligence Scan on a token mint or contract with market data',
+      },
+    ],
+    footerHint: VIEW_AFTER_SCAN,
+    actionType: LAYER_ACTION_TYPES.LIQUIDITY,
+    buttonLabel: LAYER_BUTTON_LABELS.liquidity,
   }
 }

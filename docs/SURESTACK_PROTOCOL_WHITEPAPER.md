@@ -1,7 +1,7 @@
 # SureStack Protocol
-## Decentralized Risk Coverage & Governance Network
+## Digital Asset Risk Intelligence, Incident Support & Governance Network
 
-**Version 2.0**  
+**Version 2.1**  
 **September 2025**
 
 ---
@@ -12,9 +12,9 @@
 
 # **SureStack Protocol**
 
-## **Decentralized Risk Coverage & Governance Network**
+## **Digital Asset Risk Intelligence, Incident Support & Governance Network**
 
-### **Technical Whitepaper v2.0**
+### **Technical Whitepaper v2.1** *(positioning refreshed 2026 — see disclaimer below)*
 
 ---
 
@@ -29,6 +29,16 @@
 *Building the Future of Decentralized Risk Management*
 
 </div>
+
+---
+
+## Positioning & disclaimer (2026)
+
+**Public and investor-facing positioning:** SureStack is an **AI-powered digital asset risk intelligence and incident support** platform. This document describes on-chain **membership protection programs**, **incident requests**, **member assistance**, and **incident protection limits** for transparency and technical accuracy on the Sepolia testnet.
+
+**Not a licensed carrier:** SureStack is **not** positioned as a licensed **insurer** or **carrier** until any underwriting / reinsurance structure and licensed partnerships are finalized and disclosed. Where legacy wording appears (for example “insurance,” “claim,” or “payout”), it may reflect **historical narrative** or **immutable contract / event names** (`PolicyManager`, `processClaim`, `ClaimProcessed`, etc.)—those identifiers are kept for engineering traceability, not as a retail insurance solicitation.
+
+**Future regulated paths:** If SureStack or partners introduce **licensed carrier** products, they will be described separately with appropriate disclosures. Roadmap items that mention pooled “coverage” refer to **protocol risk architecture**, not an offer of insurance from SureStack as carrier.
 
 ---
 
@@ -56,35 +66,35 @@
 
 ### The Volatility Revolution in Crypto Risk
 
-The **SureStack Protocol** is the first and only DeFi insurance platform that integrates real-time market volatility into both risk scoring and coverage pricing. While competitors rely on static models updated daily or weekly, our protocol adjusts risk scores and premiums **every 30 seconds** based on live Chainlink data.
+The **SureStack Protocol** is a DeFi-native **risk intelligence and incident-support** stack that integrates real-time market volatility into both risk scoring and **program contribution** pricing. While many systems rely on static models updated daily or weekly, our protocol adjusts risk scores and contributions **every 30 seconds** based on live Chainlink data.
 
 **Our Three Pillars of Differentiation:**
 
 1. **Real-Time Volatility Integration**: Continuous monitoring via `OracleReaderV2`
-2. **Dynamic Risk Pricing**: Premiums calculated on-chain using volatility factor
+2. **Dynamic risk pricing:** Program contributions calculated on-chain using volatility factor
 3. **Full Protocol Transparency**: All 8 contracts deployed, verified, and open-source
 
-This combination positions **SureStack** as the most advanced, transparent, and capital-efficient risk coverage layer in DeFi.
+This combination positions **SureStack** as a transparent, capital-efficient **digital asset risk intelligence** layer in DeFi—with on-chain **incident support** mechanics for eligible **protection benefits** (subject to program terms and incident protection limits).
 
 The **SureStack Protocol** introduces a revolutionary approach to cryptocurrency transaction risk assessment by leveraging decentralized consensus, tokenized incentives, and advanced risk modeling. Through the **SST token**, validators stake capital to provide accurate risk assessments, creating a self-regulating ecosystem where precision is rewarded and inaccuracy is penalized.
 
-This whitepaper outlines the technical architecture, economic model, and governance framework that enables transparent, scalable, and reliable crypto risk coverage for institutions, protocols, and individual users.
+This whitepaper outlines the technical architecture, economic model, and governance framework that enables transparent, scalable, and reliable **risk intelligence** and **incident support** workflows for institutions, protocols, and members.
 
 ---
 
 ## 1. Executive Summary
 
-SureStack Protocol is a **decentralized risk coverage and governance network** built on Ethereum, designed to provide transparent, on-chain insurance coverage with dynamic premium calculation, validator-based consensus, and DAO-governed operations.
+SureStack Protocol is a **decentralized risk intelligence, incident support, and governance network** built on Ethereum, designed to provide transparent, on-chain **membership protection programs** with dynamic program-contribution calculation, validator-based consensus, and DAO-governed operations—**not** a licensed **carrier** offering until any such structure is finalized and disclosed.
 
 ### Key Features
 
 - **8 Production-Ready Smart Contracts** deployed on Sepolia testnet
 - **Real-Time Chainlink Oracle Integration** with 30-second volatility updates
-- **Dynamic Premium Calculation** based on live market conditions
+- **Dynamic program contribution calculation** based on live market conditions
 - **Validator Staking System** with tier-based rewards (Community, Regular, Institutional)
 - **OpenZeppelin DAO Governance** with proposal creation, voting, and execution
 - **Cyberpunk "Risk Oracle Control Room" Frontend** with live data visualization
-- **On-Chain Claim Processing** with automatic payout distribution
+- **On-chain incident support processing** with automatic **member assistance** distribution (within **incident protection limits** and program terms)
 
 ### Protocol Status
 
@@ -100,28 +110,28 @@ SureStack Protocol is a **decentralized risk coverage and governance network** b
 
 ### 2.1 Problem Statement
 
-Traditional insurance markets suffer from:
-- **Opacity** in pricing and claims processing
+Traditional risk-transfer and legacy insurance markets suffer from:
+- **Opacity** in pricing and **incident support** processing
 - **Centralized control** limiting access and fairness
-- **Slow claims processing** with manual verification
+- **Slow dispute resolution** with manual verification
 - **Lack of transparency** in risk assessment
 - **High barriers to entry** for new participants
 
 ### 2.2 Solution: SureStack Protocol
 
 SureStack Protocol addresses these issues by:
-- **On-Chain Transparency:** All policies, premiums, and claims are publicly verifiable
-- **Decentralized Governance:** DAO-controlled parameters and upgrades
-- **Automated Processing:** Smart contract-based claim verification and payout
+- **On-chain transparency:** All **protection programs**, program contributions, and **incident support** events are publicly verifiable
+- **Decentralized governance:** DAO-controlled parameters and upgrades
+- **Automated processing:** Smart contract-based **incident request** verification and **member assistance** transfers
 - **Real-Time Risk Assessment:** Chainlink oracle integration for live market data
 - **Validator Consensus:** Distributed network of validators for risk validation
-- **Dynamic Pricing:** Premiums adjust automatically based on volatility and risk factors
+- **Dynamic pricing:** Program contributions adjust automatically based on volatility and risk factors
 
 ### 2.3 Core Principles
 
 1. **Transparency:** All operations are on-chain and publicly auditable
 2. **Decentralization:** No single point of control or failure
-3. **Automation:** Smart contracts handle policy creation, premium calculation, and claims
+3. **Automation:** Smart contracts handle **protection program** creation, program-contribution calculation, and **incident support** flows (contract identifiers such as `PolicyManager` / `processClaim` remain for technical compatibility)
 4. **Real-Time Data:** Live oracle feeds ensure accurate risk assessment
 5. **Community Governance:** Token holders control protocol parameters
 
@@ -135,14 +145,14 @@ SureStack Protocol consists of **8 core smart contracts** working together to pr
 
 ```mermaid
 graph TB
-    A[User] -->|Create Policy| B[PolicyManager]
-    B -->|Calculate Premium| C[OracleReaderV2]
+    A[Member] -->|Open protection program| B[PolicyManager]
+    B -->|Calculate contribution| C[OracleReaderV2]
     C -->|Fetch Price| D[Chainlink ETH/USD]
-    B -->|Deposit Premium| E[RewardPoolAndSlasher]
+    B -->|Deposit program contribution| E[RewardPoolAndSlasher]
     F[Validator] -->|Stake SST| G[ConsensusAndStakingV2]
-    G -->|Validate Claims| B
-    B -->|Process Claim| E
-    E -->|Distribute Payout| A
+    G -->|Validate incident requests| B
+    B -->|processClaim| E
+    E -->|Member assistance / protection benefit| A
     H[DAO] -->|Govern| I[DAOGovernance]
     I -->|Control Parameters| B
     I -->|Control Parameters| C
@@ -154,18 +164,18 @@ graph TB
 
 ### 3.2 Contract Interaction Flow
 
-1. **Policy Creation:**
-   - User calls `PolicyManager.createPolicy()`
+1. **Protection program creation:**
+   - User calls `PolicyManager.createPolicy()` *(on-chain name; user-facing: membership protection program)*
    - Contract queries `OracleReaderV2` for current price and volatility
-   - Premium calculated dynamically using `calculatePremiumUSD()`
-   - Premium deposited into `RewardPoolAndSlasher`
-   - Policy stored on-chain with unique ID
+   - Program contribution calculated dynamically using `calculatePremiumUSD()`
+   - SST deposited into `RewardPoolAndSlasher` as the program contribution
+   - Program stored on-chain with unique ID
 
-2. **Claim Processing:**
-   - User submits claim via `PolicyManager.processClaim()`
-   - Validators verify claim through `ConsensusAndStakingV2`
-   - If consensus reached, `RewardPoolAndSlasher` distributes payout
-   - Claim event emitted for audit trail
+2. **Incident support processing:**
+   - Member submits an **incident request** via `PolicyManager.processClaim()` *(immutable function name)*
+   - Validators verify the request through `ConsensusAndStakingV2`
+   - If consensus reached, `RewardPoolAndSlasher` distributes **member assistance** up to the **incident protection limit**
+   - `ClaimProcessed` event emitted for audit trail *(event name retained for compatibility)*
 
 3. **Validator Operations:**
    - Validators stake SST tokens via `ConsensusAndStakingV2.stake()`
@@ -216,12 +226,12 @@ graph TB
 
 #### 4.2.2 PolicyManager
 
-**Purpose:** Core contract for policy creation, premium calculation, and claim processing
+**Purpose:** Core contract for **protection program** lifecycle, program-contribution calculation, and **incident support** (`PolicyManager` name retained on-chain)
 
 **Key Features:**
-- Dynamic premium calculation based on oracle data
-- On-chain policy storage
-- Integration with RewardPool for claim payouts
+- Dynamic program-contribution calculation based on oracle data
+- On-chain **protection program** storage
+- Integration with RewardPool for **member assistance** transfers (within **incident protection limits**)
 - Oracle data validation (staleness checks)
 
 **Key Functions:**
@@ -310,7 +320,7 @@ function getValidatorStats(address _validator)
 **Key Features:**
 - Reward distribution to validators
 - Slashing mechanism for malicious validators
-- Policy claim payout distribution
+- **Protection-program member assistance** distribution (within limits)
 - Treasury routing (DAO-controlled)
 
 **Key Functions:**
@@ -385,7 +395,7 @@ function execute(uint256 proposalId)
 | **Early Investors** | 15% | Milestone-based vesting | Early funding |
 | **Treasury (DAO)** | 10% | DAO-controlled | Operations, audits, R&D |
 | **Ecosystem Incentives** | 25% | Immediate | Grants, staking, integrations |
-| **Public & Community** | 25% | Immediate | Open staking, coverage |
+| **Public & Community** | 25% | Immediate | Open staking, **protection program** participation |
 | **Liquidity & Market Ops** | 10% | Immediate | Market stability, DEX liquidity |
 
 ### 5.2 Token Utility
@@ -394,18 +404,18 @@ function execute(uint256 proposalId)
 
 1. **Voting Power:** 1 SST = 1 vote in DAO governance
 2. **Staking:** Validators stake SST to participate in consensus
-3. **Premium Payment:** Users pay premiums in SST
+3. **Program contribution:** Users pay SST **program contributions** (historically referred to as premiums in contract math)
 4. **Rewards:** Validators earn SST rewards for accurate assessments
 5. **Slashing:** Malicious validators lose staked SST
 
 ### 5.3 Economic Mechanisms
 
-#### 5.3.1 Premium Flow
+#### 5.3.1 Program contribution flow
 
 ```
-User Premium → PolicyManager → RewardPoolAndSlasher
+User program contribution → PolicyManager → RewardPoolAndSlasher
                                     ↓
-                            Claim Payouts
+                            Member assistance / protection benefits
                             Validator Rewards
                             Treasury (DAO-controlled)
 ```
@@ -434,9 +444,9 @@ APY = (ProtocolFees × AccuracyFactor) / TotalStaked × 365 days
 
 ## 6. Risk Management
 
-### 6.1 Dynamic Premium Calculation
+### 6.1 Dynamic program contribution calculation
 
-Premiums are calculated in real-time based on:
+Program contributions (contract: `premiumUSD` / `calculatePremiumUSD`) are calculated in real time based on:
 
 1. **Base Rate:** 2% (governance-controlled)
 2. **Volatility Factor:** Calculated from OracleReaderV2
@@ -463,17 +473,17 @@ where:
 - **Medium Risk (40-69):** Warning (yellow glow)
 - **High Risk (70-100):** Critical (red glow, pulse animation)
 
-### 6.3 Claim Processing
+### 6.3 Incident support processing
 
 **Process:**
-1. User submits claim with loss event value
-2. Validators verify claim through consensus
-3. If consensus reached, RewardPool distributes payout
-4. Claim event emitted for audit trail
+1. Member submits an **incident request** with loss event value (`processClaim`)
+2. Validators verify the request through consensus
+3. If consensus reached, RewardPool distributes **member assistance** (subject to **incident protection limits**)
+4. `ClaimProcessed` event emitted for audit trail *(event name retained for compatibility)*
 
 **Requirements:**
-- Policy must be active
-- Loss event value must exceed claim trigger threshold (20% default)
+- **Protection program** must be active
+- Loss event value must exceed **incident request** trigger threshold (20% default)
 - Sufficient funds in RewardPool
 
 ---
@@ -534,9 +544,9 @@ Validators must:
 ### 8.3 Governance Parameters
 
 **Configurable via DAO proposals:**
-- Base premium rate
+- Base program-contribution rate (contract: base premium rate)
 - Maximum volatility factor
-- Claim trigger threshold
+- **Incident request** trigger threshold
 - Validator staking requirements
 - Reward distribution rates
 - Slashing thresholds
@@ -715,7 +725,7 @@ volatilityFactor = ((currentPrice - previousPrice) / previousPrice) × 1e8
 
 ### Phase 4: Expansion (📅 Q2-Q4 2026)
 - [ ] Multi-chain support (Polygon, Arbitrum)
-- [ ] Additional coverage types
+- [ ] **Additional protection program types** / risk modules (may involve **licensed carrier** partners where regulated products are offered)
 - [ ] Institutional partnerships
 - [ ] Advanced analytics dashboard
 
@@ -731,7 +741,7 @@ SureStack Protocol represents a **paradigm shift** in decentralized risk coverag
 - **Community Governance:** DAO-controlled parameters
 - **Validator Consensus:** Distributed risk validation
 
-With **8 production-ready contracts** deployed on Sepolia and a **cyberpunk-themed frontend** providing real-time risk monitoring, SureStack Protocol is positioned to become a leading DeFi insurance platform.
+With **8 production-ready contracts** deployed on Sepolia and a **cyberpunk-themed frontend** providing real-time risk monitoring, SureStack Protocol is positioned as a leading **AI-powered digital asset risk intelligence and incident support** stack for DeFi—**not** as a licensed **insurer** until any such offering is separately structured and disclosed.
 
 **Current Status:** 85% Complete POC, ready for security audit and mainnet preparation.
 
@@ -799,8 +809,8 @@ APY = (ProtocolFees × AccuracyFactor) / TotalStaked × 365
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** September 2025  
+**Document Version:** 2.1  
+**Last Updated:** September 2025 *(positioning disclaimer added 2026)*  
 **Status:** Production-Ready POC (85% Complete)
 
 ---

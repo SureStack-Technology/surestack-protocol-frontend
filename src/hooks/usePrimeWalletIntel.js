@@ -123,20 +123,38 @@ export function usePrimeWalletIntel(api, walletKey) {
     return alerts.filter((a) => !a.read).length
   }, [alerts])
 
-  return {
-    timeline,
-    timelineLoading,
-    timelineErr,
-    refetchTimeline: loadTimeline,
-    alerts,
-    alertsLoading,
-    refetchAlerts: loadAlerts,
-    unreadAlertCount,
-    scenarioCatalog,
-    refetchScenarios: loadScenarios,
-    runAnalyst,
-    runSimulator,
-    fetchApprovals,
-    fetchThreatFeed,
-  }
+  return useMemo(
+    () => ({
+      timeline,
+      timelineLoading,
+      timelineErr,
+      refetchTimeline: loadTimeline,
+      alerts,
+      alertsLoading,
+      refetchAlerts: loadAlerts,
+      unreadAlertCount,
+      scenarioCatalog,
+      refetchScenarios: loadScenarios,
+      runAnalyst,
+      runSimulator,
+      fetchApprovals,
+      fetchThreatFeed,
+    }),
+    [
+      timeline,
+      timelineLoading,
+      timelineErr,
+      loadTimeline,
+      alerts,
+      alertsLoading,
+      loadAlerts,
+      unreadAlertCount,
+      scenarioCatalog,
+      loadScenarios,
+      runAnalyst,
+      runSimulator,
+      fetchApprovals,
+      fetchThreatFeed,
+    ],
+  )
 }

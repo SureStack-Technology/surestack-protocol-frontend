@@ -60,7 +60,7 @@ async function fetchDexScreenerRaw(address, chainId) {
   )
   if (!res.ok) return { error: true }
   const json = await res.json()
-  if (json?.pairs == null) return { malformed: true }
+  if (json?.pairs == null) return { ranked: [], slug }
   const pairs = Array.isArray(json.pairs) ? json.pairs : []
   const slug = chainId === 'solana' ? 'solana' : CHAIN_SLUG[Number(chainId)] || null
   const filtered = filterPairsForChain(pairs, slug)

@@ -64,7 +64,7 @@ function narrativeContext(primeTrends) {
     return 'Live narrative feed active.'
   }
   if (primeTrends?.status === 'fallback' || primeTrends) {
-    return 'Scenario showcase active — live narrative feed pending.'
+    return 'Narrative intelligence model active — live narrative feed pending.'
   }
   return 'Narrative provider pending.'
 }
@@ -73,7 +73,7 @@ function behaviorContext(watchlist) {
   if (watchlist?.status === 'live') {
     return 'Live behavior feed active.'
   }
-  return 'Birdeye behavior layer is provider-ready; live feed pending.'
+  return 'Birdeye behavior layer has partial provider coverage; live feed pending.'
 }
 
 function contractTrustCopy(contractsUnderReview, hasWallet) {
@@ -170,7 +170,7 @@ function buildNextSteps({
 function buildStatusChips({ lunarLive, birdeyeLive, contractsUnderReview }) {
   const chips = []
   if (lunarLive) chips.push({ label: 'Live', tone: 'live' })
-  else chips.push({ label: 'Scenario Showcase', tone: 'showcase' })
+  else chips.push({ label: 'Narrative Model', tone: 'showcase' })
   if (birdeyeLive) chips.push({ label: 'Live', tone: 'live' })
   else chips.push({ label: 'Provider Pending', tone: 'pending' })
   if (contractsUnderReview > 0) {

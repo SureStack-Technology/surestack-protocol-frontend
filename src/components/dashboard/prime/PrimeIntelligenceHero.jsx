@@ -36,14 +36,14 @@ function buildLayerCards(walletSnapshot, primeTrends, watchlist, contractsUnderR
     {
       id: 'narrative',
       label: 'Narrative Intelligence',
-      value: lunarLive ? 'Live feed active' : 'Scenario Intelligence Active',
-      status: lunarLive ? 'Live' : 'Upgrade',
+      value: lunarLive ? 'Live feed active' : 'Narrative Intelligence Active',
+      status: lunarLive ? 'Live' : 'Model',
       tone: 'fuchsia',
     },
     {
       id: 'behavior',
       label: 'Behavior Intelligence',
-      value: birdeyeLive ? 'Live feed active' : 'Behavior Engine Ready',
+      value: birdeyeLive ? 'Live feed active' : 'Behavior coverage pending',
       status: birdeyeLive ? 'Live' : 'Pending',
       tone: 'cyan',
     },
