@@ -4,7 +4,6 @@ import { Activity, BarChart3, Menu, X, Package as PackageIcon, UserCircle, LifeB
 import { Link, useLocation, Outlet } from 'react-router-dom'
 import { useWeb3 } from '../contexts/Web3Context.jsx'
 import { formatAddress } from '../utils/formatters.js'
-import NeonParticles from '@/components/backgrounds/NeonParticles'
 import NeuroGridOverlay from '@/components/backgrounds/NeuroGridOverlay'
 import RiskTicker from '../components/ui/RiskTicker.jsx'
 import DataFlowOverlay from '../components/visuals/DataFlowOverlay.jsx'
@@ -103,17 +102,14 @@ function MainLayoutBody() {
         : 'Explorer Intelligence'
   return (
     <div className="theme-shell">
-      <div className="theme-canvas-layer pointer-events-none z-0">
-        <NeonParticles />
-      </div>
-      <div className="theme-neuro-layer pointer-events-none z-10">
+      <div className="theme-neuro-layer pointer-events-none">
         <NeuroGridOverlay />
       </div>
-      <div className="theme-overlay-layer pointer-events-none z-20">
+      <div className="theme-overlay-layer pointer-events-none">
         <DataFlowOverlay />
       </div>
       <div className="theme-content-layer">
-        <div className="content-shell relative min-h-screen overflow-hidden z-50">
+        <div className="content-shell relative min-h-screen overflow-hidden">
           <div className="fixed inset-x-0 top-0 z-40">
             <RiskTicker />
           </div>
@@ -137,7 +133,7 @@ function MainLayoutBody() {
               initial={{ x: -80, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.3 }}
-              className={`w-64 bg-gradient-to-b from-[#050a14] via-[#0a1224] to-[#04060c] p-5 flex flex-col justify-between shadow-2xl sticky top-[64px] h-[calc(100vh-64px)] border-r border-indigo-500/15 pointer-events-auto ${
+              className={`dashboard-sidebar-glass w-64 p-5 flex flex-col justify-between shadow-2xl sticky top-[64px] h-[calc(100vh-64px)] pointer-events-auto ${
                 sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
               } fixed lg:relative transition-transform duration-300`}
             >
@@ -189,7 +185,7 @@ function MainLayoutBody() {
             </motion.aside>
 
             <div className="flex-1 flex flex-col overflow-hidden relative pt-[64px]">
-              <header className="flex items-center justify-between px-5 sm:px-8 py-4 lg:py-4 bg-[rgba(4,10,22,0.82)] border-b border-indigo-500/20 backdrop-blur-xl sticky top-0 z-20 shadow-[0_12px_40px_rgba(0,0,0,0.45)] pointer-events-auto min-h-[4rem]">
+              <header className="dashboard-header-glass flex items-center justify-between px-5 sm:px-8 py-4 lg:py-4 sticky top-0 z-20 pointer-events-auto min-h-[4rem]">
                 <div className="flex items-center gap-3 sm:gap-5 min-w-0">
                   <button
                     onClick={() => setSidebarOpen(true)}

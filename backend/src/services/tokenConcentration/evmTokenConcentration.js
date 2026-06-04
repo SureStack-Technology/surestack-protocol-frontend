@@ -36,6 +36,9 @@ export function isLikelyErc20Token({ onChain, etherscan, address, chainId }) {
 export async function analyzeEvmTokenConcentration(address, chainId, deploymentMetaIn = null) {
   const archetype = resolveContractArchetype(address, chainId)
   const isCanonical = archetype?.class === 'canonical_token'
+  const isStablecoin = Boolean(
+    isCanonical && /^(usdc|usdt|dai|usds|pyusd|frax|lusd)$/i.test(String(archetype?.id || '')),
+  )
 
   const deploymentMetaPromise =
     deploymentMetaIn != null
@@ -55,6 +58,7 @@ export async function analyzeEvmTokenConcentration(address, chainId, deploymentM
     dex,
     goPlusParsed,
     isCanonical,
+    isStablecoin,
     deploymentMeta,
   })
 }

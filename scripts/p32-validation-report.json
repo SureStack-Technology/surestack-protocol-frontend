@@ -1,0 +1,437 @@
+{
+  "sprint": "P3.2 Live Validation",
+  "startedAt": "2026-06-04T00:06:03.508Z",
+  "completedAt": "2026-06-04T00:06:25.943Z",
+  "health": {
+    "url": "http://localhost:5001/health",
+    "status": 200,
+    "ok": true
+  },
+  "providers": [
+    {
+      "provider": "Helius/RPC",
+      "status": "success",
+      "latencyMs": 238,
+      "detail": {
+        "configured": true
+      },
+      "coverage": "live"
+    },
+    {
+      "provider": "DexScreener",
+      "status": "success",
+      "latencyMs": 235,
+      "detail": {
+        "pairs": 30
+      },
+      "coverage": "live"
+    },
+    {
+      "provider": "Jupiter",
+      "status": "success",
+      "latencyMs": 331,
+      "detail": {
+        "hits": 1
+      },
+      "coverage": "live"
+    },
+    {
+      "provider": "Birdeye",
+      "status": "success",
+      "latencyMs": 363,
+      "detail": {
+        "status": 200
+      },
+      "coverage": "live"
+    },
+    {
+      "provider": "Alchemy",
+      "status": "success",
+      "latencyMs": 190,
+      "detail": {
+        "block": "0x181230c"
+      },
+      "coverage": "live"
+    },
+    {
+      "provider": "Etherscan",
+      "status": "failure",
+      "latencyMs": 528,
+      "detail": "NOTOK",
+      "coverage": "degraded"
+    },
+    {
+      "provider": "GoPlus",
+      "status": "success",
+      "latencyMs": 386,
+      "detail": {
+        "code": 1
+      },
+      "coverage": "live"
+    }
+  ],
+  "ethereum": [
+    {
+      "symbol": "LINK",
+      "chain": "ethereum",
+      "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+      "classification": "LINK",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 753,
+      "scanSuccess": true,
+      "trustScore": 72,
+      "executiveClassification": "ORACLE INFRASTRUCTURE",
+      "executiveRisk": 32,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "liquidityScore": 15,
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "UNI",
+      "chain": "ethereum",
+      "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+      "classification": "UNI",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1158,
+      "scanSuccess": true,
+      "trustScore": 72,
+      "executiveClassification": "GOVERNANCE ASSET",
+      "executiveRisk": 36,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "liquidityScore": 16,
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "AAVE",
+      "chain": "ethereum",
+      "address": "0x7fc66500c84a76ad7e9c93481fe6c2e88f4923e6",
+      "classification": "protocol",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 156,
+      "scanSuccess": true,
+      "executiveClassification": "GOVERNANCE ASSET",
+      "executiveRisk": 36,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": false,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "USDC",
+      "chain": "ethereum",
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "classification": "USDC",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1403,
+      "scanSuccess": true,
+      "trustScore": 72,
+      "executiveClassification": "STABLECOIN ASSET",
+      "executiveRisk": 28,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "liquidityScore": 24,
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "USDT",
+      "chain": "ethereum",
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "classification": "USDT",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1203,
+      "scanSuccess": true,
+      "trustScore": 72,
+      "executiveClassification": "STABLECOIN ASSET",
+      "executiveRisk": 28,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "liquidityScore": 23,
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "PEPE",
+      "chain": "ethereum",
+      "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+      "classification": "PEPE",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1266,
+      "scanSuccess": true,
+      "trustScore": 72,
+      "executiveClassification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 58,
+      "executiveConfidence": 68,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Scanner validated — evidence-backed intelligence available.",
+      "liquidityScore": 40,
+      "checks": {
+        "registryMatch": true,
+        "classifyOk": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasClassification": true,
+        "hasRiskScore": true,
+        "noFabricationWhenUnverified": true,
+        "bannerOk": true
+      },
+      "pass": true
+    }
+  ],
+  "solana": [
+    {
+      "symbol": "WIF",
+      "chain": "solana",
+      "address": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 8713,
+      "scanSuccess": true,
+      "trustScore": 76,
+      "marketCapUsd": 190311485,
+      "liquidityUsd": 4724604.039999998,
+      "holderCount": null,
+      "executiveClassification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 58,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Metadata resolved — preliminary intelligence available.",
+      "checks": {
+        "registryMatch": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasMarketData": true,
+        "hasClassification": true,
+        "hasRiskScore": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "BONK",
+      "chain": "solana",
+      "address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1270,
+      "scanSuccess": true,
+      "trustScore": 76,
+      "marketCapUsd": 446534886,
+      "liquidityUsd": 2402324.99,
+      "holderCount": null,
+      "executiveClassification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 58,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Metadata resolved — preliminary intelligence available.",
+      "checks": {
+        "registryMatch": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasMarketData": true,
+        "hasClassification": true,
+        "hasRiskScore": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "JUP",
+      "chain": "solana",
+      "address": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 1711,
+      "scanSuccess": true,
+      "trustScore": 100,
+      "marketCapUsd": 3407599908005,
+      "liquidityUsd": 66897216.02,
+      "holderCount": null,
+      "executiveClassification": "DEFI ASSET",
+      "executiveRisk": 40,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Metadata resolved — preliminary intelligence available.",
+      "checks": {
+        "registryMatch": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasMarketData": true,
+        "hasClassification": true,
+        "hasRiskScore": true
+      },
+      "pass": true
+    },
+    {
+      "symbol": "TAO",
+      "chain": "solana",
+      "address": "TaoFYsbq8b45Qxig2pkMHFCKq62hvxQrU8aXZwHb1XY",
+      "preScanState": "METADATA_RESOLVED",
+      "postScanState": "SCANNER_VALIDATED",
+      "scanLatencyMs": 931,
+      "scanSuccess": true,
+      "trustScore": 29,
+      "marketCapUsd": 5526686901,
+      "liquidityUsd": 5526530387.49,
+      "holderCount": null,
+      "executiveClassification": "AI ASSET",
+      "executiveRisk": 42,
+      "bannerTitle": "Token identified",
+      "bannerSubtitle": "Metadata resolved — preliminary intelligence available.",
+      "checks": {
+        "registryMatch": true,
+        "preScanStateOk": true,
+        "scanSuccess": true,
+        "postScanStateOk": true,
+        "hasMarketData": true,
+        "hasClassification": true,
+        "hasRiskScore": true
+      },
+      "pass": true
+    }
+  ],
+  "unknown": [
+    {
+      "id": "pump_fun_mint",
+      "label": "Random Pump.fun token",
+      "query": "VGz5JN59ozf2Mtsv8R4FbCDUWxtEgmAdKEBZL4Epump",
+      "state": "MINT_DETECTED",
+      "bannerTitle": "Mint detected",
+      "bannerSubtitle": "Metadata and market intelligence pending scanner validation.",
+      "classification": "UNKNOWN ASSET",
+      "executiveRisk": "—",
+      "unverified": true,
+      "scanSuccess": true,
+      "scanLatencyMs": 585,
+      "checks": {
+        "stateOk": true,
+        "noFabricatedClass": true,
+        "noRiskScore": true,
+        "noBadBanner": true,
+        "conclusionOk": true
+      },
+      "pass": true
+    },
+    {
+      "id": "random_evm",
+      "label": "Random EVM contract",
+      "query": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "state": "MINT_DETECTED",
+      "bannerTitle": "Mint detected",
+      "bannerSubtitle": "Metadata and market intelligence pending scanner validation.",
+      "classification": "UNKNOWN ASSET",
+      "executiveRisk": "—",
+      "unverified": true,
+      "scanSuccess": true,
+      "scanLatencyMs": 490,
+      "checks": {
+        "stateOk": true,
+        "noFabricatedClass": true,
+        "noRiskScore": true,
+        "noBadBanner": true,
+        "conclusionOk": true
+      },
+      "pass": true
+    },
+    {
+      "id": "unknown_symbol",
+      "label": "Unknown symbol",
+      "query": "ZZZZNOTATOKEN",
+      "state": "UNKNOWN_ASSET",
+      "bannerTitle": "Asset detected",
+      "bannerSubtitle": "Metadata unavailable. Scanner validation required.",
+      "classification": "UNKNOWN ASSET",
+      "executiveRisk": "—",
+      "unverified": true,
+      "scanSuccess": false,
+      "scanLatencyMs": null,
+      "checks": {
+        "stateOk": true,
+        "noFabricatedClass": true,
+        "noRiskScore": true,
+        "noBadBanner": true,
+        "conclusionOk": true
+      },
+      "pass": true
+    }
+  ],
+  "summary": {
+    "ethPass": "6/6",
+    "solPass": "4/4",
+    "unknownPass": "3/3",
+    "providerPass": "6/7"
+  },
+  "launchGate": {
+    "knownEthScannerBacked": true,
+    "knownSolScannerBacked": true,
+    "unknownIntegrity": true,
+    "backendHealth": true,
+    "providerCoverage": true
+  },
+  "recommendation": "GO",
+  "failedAssets": []
+}

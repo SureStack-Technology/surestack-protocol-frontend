@@ -1,11 +1,16 @@
-import { SYMBOL_REGISTRY } from '@/services/intelligenceTargetClassifier.js'
+import {
+  buildSymbolRegistryMap,
+  lookupPrimeToken,
+  toTokenResolutionPayload,
+  UNRESOLVED_ASSET_COPY,
+} from '../../../shared/constants/primeTokenRegistry.mjs'
 
 /**
  * Lightweight EVM token symbol → contract address resolver.
  * Registry auto-selects; DexScreener returns candidates requiring user confirmation.
  */
 
-/** Mainnet registry — lowercase addresses. */
+/** Mainnet registry — lowercase addresses (legacy; prefer PRIME_TOKEN_REGISTRY). */
 export const ETHEREUM_TOKEN_REGISTRY = {
   LINK: '0x514910771af9ca656af840dff83e8264ecf986ca',
   UNI: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
@@ -13,6 +18,11 @@ export const ETHEREUM_TOKEN_REGISTRY = {
   PEPE: '0x6982508145454ce325ddbe47a25d4ec3d2311933',
   SHIB: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce',
   USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  USDT: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+  DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
+  FET: '0xaea46a60368a7bd06006146a4107a6490e122342',
+  RNDR: '0x6de037ef9ad2725eb1694d337882399c32785661',
+  ARB: '0xb50721bcf8d667c67912441f4d70b32f0802e3c',
 }
 
 /** Minimum liquidity for DexScreener candidates (default). */
@@ -201,38 +211,28 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
   const manualOnlySymbol = MANUAL_ONLY_SYMBOLS.has(symbol)
   const ambiguousNative = AMBIGUOUS_NATIVE_SYMBOLS.has(symbol)
 
+  const registryHit = lookupPrimeToken(symbol)
+  if (registryHit) {
+    return toTokenResolutionPayload(registryHit, 'registry')
+  }
+
   if (terminalChainId === 'ethereum' && ETHEREUM_TOKEN_REGISTRY[symbol]) {
-    return {
-      resolved: true,
-      autoSelected: true,
-      confirmationRequired: false,
-      symbol,
-      address: checksumNeutral(ETHEREUM_TOKEN_REGISTRY[symbol]),
-      source: 'registry',
-      chainSlug: 'ethereum',
-      candidates: [],
-      ambiguousNative: false,
-      manualOnly: false,
-      message: 'Contract proof available',
-    }
+    return toTokenResolutionPayload(
+      {
+        symbol,
+        name: symbol,
+        chain: 'ethereum',
+        address: ETHEREUM_TOKEN_REGISTRY[symbol],
+      },
+      'registry',
+    )
   }
 
   if (terminalChainId === 'solana') {
-    const reg = SYMBOL_REGISTRY[symbol]
+    const regMap = buildSymbolRegistryMap()
+    const reg = regMap[symbol]
     if (reg?.chain === 'solana' && reg.address) {
-      return {
-        resolved: true,
-        autoSelected: true,
-        confirmationRequired: false,
-        symbol: reg.symbol,
-        address: reg.address,
-        source: 'registry',
-        chainSlug: 'solana',
-        candidates: [],
-        ambiguousNative: false,
-        manualOnly: false,
-        message: 'Solana mint resolved from registry',
-      }
+      return toTokenResolutionPayload(reg, 'registry')
     }
     return {
       resolved: false,
@@ -285,6 +285,24 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
   }
 
   const dex = await fetchDexScreenerCandidates(symbol, chainSlug)
+  if (dex?.candidates?.length === 1 && dex.candidates[0]?.liquidityUsd >= HIGH_CONFIDENCE_LIQUIDITY_USD) {
+    const c = dex.candidates[0]
+    return {
+      resolved: true,
+      autoSelected: true,
+      confirmationRequired: false,
+      status: 'resolved',
+      symbol,
+      address: checksumNeutral(c.address),
+      source: 'dexscreener',
+      chainSlug: c.chainId || chainSlug || 'ethereum',
+      chainLabel: CHAIN_LABEL[c.chainId] || CHAIN_LABEL[chainSlug] || 'Ethereum',
+      candidates: [],
+      ambiguousNative,
+      manualOnly: false,
+      message: 'Token identified and contract resolved.',
+    }
+  }
   if (dex?.candidates?.length) {
     return {
       resolved: false,
@@ -306,6 +324,7 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
   return {
     resolved: false,
     autoSelected: false,
+    status: 'unresolved',
     symbol,
     address: null,
     source: null,
@@ -315,7 +334,7 @@ export async function resolveTokenSymbol(symbolInput, terminalChainId = 'ethereu
     ambiguousNative,
     manualOnly: false,
     message: ambiguousNative
-      ? `${symbol} may refer to a native or wrapped asset. Contract proof unavailable until you paste the exact contract.`
-      : 'Contract proof unavailable until token contract is resolved.',
+      ? `${symbol} may refer to a native or wrapped asset. Paste the exact contract address to scan.`
+      : UNRESOLVED_ASSET_COPY,
   }
 }

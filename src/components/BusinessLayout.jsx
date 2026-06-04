@@ -17,7 +17,6 @@ import { useEffect, useRef } from 'react'
 import { useWeb3 } from '@contexts/Web3Context'
 import { formatAddress } from '../utils/formatters.js'
 import NeuroGridBackground from '@components/visuals/NeuroGridBackground'
-import CanvasBackground from '@components/visuals/CanvasBackground'
 import DataFlowOverlay from '@components/visuals/DataFlowOverlay'
 import RiskTicker from '@components/ui/RiskTicker'
 import { PrimeIntelligenceHeroProvider } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
@@ -98,9 +97,8 @@ export default function BusinessLayout() {
   }, [role, roleLoading, filteredNav.length])
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden bg-background text-foreground">
+    <div className="relative w-full min-h-screen overflow-hidden bg-transparent text-foreground">
       <TNeuroGridBackground />
-      <CanvasBackground />
       <DataFlowOverlay />
       <div className="fixed inset-x-0 top-0 h-16 z-40">
         <PrimeIntelligenceHeroProvider>

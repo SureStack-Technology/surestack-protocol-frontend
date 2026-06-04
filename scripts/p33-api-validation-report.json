@@ -1,0 +1,3115 @@
+{
+  "sprint": "P3.3 End-to-End API Validation",
+  "backendUrl": "http://localhost:5001",
+  "startedAt": "2026-06-04T00:16:38.626Z",
+  "completedAt": "2026-06-04T00:16:53.823Z",
+  "health": {
+    "route": "GET /health",
+    "status": 200,
+    "latencyMs": 29,
+    "pass": true
+  },
+  "summary": {
+    "decision": "GO",
+    "knownPass": "10/10",
+    "unknownPass": "3/3",
+    "routeCoverage": [
+      "POST /api/prime/intelligence/classify",
+      "POST /api/prime/contracts/analyze",
+      "POST /api/prime/solana/analyze",
+      "GET /health"
+    ],
+    "averageLatencyMs": 606,
+    "hardFails": [],
+    "warningCount": 0
+  },
+  "ethereum": [
+    {
+      "asset": "LINK",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 17,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Token",
+              "symbol": "LINK",
+              "name": null,
+              "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 990,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0x514910771af9ca656af840dff83e8264ecf986ca",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:39.661Z",
+            "isContract": true,
+            "addressType": "TOKEN",
+            "trustScore": 72,
+            "trustBand": "MODERATE",
+            "honeypotRisk": "UNDETERMINED",
+            "ownershipConcentration": "NOT_DISCLOSED",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": false,
+              "blacklist": false,
+              "owner": false
+            },
+            "deployerHeuristics": "Moderate activity — standard footprint for orientation",
+            "findings": [
+              {
+                "code": "VERIFIED_SOURCE",
+                "severity": "INFO",
+                "title": "Verified source on explorer",
+                "detail": "Contract name: LinkToken."
+              }
+            ],
+            "interpretationSummary": "Established oracle network token with verified source and long production history — review admin and proxy controls as standard governance risk.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "etherscan_v2"
+            },
+            "archetypeId": "link",
+            "archetypeLabel": "Chainlink (LINK)",
+            "tokenConcentration": {
+              "available": true,
+              "holderConcentration": "Holder concentration unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "liquidityStatus": "DEX liquidity detected — deep",
+              "liquidityConcentration": "Liquidity concentration unavailable",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Established token distribution",
+              "deploymentAge": "~8 years 9 months",
+              "contractDeploymentAge": "~8 years 9 months",
+              "primaryPoolAge": "~6 years 1 months",
+              "deploymentAgeSource": "contract_creation",
+              "deploymentAgeHours": 76370.83628555556,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "unknown",
+              "liquidityUsd": 40644120.55999999,
+              "creatorPct": null,
+              "ownerPct": null,
+              "isStablecoin": false,
+              "isCanonical": true,
+              "liquidityConfirmed": true,
+              "pairCount": 22,
+              "volume24hUsd": 13020695.059999999,
+              "topPairLiquidityUsd": 22785738.21,
+              "dexListings": "uniswap, sushiswap, supernova, balancer, shibaswap, 0x696708Db871B77355d6C2bE7290B27CF0Bb9B24b, defiswap, curve",
+              "dataSources": {
+                "dexscreener": true,
+                "goplus": false
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "aiSummary": "Established oracle network token with verified source and long production history — review admin and proxy controls as standard governance risk.",
+            "deploymentMeta": {
+              "available": true,
+              "source": "etherscan_v2",
+              "contractCreatedAtMs": 1505597189000,
+              "contractCreator": "0xf55037738604fddfc4043d12f25124e94d7d1780",
+              "creationTxHash": "0x5488510df045770efbff57f25d0c6d2c1404d58c1199b21eb8dc5072b22d91d7",
+              "isProxy": false,
+              "implementationAddress": null,
+              "implementationCreatedAtMs": null
+            },
+            "confidence": {
+              "score": 65,
+              "band": "LOW",
+              "providerCoverage": {
+                "etherscan": true,
+                "goplus": false,
+                "dexscreener": true,
+                "honeypot": false,
+                "ownership": true,
+                "proxy": true
+              },
+              "solanaLabel": null,
+              "dataConfidence": null
+            },
+            "scannerConfidenceScore": 65,
+            "trustScoreUncapped": 85,
+            "liquidityIntelligence": {
+              "intelligenceScore": 15,
+              "intelligenceBand": "Lower Observed Liquidity Risk",
+              "intelligenceBandId": "lower",
+              "liquidityDepthScore": 100,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "MODERATE IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Low",
+              "liquidityConcentration": "HEALTHY",
+              "liquidityConcentrationReason": "Liquidity appears distributed across multiple indexed pools.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "uniswap",
+                "sushiswap",
+                "supernova",
+                "balancer",
+                "shibaswap",
+                "0x696708Db871B77355d6C2bE7290B27CF0Bb9B24b"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Chainlink (LINK)",
+              "classification": "ORACLE INFRASTRUCTURE",
+              "classificationSecondaryDriver": null,
+              "executiveRiskScore": 28,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Established oracle network with deep protocol adoption",
+                "Long deployment history in indexed registry",
+                "Strong indexed liquidity (exceptional depth)",
+                "Holder concentration: Holder concentration unavailable",
+                "Technical trust index 72/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Chainlink (LINK) indicate a oracle infrastructure profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:39.661Z"
+            },
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 17,
+        "scan": 990,
+        "total": 1007
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "ORACLE INFRASTRUCTURE",
+      "apiClassification": "ORACLE INFRASTRUCTURE",
+      "executiveRisk": 28,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "UNI",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 5,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Token",
+              "symbol": "UNI",
+              "name": null,
+              "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1154,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:40.824Z",
+            "isContract": true,
+            "addressType": "TOKEN",
+            "trustScore": 72,
+            "trustBand": "MODERATE",
+            "honeypotRisk": "UNDETERMINED",
+            "ownershipConcentration": "NOT_DISCLOSED",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": true,
+              "pause": false,
+              "blacklist": false,
+              "owner": false
+            },
+            "deployerHeuristics": "Moderate activity — standard footprint for orientation",
+            "findings": [
+              {
+                "code": "MINT_PRIVILEGE",
+                "severity": "WATCH",
+                "title": "Mint capability detected",
+                "detail": "Supply can be inflated by privileged callers — verify caps and timelocks."
+              }
+            ],
+            "interpretationSummary": "Established DeFi governance token — verified production contract with expected administrative surfaces.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "skipped"
+            },
+            "archetypeId": "uni",
+            "archetypeLabel": "Uniswap (UNI)",
+            "tokenConcentration": {
+              "available": true,
+              "holderConcentration": "Holder concentration unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "liquidityStatus": "DEX liquidity detected — deep",
+              "liquidityConcentration": "Liquidity concentration unavailable",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Established token distribution",
+              "deploymentAge": "~5 years 9 months",
+              "contractDeploymentAge": "~5 years 9 months",
+              "primaryPoolAge": "~5 years 9 months",
+              "deploymentAgeSource": "contract_creation",
+              "deploymentAgeHours": 50118.087450833336,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "unknown",
+              "liquidityUsd": 22717320.959999997,
+              "creatorPct": null,
+              "ownerPct": null,
+              "isStablecoin": false,
+              "isCanonical": true,
+              "liquidityConfirmed": true,
+              "pairCount": 20,
+              "volume24hUsd": 1480254.9400000002,
+              "topPairLiquidityUsd": 11867827.67,
+              "dexListings": "uniswap, sushiswap, shibaswap",
+              "dataSources": {
+                "dexscreener": true,
+                "goplus": false
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "aiSummary": "Established DeFi governance token — verified production contract with expected administrative surfaces.",
+            "deploymentMeta": {
+              "available": true,
+              "source": "etherscan_v2",
+              "contractCreatedAtMs": 1600107086000,
+              "contractCreator": "0x41653c7d61609d856f29355e404f310ec4142cfb",
+              "creationTxHash": "0x4b37d2f343608457ca3322accdab2811c707acf3eb07a40dd8d9567093ea5b82",
+              "isProxy": false,
+              "implementationAddress": null,
+              "implementationCreatedAtMs": null
+            },
+            "confidence": {
+              "score": 45,
+              "band": "LOW",
+              "providerCoverage": {
+                "etherscan": false,
+                "goplus": false,
+                "dexscreener": true,
+                "honeypot": false,
+                "ownership": true,
+                "proxy": true
+              },
+              "solanaLabel": null,
+              "dataConfidence": null
+            },
+            "scannerConfidenceScore": 45,
+            "trustScoreUncapped": 84,
+            "liquidityIntelligence": {
+              "intelligenceScore": 16,
+              "intelligenceBand": "Lower Observed Liquidity Risk",
+              "intelligenceBandId": "lower",
+              "liquidityDepthScore": 100,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "ELEVATED IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Moderate",
+              "liquidityConcentration": "HEALTHY",
+              "liquidityConcentrationReason": "Liquidity appears distributed across multiple indexed pools.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "uniswap",
+                "sushiswap",
+                "shibaswap"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Uniswap (UNI)",
+              "classification": "GOVERNANCE ASSET",
+              "classificationSecondaryDriver": null,
+              "executiveRiskScore": 28,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Strong indexed liquidity (exceptional depth)",
+                "Holder concentration: Holder concentration unavailable",
+                "Technical trust index 72/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Uniswap (UNI) indicate a governance asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:40.824Z"
+            },
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 5,
+        "scan": 1154,
+        "total": 1159
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "GOVERNANCE ASSET",
+      "apiClassification": "GOVERNANCE ASSET",
+      "executiveRisk": 28,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "AAVE",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 7,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "protocol",
+              "chain": null,
+              "confidence": 100,
+              "recommendedModule": "protocol",
+              "displayLabel": "Protocol",
+              "symbol": null,
+              "name": null,
+              "address": null,
+              "protocolName": "Aave",
+              "url": "AAVE",
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 184,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0x7fc66500c84a76ad7e9c93481fe6c2e88f4923e6",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:41.015Z",
+            "isContract": false,
+            "addressType": "EOA",
+            "trustScore": null,
+            "trustBand": null,
+            "honeypotRisk": "NOT_APPLICABLE",
+            "ownershipConcentration": "NOT_APPLICABLE",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": false,
+              "blacklist": false,
+              "owner": false
+            },
+            "deployerHeuristics": "Externally owned account — contract trust scoring does not apply.",
+            "findings": [
+              {
+                "code": "NOT_CONTRACT",
+                "severity": "INFO",
+                "title": "Externally owned account",
+                "detail": "No contract bytecode at this address. Use wallet risk modules for EOA exposure."
+              }
+            ],
+            "interpretationSummary": "This address is an externally owned account (EOA), not a deployed smart contract. Trust scores apply to contract bytecode only.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "etherscan_v2"
+            },
+            "aiSummary": "This address is an externally owned account (EOA), not a deployed smart contract. Trust scores apply to contract bytecode only.",
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 7,
+        "scan": 184,
+        "total": 191
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "GOVERNANCE ASSET",
+      "apiClassification": null,
+      "executiveRisk": 36,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "USDC",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 5,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Token",
+              "symbol": "USDC",
+              "name": null,
+              "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1434,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:42.460Z",
+            "isContract": true,
+            "addressType": "TOKEN",
+            "trustScore": 72,
+            "trustBand": "MODERATE",
+            "honeypotRisk": "UNDETERMINED",
+            "ownershipConcentration": "NOT_DISCLOSED",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": false,
+              "blacklist": false,
+              "owner": false
+            },
+            "deployerHeuristics": "Moderate activity — standard footprint for orientation",
+            "findings": [],
+            "interpretationSummary": "Established fiat-backed stablecoin with verified source and institutional usage — administrative upgrade paths exist by design.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "skipped"
+            },
+            "archetypeId": "usdc",
+            "archetypeLabel": "USD Coin (USDC)",
+            "tokenConcentration": {
+              "available": true,
+              "holderConcentration": "Holder concentration unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "liquidityStatus": "DEX liquidity detected — deep",
+              "liquidityConcentration": "Liquidity concentration unavailable",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Established token distribution",
+              "deploymentAge": "~7 years 10 months (proxy; implementation deployed separately)",
+              "contractDeploymentAge": "~7 years 10 months",
+              "primaryPoolAge": "~4 years 7 months",
+              "deploymentAgeSource": "contract_creation",
+              "deploymentAgeHours": 68668.80512722222,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "unknown",
+              "liquidityUsd": 22469536.23,
+              "creatorPct": null,
+              "ownerPct": null,
+              "isStablecoin": true,
+              "isCanonical": true,
+              "liquidityConfirmed": true,
+              "pairCount": 4,
+              "volume24hUsd": 469653342.96999997,
+              "topPairLiquidityUsd": 18909393.85,
+              "dexListings": "uniswap, curve",
+              "dataSources": {
+                "dexscreener": true,
+                "goplus": false
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "aiSummary": "Established fiat-backed stablecoin with verified source and institutional usage — administrative upgrade paths exist by design.",
+            "deploymentMeta": {
+              "available": true,
+              "source": "etherscan_v2",
+              "contractCreatedAtMs": 1533324504000,
+              "contractCreator": "0x95ba4cf87d6723ad9c0db21737d862be80e93911",
+              "creationTxHash": "0xe7e0fe390354509cd08c9a0168536938600ddc552b3f7cb96030ebef62e75895",
+              "isProxy": true,
+              "implementationAddress": "0x43506849d7c04f9138d1a2050bbf3a0c054402dd",
+              "implementationCreatedAtMs": 1704220343000
+            },
+            "confidence": {
+              "score": 45,
+              "band": "LOW",
+              "providerCoverage": {
+                "etherscan": false,
+                "goplus": false,
+                "dexscreener": true,
+                "honeypot": false,
+                "ownership": true,
+                "proxy": true
+              },
+              "solanaLabel": null,
+              "dataConfidence": null
+            },
+            "scannerConfidenceScore": 45,
+            "trustScoreUncapped": 86,
+            "liquidityIntelligence": {
+              "intelligenceScore": 24,
+              "intelligenceBand": "Lower Observed Liquidity Risk",
+              "intelligenceBandId": "lower",
+              "liquidityDepthScore": 92,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "MODERATE IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Low",
+              "liquidityConcentration": "ELEVATED",
+              "liquidityConcentrationReason": "Most liquidity resides in a small number of pools.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "uniswap",
+                "curve"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Liquidity concentration is elevated: Most liquidity resides in a small number of pools. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "USD Coin (USDC)",
+              "classification": "STABLECOIN ASSET",
+              "classificationSecondaryDriver": "Reserve Transparency",
+              "executiveRiskScore": 28,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Issuer and reserve transparency",
+                "Redemption and liquidity dependency on issuer",
+                "Depeg sensitivity during market stress",
+                "Strong indexed liquidity (exceptional depth)",
+                "Holder concentration: Holder concentration unavailable",
+                "Technical trust index 72/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for USD Coin (USDC) indicate a stablecoin asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Stablecoin profile emphasizes issuer credibility, reserve transparency, redemption mechanics, and depeg sensitivity rather than speculative narrative cycles. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:42.460Z"
+            },
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 5,
+        "scan": 1434,
+        "total": 1439
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "STABLECOIN ASSET",
+      "apiClassification": "STABLECOIN ASSET",
+      "executiveRisk": 28,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "USDT",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 6,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Token",
+              "symbol": "USDT",
+              "name": null,
+              "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1431,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:43.898Z",
+            "isContract": true,
+            "addressType": "TOKEN",
+            "trustScore": 72,
+            "trustBand": "MODERATE",
+            "honeypotRisk": "UNDETERMINED",
+            "ownershipConcentration": "NOT_DISCLOSED",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": true,
+              "blacklist": false,
+              "owner": true
+            },
+            "deployerHeuristics": "Moderate activity — standard footprint for orientation",
+            "findings": [
+              {
+                "code": "OWNER_PRIVILEGE",
+                "severity": "WATCH",
+                "title": "Ownership controls present",
+                "detail": "owner() detected — assess admin concentration and timelock policy."
+              },
+              {
+                "code": "PAUSE_PRIVILEGE",
+                "severity": "WATCH",
+                "title": "Pause / unpause capability",
+                "detail": "Privileged roles can halt transfers or interactions — standard for regulated stablecoins and governance tokens."
+              }
+            ],
+            "interpretationSummary": "Established fiat-backed stablecoin with broad global liquidity — review issuer attestations and redemption mechanics as standard stablecoin diligence.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "skipped"
+            },
+            "archetypeId": "usdt",
+            "archetypeLabel": "Tether USD (USDT)",
+            "tokenConcentration": {
+              "available": true,
+              "holderConcentration": "Holder concentration unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "liquidityStatus": "Institutional stablecoin — global liquidity primarily off indexed DEX sampling (CEX / issuer rails)",
+              "liquidityConcentration": "Institutional stablecoin — pooled DEX sample incomplete; global liquidity remains deep",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Established token distribution",
+              "deploymentAge": "~8 years 6 months",
+              "contractDeploymentAge": "~8 years 6 months",
+              "primaryPoolAge": null,
+              "deploymentAgeSource": "contract_creation",
+              "deploymentAgeHours": 74639.58969361111,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "unknown",
+              "liquidityUsd": 0,
+              "creatorPct": null,
+              "ownerPct": null,
+              "isStablecoin": true,
+              "isCanonical": true,
+              "liquidityConfirmed": true,
+              "pairCount": 0,
+              "volume24hUsd": null,
+              "topPairLiquidityUsd": null,
+              "dexListings": null,
+              "dataSources": {
+                "dexscreener": true,
+                "goplus": false
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "aiSummary": "Established fiat-backed stablecoin with broad global liquidity — review issuer attestations and redemption mechanics as standard stablecoin diligence.",
+            "deploymentMeta": {
+              "available": true,
+              "source": "etherscan_v2",
+              "contractCreatedAtMs": 1511829681000,
+              "contractCreator": "0x36928500bc1dcd7af6a2b4008875cc336b927d57",
+              "creationTxHash": "0x2f1c5c2b44f771e942a8506148e256f94f1a464babc938ae0690c6e34cd79190",
+              "isProxy": false,
+              "implementationAddress": null,
+              "implementationCreatedAtMs": null
+            },
+            "confidence": {
+              "score": 45,
+              "band": "LOW",
+              "providerCoverage": {
+                "etherscan": false,
+                "goplus": false,
+                "dexscreener": true,
+                "honeypot": false,
+                "ownership": true,
+                "proxy": true
+              },
+              "solanaLabel": null,
+              "dataConfidence": null
+            },
+            "scannerConfidenceScore": 45,
+            "trustScoreUncapped": 84,
+            "liquidityIntelligence": {
+              "intelligenceScore": 23,
+              "intelligenceBand": "Lower Observed Liquidity Risk",
+              "intelligenceBandId": "lower",
+              "liquidityDepthScore": 92,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "HIGH IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "HIGH IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Elevated",
+              "liquidityConcentration": "HEALTHY",
+              "liquidityConcentrationReason": "Institutional asset — global liquidity primarily off indexed DEX sample (CEX / protocol depth).",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "Institutional asset — multi-venue liquidity expected off indexed sample"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Estimated market impact appears more sensitive at larger notional sizes relative to observed depth, which may warrant additional review before interaction. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Tether USD (USDT)",
+              "classification": "STABLECOIN ASSET",
+              "classificationSecondaryDriver": "Reserve Transparency",
+              "executiveRiskScore": 28,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Issuer and reserve transparency",
+                "Redemption and liquidity dependency on issuer",
+                "Depeg sensitivity during market stress",
+                "Strong indexed liquidity (exceptional depth)",
+                "Holder concentration: Holder concentration unavailable",
+                "Technical trust index 72/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Tether USD (USDT) indicate a stablecoin asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Stablecoin profile emphasizes issuer credibility, reserve transparency, redemption mechanics, and depeg sensitivity rather than speculative narrative cycles. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:43.898Z"
+            },
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 6,
+        "scan": 1431,
+        "total": 1437
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "STABLECOIN ASSET",
+      "apiClassification": "STABLECOIN ASSET",
+      "executiveRisk": 28,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "PEPE",
+      "chain": "ethereum",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 5,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Token",
+              "symbol": "PEPE",
+              "name": null,
+              "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1144,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0x6982508145454ce325ddbe47a25d4ec3d2311933",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:45.050Z",
+            "isContract": true,
+            "addressType": "TOKEN",
+            "trustScore": 72,
+            "trustBand": "MODERATE",
+            "honeypotRisk": "UNDETERMINED",
+            "ownershipConcentration": "NOT_DISCLOSED",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": false,
+              "blacklist": false,
+              "owner": true
+            },
+            "deployerHeuristics": "Moderate activity — standard footprint for orientation",
+            "findings": [
+              {
+                "code": "VERIFIED_SOURCE",
+                "severity": "INFO",
+                "title": "Verified source on explorer",
+                "detail": "Contract name: PepeToken."
+              },
+              {
+                "code": "OWNER_PRIVILEGE",
+                "severity": "WATCH",
+                "title": "Ownership controls present",
+                "detail": "owner() detected — assess admin concentration and timelock policy."
+              }
+            ],
+            "interpretationSummary": "Moderate trust (score 74): mixed signals — review structured findings before signing or approving.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "etherscan_v2"
+            },
+            "tokenConcentration": {
+              "available": true,
+              "holderConcentration": "Holder concentration unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "liquidityStatus": "DEX liquidity detected — deep",
+              "liquidityConcentration": "Liquidity concentration unavailable",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Standard transfer patterns",
+              "deploymentAge": "~3 years 2 months",
+              "contractDeploymentAge": "~3 years 2 months",
+              "primaryPoolAge": "~3 years 2 months",
+              "deploymentAgeSource": "contract_creation",
+              "deploymentAgeHours": 27513.419457777778,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "unknown",
+              "liquidityUsd": 23773348.810000002,
+              "creatorPct": null,
+              "ownerPct": null,
+              "isStablecoin": false,
+              "isCanonical": false,
+              "liquidityConfirmed": true,
+              "pairCount": 5,
+              "volume24hUsd": 530983.6300000001,
+              "topPairLiquidityUsd": 21760615.73,
+              "dexListings": "uniswap",
+              "dataSources": {
+                "dexscreener": true,
+                "goplus": false
+              }
+            },
+            "verdictActionFrame": "SPECULATIVE — VERIFY LIQUIDITY & HOLDER DISTRIBUTION",
+            "aiSummary": "Moderate trust (score 74): mixed signals — review structured findings before signing or approving.",
+            "deploymentMeta": {
+              "available": true,
+              "source": "etherscan_v2",
+              "contractCreatedAtMs": 1681483895000,
+              "contractCreator": "0xfbfeaf0da0f2fde5c66df570133ae35f3eb58c9a",
+              "creationTxHash": "0x2afae7763487e60b893cb57803694810e6d3d136186a6de6719921afd7ca304a",
+              "isProxy": false,
+              "implementationAddress": null,
+              "implementationCreatedAtMs": null
+            },
+            "confidence": {
+              "score": 65,
+              "band": "LOW",
+              "providerCoverage": {
+                "etherscan": true,
+                "goplus": false,
+                "dexscreener": true,
+                "honeypot": false,
+                "ownership": true,
+                "proxy": true
+              },
+              "solanaLabel": null,
+              "dataConfidence": null
+            },
+            "scannerConfidenceScore": 65,
+            "trustScoreUncapped": 74,
+            "liquidityIntelligence": {
+              "intelligenceScore": 40,
+              "intelligenceBand": "Moderate Liquidity Risk",
+              "intelligenceBandId": "moderate",
+              "liquidityDepthScore": 97,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "ELEVATED IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Moderate",
+              "liquidityConcentration": "CRITICAL",
+              "liquidityConcentrationReason": "Most liquidity resides in a single pool or venue, which may increase dependency risk.",
+              "venueDiversity": "POOR",
+              "venueEvidence": [
+                "uniswap"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Liquidity concentration is critical: Most liquidity resides in a single pool or venue, which may increase dependency risk. Trading venue diversity appears limited across indexed DEX and routing sources, which may increase sensitivity during volatile periods. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Pepe (PEPE)",
+              "classification": "MEME SPECULATIVE ASSET",
+              "classificationSecondaryDriver": null,
+              "executiveRiskScore": 28,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Strong indexed liquidity (exceptional depth)",
+                "Holder concentration: Holder concentration unavailable",
+                "Technical trust index 72/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Pepe (PEPE) indicate a meme speculative asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:45.050Z"
+            },
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 5,
+        "scan": 1144,
+        "total": 1149
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "MEME SPECULATIVE ASSET",
+      "apiClassification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 28,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    }
+  ],
+  "solana": [
+    {
+      "asset": "WIF",
+      "chain": "solana",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 4,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "solana",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Solana Token",
+              "symbol": "WIF",
+              "name": null,
+              "address": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/solana/analyze",
+          "url": "http://localhost:5001/api/prime/solana/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 3304,
+          "body": {
+            "success": true,
+            "product": "surestack_solana_risk_scanner",
+            "analyzedAt": "2026-06-04T00:16:48.362Z",
+            "chain": "solana",
+            "addressType": "SPL_TOKEN_MINT",
+            "address": "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
+            "trustScore": 76,
+            "trustBand": "MODERATE",
+            "isScorable": true,
+            "mintAuthority": null,
+            "freezeAuthority": null,
+            "supply": "998839090603678",
+            "decimals": 6,
+            "metadataPresent": true,
+            "holderConcentration": "DISPERSED",
+            "liquiditySignals": "Established market liquidity profile (heuristic)",
+            "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "regulatedStablecoin": false,
+            "findings": [
+              {
+                "code": "MINT_AUTHORITY_REVOKED",
+                "severity": "INFO",
+                "title": "Mint authority revoked",
+                "detail": "Fixed supply posture — mint authority is not set."
+              },
+              {
+                "code": "JUPITER_ROUTING_ACTIVE",
+                "severity": "INFO",
+                "title": "Jupiter routing available",
+                "detail": "Token is tradable via Jupiter aggregator."
+              },
+              {
+                "code": "STRONG_VOLUME_24H",
+                "severity": "INFO",
+                "title": "Strong 24h volume",
+                "detail": "24h volume ~$854,540 (DexScreener)."
+              },
+              {
+                "code": "ESTABLISHED_TOKEN_AGE",
+                "severity": "INFO",
+                "title": "Established token age",
+                "detail": "Primary pool / market age ~~2 years 6 months."
+              },
+              {
+                "code": "HEALTHY_LIQUIDITY_DEPTH",
+                "severity": "INFO",
+                "title": "Healthy liquidity depth",
+                "detail": "Estimated liquidity ~$4,732,198."
+              },
+              {
+                "code": "MULTI_POOL_LIQUIDITY",
+                "severity": "INFO",
+                "title": "Multiple liquidity pools",
+                "detail": "30 pools indexed — broader exit paths."
+              },
+              {
+                "code": "MAJOR_ASSET_MARKET",
+                "severity": "INFO",
+                "title": "Major Solana asset",
+                "detail": "Established market cap and liquidity profile on indexed venues."
+              },
+              {
+                "code": "MEME_NARRATIVE_VOLATILITY",
+                "severity": "WATCH",
+                "title": "Speculative narrative risk",
+                "detail": "Meme/speculative asset — composite trust capped at 76 (technical 92/100). Mint safety does not remove narrative volatility."
+              }
+            ],
+            "interpretationSummary": "Major Solana meme asset — verify liquidity depth and holder distribution before exposure.",
+            "scanTarget": "token_mint",
+            "archetypeId": "wif",
+            "archetypeLabel": "dogwifhat (WIF)",
+            "tokenConcentration": {
+              "platform": "solana",
+              "available": true,
+              "limitedMarketIntelligence": false,
+              "isMajorAsset": true,
+              "holderConcentration": "Top 10 holders control 79.9% · BIRDEYE",
+              "largestWallet": "24.9% · BIRDEYE",
+              "largestWalletPct": 24.92363088410516,
+              "top10HolderPct": 79.92881263526942,
+              "holderCount": null,
+              "holderCountDisplay": "Unavailable",
+              "holderProvenance": "BIRDEYE",
+              "liquidityStatus": "DEX liquidity detected · DEXSCREENER",
+              "liquidityDepth": "$4.73M · DEXSCREENER",
+              "liquidityConfidence": "HIGH",
+              "liquidityConcentration": "Multiple pools (30) · DEXSCREENER",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Active Jupiter routing · JUPITER",
+              "tradingActivity": "Active · DEXSCREENER",
+              "marketRouting": "Jupiter Routing Available · DEX: raydium, orca, meteora, fluxbeam",
+              "jupiterRoutingLabel": "Jupiter Routing Available",
+              "deploymentAge": "~2 years 6 months",
+              "tokenAge": "~2 years 6 months",
+              "deploymentAgeHours": 22228.37176638889,
+              "marketCap": "$190.98M",
+              "marketCapUsd": 190980541,
+              "fdv": "$190.98M",
+              "fdvUsd": 190980541,
+              "volume24h": "$854,540",
+              "volume24hUsd": 854539.9099999999,
+              "activeDex": "raydium, orca, meteora, fluxbeam · DEXSCREENER",
+              "dexListings": "raydium, orca, meteora, fluxbeam",
+              "pairCount": 30,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "active",
+              "lpStatusLabel": "Active pools — lock status not confirmed",
+              "liquidityUsd": 4732198.3,
+              "topPairLiquidityUsd": 4535906.16,
+              "liquidityConfirmed": true,
+              "jupiterRoutable": true,
+              "jupiterClassification": "ROUTABLE",
+              "routingConfidence": "HIGH",
+              "txns24h": 22622,
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              },
+              "dataConfidencePenalty": 3,
+              "providerHealth": {
+                "birdeye": "Live",
+                "helius": "Degraded",
+                "dexscreener": "Live",
+                "jupiter": "Live"
+              },
+              "provenance": {
+                "dexscreener": true,
+                "jupiter": true,
+                "rpc": false,
+                "goplus": false,
+                "birdeye": true
+              },
+              "dataSources": {
+                "dexscreener": true,
+                "jupiter": true,
+                "goplus": false,
+                "rpc": false,
+                "birdeye": true
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "requestedSymbol": "WIF",
+            "confidence": {
+              "score": 100,
+              "band": "HIGH",
+              "providerCoverage": {
+                "rpc": true,
+                "helius": true,
+                "birdeye": true,
+                "dexscreener": true,
+                "jupiter": true,
+                "holders": true,
+                "largestWallet": true,
+                "metadata": true,
+                "mintAuthority": true,
+                "freezeAuthority": true
+              },
+              "solanaLabel": {
+                "score": 100,
+                "tier": "Scanner + Birdeye + Helius + Jupiter",
+                "providersLabel": "Scanner + Birdeye + DexScreener + Jupiter + Helius"
+              },
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              }
+            },
+            "scannerConfidenceScore": 100,
+            "trustScoreUncapped": 100,
+            "technicalTrustScore": 92,
+            "technicalTrustLabel": "Strong",
+            "narrativeRiskScore": 78,
+            "narrativeRiskLabel": "High",
+            "compositeTrustScore": 76,
+            "scannerVerdict": "MODERATE WATCH",
+            "scannerVerdictDetail": "TECHNICALLY CLEAN · SPECULATIVE NARRATIVE RISK",
+            "compositeRiskBand": "MODERATE",
+            "narrativeCategory": "meme_speculative",
+            "riskLayers": {
+              "technical": "Strong",
+              "narrative": "High",
+              "composite": "Moderate"
+            },
+            "liquidityIntelligence": {
+              "intelligenceScore": 39,
+              "intelligenceBand": "Moderate Liquidity Risk",
+              "intelligenceBandId": "moderate",
+              "liquidityDepthScore": 75,
+              "liquidityDepthLabel": "Strong",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "HIGH IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Moderate",
+              "liquidityConcentration": "CRITICAL",
+              "liquidityConcentrationReason": "Most liquidity resides in a single pool or venue, which may increase dependency risk.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "raydium",
+                "orca",
+                "meteora",
+                "fluxbeam",
+                "Jupiter routing"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as strong based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Liquidity concentration is critical: Most liquidity resides in a single pool or venue, which may increase dependency risk. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "dogwifhat (WIF)",
+              "classification": "MEME SPECULATIVE ASSET",
+              "classificationSecondaryDriver": "Concentrated Holder Distribution",
+              "executiveRiskScore": 45,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Mint authority revoked or absent",
+                "Freeze authority revoked or absent",
+                "Strong indexed liquidity (strong depth)",
+                "Top 10 holders control ~79.9% of sampled supply",
+                "Jupiter routing available in indexed market data",
+                "Technical trust index 76/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for dogwifhat (WIF) indicate a meme speculative asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Concentration among top holders remains a primary sensitivity factor in the indexed supply sample. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Holder Concentration"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:48.362Z"
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 4,
+        "scan": 3304,
+        "total": 3308
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 45,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "BONK",
+      "chain": "solana",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 5,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "solana",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Solana Token",
+              "symbol": "BONK",
+              "name": null,
+              "address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/solana/analyze",
+          "url": "http://localhost:5001/api/prime/solana/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1334,
+          "body": {
+            "success": true,
+            "product": "surestack_solana_risk_scanner",
+            "analyzedAt": "2026-06-04T00:16:49.704Z",
+            "chain": "solana",
+            "addressType": "SPL_TOKEN_MINT",
+            "address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+            "trustScore": 76,
+            "trustBand": "MODERATE",
+            "isScorable": true,
+            "mintAuthority": null,
+            "freezeAuthority": null,
+            "supply": "8799472663494367582",
+            "decimals": 5,
+            "metadataPresent": true,
+            "holderConcentration": "NOT_AVAILABLE",
+            "liquiditySignals": "Established market liquidity profile (heuristic)",
+            "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "regulatedStablecoin": false,
+            "findings": [
+              {
+                "code": "MINT_AUTHORITY_REVOKED",
+                "severity": "INFO",
+                "title": "Mint authority revoked",
+                "detail": "Fixed supply posture — mint authority is not set."
+              },
+              {
+                "code": "JUPITER_ROUTING_ACTIVE",
+                "severity": "INFO",
+                "title": "Jupiter routing available",
+                "detail": "Token is tradable via Jupiter aggregator."
+              },
+              {
+                "code": "STRONG_VOLUME_24H",
+                "severity": "INFO",
+                "title": "Strong 24h volume",
+                "detail": "24h volume ~$1,035,422 (DexScreener)."
+              },
+              {
+                "code": "ESTABLISHED_TOKEN_AGE",
+                "severity": "INFO",
+                "title": "Established token age",
+                "detail": "Primary pool / market age ~~3 years 5 months."
+              },
+              {
+                "code": "HEALTHY_LIQUIDITY_DEPTH",
+                "severity": "INFO",
+                "title": "Healthy liquidity depth",
+                "detail": "Estimated liquidity ~$2,404,647."
+              },
+              {
+                "code": "MULTI_POOL_LIQUIDITY",
+                "severity": "INFO",
+                "title": "Multiple liquidity pools",
+                "detail": "30 pools indexed — broader exit paths."
+              },
+              {
+                "code": "MAJOR_ASSET_MARKET",
+                "severity": "INFO",
+                "title": "Major Solana asset",
+                "detail": "Established market cap and liquidity profile on indexed venues."
+              },
+              {
+                "code": "MEME_NARRATIVE_VOLATILITY",
+                "severity": "WATCH",
+                "title": "Speculative narrative risk",
+                "detail": "Meme/speculative asset — composite trust capped at 76 (technical 92/100). Mint safety does not remove narrative volatility."
+              }
+            ],
+            "interpretationSummary": "Major Solana meme asset with deep DEX liquidity — review holder concentration and narrative velocity before sizing exposure.",
+            "scanTarget": "token_mint",
+            "archetypeId": "bonk",
+            "archetypeLabel": "Bonk (BONK)",
+            "tokenConcentration": {
+              "platform": "solana",
+              "available": true,
+              "limitedMarketIntelligence": false,
+              "isMajorAsset": true,
+              "holderConcentration": "Holder distribution estimate unavailable",
+              "largestWallet": "Unavailable",
+              "largestWalletPct": null,
+              "top10HolderPct": null,
+              "holderCount": null,
+              "holderCountDisplay": "Unavailable",
+              "holderProvenance": null,
+              "liquidityStatus": "DEX liquidity detected · DEXSCREENER",
+              "liquidityDepth": "$2.40M · DEXSCREENER",
+              "liquidityConfidence": "HIGH",
+              "liquidityConcentration": "Multiple pools (30) · DEXSCREENER",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Active Jupiter routing · JUPITER",
+              "tradingActivity": "Active · DEXSCREENER",
+              "marketRouting": "Jupiter Routing Available · DEX: meteora, raydium, orca",
+              "jupiterRoutingLabel": "Jupiter Routing Available",
+              "deploymentAge": "~3 years 5 months",
+              "tokenAge": "~3 years 5 months",
+              "deploymentAgeHours": 30267.216305,
+              "marketCap": "$447.28M",
+              "marketCapUsd": 447280771,
+              "fdv": "$451.69M",
+              "fdvUsd": 451692191,
+              "volume24h": "$1.04M",
+              "volume24hUsd": 1035422.3699999998,
+              "activeDex": "meteora, raydium, orca · DEXSCREENER",
+              "dexListings": "meteora, raydium, orca",
+              "pairCount": 30,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "active",
+              "lpStatusLabel": "Active pools — lock status not confirmed",
+              "liquidityUsd": 2404647.4,
+              "topPairLiquidityUsd": 708637.74,
+              "liquidityConfirmed": true,
+              "jupiterRoutable": true,
+              "jupiterClassification": "ROUTABLE",
+              "routingConfidence": "HIGH",
+              "txns24h": 27814,
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "UNKNOWN",
+                "top1HolderPct": "UNKNOWN",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              },
+              "dataConfidencePenalty": 9,
+              "providerHealth": {
+                "birdeye": "No data",
+                "helius": "Degraded",
+                "dexscreener": "Live",
+                "jupiter": "Live"
+              },
+              "provenance": {
+                "dexscreener": true,
+                "jupiter": true,
+                "rpc": false,
+                "goplus": false,
+                "birdeye": false
+              },
+              "dataSources": {
+                "dexscreener": true,
+                "jupiter": true,
+                "goplus": false,
+                "rpc": false,
+                "birdeye": false
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "requestedSymbol": "BONK",
+            "confidence": {
+              "score": 75,
+              "band": "MODERATE",
+              "providerCoverage": {
+                "rpc": true,
+                "helius": true,
+                "birdeye": false,
+                "dexscreener": true,
+                "jupiter": true,
+                "holders": false,
+                "largestWallet": false,
+                "metadata": true,
+                "mintAuthority": true,
+                "freezeAuthority": true
+              },
+              "solanaLabel": {
+                "score": 75,
+                "tier": "Scanner + Birdeye + DexScreener",
+                "providersLabel": "Scanner + DexScreener + Jupiter + Helius"
+              },
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "UNKNOWN",
+                "top1HolderPct": "UNKNOWN",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              }
+            },
+            "scannerConfidenceScore": 75,
+            "trustScoreUncapped": 100,
+            "technicalTrustScore": 92,
+            "technicalTrustLabel": "Strong",
+            "narrativeRiskScore": 78,
+            "narrativeRiskLabel": "High",
+            "compositeTrustScore": 76,
+            "scannerVerdict": "MODERATE WATCH",
+            "scannerVerdictDetail": "TECHNICALLY CLEAN · SPECULATIVE NARRATIVE RISK",
+            "compositeRiskBand": "MODERATE",
+            "narrativeCategory": "meme_speculative",
+            "riskLayers": {
+              "technical": "Strong",
+              "narrative": "High",
+              "composite": "Moderate"
+            },
+            "liquidityIntelligence": {
+              "intelligenceScore": 27,
+              "intelligenceBand": "Moderate Liquidity Risk",
+              "intelligenceBandId": "moderate",
+              "liquidityDepthScore": 73,
+              "liquidityDepthLabel": "Healthy",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "HIGH IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Moderate",
+              "liquidityConcentration": "HEALTHY",
+              "liquidityConcentrationReason": "Liquidity appears distributed across multiple indexed pools.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "meteora",
+                "raydium",
+                "orca",
+                "Jupiter routing"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as healthy based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Bonk (BONK)",
+              "classification": "MEME SPECULATIVE ASSET",
+              "classificationSecondaryDriver": null,
+              "executiveRiskScore": 42,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Mint authority revoked or absent",
+                "Freeze authority revoked or absent",
+                "Strong indexed liquidity (healthy depth)",
+                "Holder concentration: Holder distribution estimate unavailable",
+                "Jupiter routing available in indexed market data",
+                "Technical trust index 76/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Bonk (BONK) indicate a meme speculative asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Contract Trust",
+                "Review Liquidity Intelligence"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:49.704Z"
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 5,
+        "scan": 1334,
+        "total": 1339
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "MEME SPECULATIVE ASSET",
+      "executiveRisk": 42,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "JUP",
+      "chain": "solana",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 5,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "solana",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Solana Token",
+              "symbol": "JUP",
+              "name": null,
+              "address": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/solana/analyze",
+          "url": "http://localhost:5001/api/prime/solana/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 1778,
+          "body": {
+            "success": true,
+            "product": "surestack_solana_risk_scanner",
+            "analyzedAt": "2026-06-04T00:16:51.490Z",
+            "chain": "solana",
+            "addressType": "SPL_TOKEN_MINT",
+            "address": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+            "trustScore": 100,
+            "trustBand": "TRUSTED",
+            "isScorable": true,
+            "mintAuthority": null,
+            "freezeAuthority": null,
+            "supply": "6862435135355137",
+            "decimals": 6,
+            "metadataPresent": true,
+            "holderConcentration": "NOT_AVAILABLE",
+            "liquiditySignals": "Established market liquidity profile (heuristic)",
+            "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "regulatedStablecoin": false,
+            "findings": [
+              {
+                "code": "MINT_AUTHORITY_REVOKED",
+                "severity": "INFO",
+                "title": "Mint authority revoked",
+                "detail": "Fixed supply posture — mint authority is not set."
+              },
+              {
+                "code": "JUPITER_ROUTING_ACTIVE",
+                "severity": "INFO",
+                "title": "Jupiter routing available",
+                "detail": "Token is tradable via Jupiter aggregator."
+              },
+              {
+                "code": "STRONG_VOLUME_24H",
+                "severity": "INFO",
+                "title": "Strong 24h volume",
+                "detail": "24h volume ~$3,335,295 (DexScreener)."
+              },
+              {
+                "code": "ESTABLISHED_TOKEN_AGE",
+                "severity": "INFO",
+                "title": "Established token age",
+                "detail": "Primary pool / market age ~~2 years 4 months."
+              },
+              {
+                "code": "HEALTHY_LIQUIDITY_DEPTH",
+                "severity": "INFO",
+                "title": "Healthy liquidity depth",
+                "detail": "Estimated liquidity ~$66,901,819."
+              },
+              {
+                "code": "MULTI_POOL_LIQUIDITY",
+                "severity": "INFO",
+                "title": "Multiple liquidity pools",
+                "detail": "30 pools indexed — broader exit paths."
+              },
+              {
+                "code": "MAJOR_ASSET_MARKET",
+                "severity": "INFO",
+                "title": "Major Solana asset",
+                "detail": "Established market cap and liquidity profile on indexed venues."
+              }
+            ],
+            "interpretationSummary": "Established Solana DeFi governance token with broad market participation.",
+            "scanTarget": "token_mint",
+            "archetypeId": "jup_token",
+            "archetypeLabel": "Jupiter (JUP)",
+            "tokenConcentration": {
+              "platform": "solana",
+              "available": true,
+              "limitedMarketIntelligence": false,
+              "isMajorAsset": true,
+              "holderConcentration": "Top 10 holders control 91.5% · BIRDEYE",
+              "largestWallet": "33.2% · BIRDEYE",
+              "largestWalletPct": 33.168619375096185,
+              "top10HolderPct": 91.54382218232668,
+              "holderCount": null,
+              "holderCountDisplay": "Unavailable",
+              "holderProvenance": "BIRDEYE",
+              "liquidityStatus": "DEX liquidity detected · DEXSCREENER",
+              "liquidityDepth": "$66.90M · DEXSCREENER",
+              "liquidityConfidence": "HIGH",
+              "liquidityConcentration": "Multiple pools (30) · DEXSCREENER",
+              "whaleRisk": "LOW",
+              "tradingBehavior": "Active Jupiter routing · JUPITER",
+              "tradingActivity": "Active · DEXSCREENER",
+              "marketRouting": "Jupiter Routing Available · DEX: meteora, orca, raydium",
+              "jupiterRoutingLabel": "Jupiter Routing Available",
+              "deploymentAge": "~2 years 4 months",
+              "tokenAge": "~2 years 4 months",
+              "deploymentAgeHours": 20559.903745555555,
+              "marketCap": "$3407.60B",
+              "marketCapUsd": 3407599908005,
+              "fdv": "$7184.00B",
+              "fdvUsd": 7183999279714,
+              "volume24h": "$3.34M",
+              "volume24hUsd": 3335294.8700000006,
+              "activeDex": "meteora, orca, raydium · DEXSCREENER",
+              "dexListings": "meteora, orca, raydium",
+              "pairCount": 30,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "active",
+              "lpStatusLabel": "Active pools — lock status not confirmed",
+              "liquidityUsd": 66901819.370000005,
+              "topPairLiquidityUsd": 64791727.76,
+              "liquidityConfirmed": true,
+              "jupiterRoutable": true,
+              "jupiterClassification": "ROUTABLE",
+              "routingConfidence": "HIGH",
+              "txns24h": 68862,
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              },
+              "dataConfidencePenalty": 3,
+              "providerHealth": {
+                "birdeye": "Live",
+                "helius": "Degraded",
+                "dexscreener": "Live",
+                "jupiter": "Live"
+              },
+              "provenance": {
+                "dexscreener": true,
+                "jupiter": true,
+                "rpc": false,
+                "goplus": false,
+                "birdeye": true
+              },
+              "dataSources": {
+                "dexscreener": true,
+                "jupiter": true,
+                "goplus": false,
+                "rpc": false,
+                "birdeye": true
+              }
+            },
+            "verdictActionFrame": "STRUCTURALLY SOUND",
+            "requestedSymbol": "JUP",
+            "confidence": {
+              "score": 100,
+              "band": "HIGH",
+              "providerCoverage": {
+                "rpc": true,
+                "helius": true,
+                "birdeye": true,
+                "dexscreener": true,
+                "jupiter": true,
+                "holders": true,
+                "largestWallet": true,
+                "metadata": true,
+                "mintAuthority": true,
+                "freezeAuthority": true
+              },
+              "solanaLabel": {
+                "score": 100,
+                "tier": "Scanner + Birdeye + Helius + Jupiter",
+                "providersLabel": "Scanner + Birdeye + DexScreener + Jupiter + Helius"
+              },
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              }
+            },
+            "scannerConfidenceScore": 100,
+            "narrativeCategory": "defi",
+            "technicalTrustScore": 100,
+            "technicalTrustLabel": "Strong",
+            "narrativeRiskScore": 42,
+            "narrativeRiskLabel": "Low",
+            "compositeTrustScore": 100,
+            "compositeRiskBand": "LOW",
+            "riskLayers": {
+              "technical": "Strong",
+              "narrative": "Low",
+              "composite": "LOW"
+            },
+            "liquidityIntelligence": {
+              "intelligenceScore": 32,
+              "intelligenceBand": "Moderate Liquidity Risk",
+              "intelligenceBandId": "moderate",
+              "liquidityDepthScore": 91,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "LOW IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "ELEVATED IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Moderate",
+              "liquidityConcentration": "CRITICAL",
+              "liquidityConcentrationReason": "Most liquidity resides in a single pool or venue, which may increase dependency risk.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "meteora",
+                "orca",
+                "raydium",
+                "Jupiter routing"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Current liquidity conditions may suggest lower expected market impact for smaller notional sizes compared with thinly traded assets, though outcomes remain uncertain. Liquidity concentration is critical: Most liquidity resides in a single pool or venue, which may increase dependency risk. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Jupiter (JUP)",
+              "classification": "CONCENTRATED EXPOSURE ASSET",
+              "classificationSecondaryDriver": "Concentrated Holder Distribution",
+              "executiveRiskScore": 45,
+              "executiveRiskBand": "MODERATE RISK",
+              "executiveRiskBandId": "moderate",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "Mint authority revoked or absent",
+                "Freeze authority revoked or absent",
+                "Strong indexed liquidity (exceptional depth)",
+                "Top 10 holders control ~91.5% of sampled supply",
+                "Jupiter routing available in indexed market data",
+                "Technical trust index 100/100 in scanner"
+              ],
+              "executiveConclusion": "Observations for Jupiter (JUP) indicate a concentrated exposure asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Concentration among top holders remains a primary sensitivity factor in the indexed supply sample. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Holder Concentration"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:51.490Z"
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 5,
+        "scan": 1778,
+        "total": 1783
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "CONCENTRATED EXPOSURE ASSET",
+      "executiveRisk": 45,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "TAO",
+      "chain": "solana",
+      "kind": "known",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 4,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "solana",
+              "confidence": 96,
+              "recommendedModule": "token",
+              "displayLabel": "Solana Token",
+              "symbol": "TAO",
+              "name": null,
+              "address": "TaoFYsbq8b45Qxig2pkMHFCKq62hvxQrU8aXZwHb1XY",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/solana/analyze",
+          "url": "http://localhost:5001/api/prime/solana/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 908,
+          "body": {
+            "success": true,
+            "product": "surestack_solana_risk_scanner",
+            "analyzedAt": "2026-06-04T00:16:52.401Z",
+            "chain": "solana",
+            "addressType": "SPL_TOKEN_MINT",
+            "address": "TaoFYsbq8b45Qxig2pkMHFCKq62hvxQrU8aXZwHb1XY",
+            "trustScore": 29,
+            "trustBand": "ELEVATED",
+            "isScorable": true,
+            "mintAuthority": null,
+            "freezeAuthority": null,
+            "supply": "20999999996777",
+            "decimals": 6,
+            "metadataPresent": false,
+            "holderConcentration": "CONCENTRATED",
+            "liquiditySignals": "Liquidity not fully indexed — confirm on DEX",
+            "tokenProgram": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "regulatedStablecoin": false,
+            "findings": [
+              {
+                "code": "MINT_AUTHORITY_REVOKED",
+                "severity": "INFO",
+                "title": "Mint authority revoked",
+                "detail": "Fixed supply posture — mint authority is not set."
+              },
+              {
+                "code": "CONCENTRATED_HOLDERS",
+                "severity": "WATCH",
+                "title": "Concentrated holder set",
+                "detail": "Largest holder represents ~100% of sampled supply."
+              },
+              {
+                "code": "METADATA_MISSING",
+                "severity": "INFO",
+                "title": "Token metadata not resolved",
+                "detail": "Name/symbol metadata unavailable from RPC — verify token identity manually."
+              },
+              {
+                "code": "TOP10_CONCENTRATION",
+                "severity": "HIGH",
+                "title": "Top 10 holder concentration",
+                "detail": "Top 10 holders control 100.0% of supply."
+              },
+              {
+                "code": "WHALE_DOMINANCE",
+                "severity": "HIGH",
+                "title": "Single-wallet dominance",
+                "detail": "Largest wallet holds 100.0% of supply."
+              },
+              {
+                "code": "HEALTHY_LIQUIDITY_DEPTH",
+                "severity": "INFO",
+                "title": "Healthy liquidity depth",
+                "detail": "Estimated liquidity ~$5,526,530,387."
+              }
+            ],
+            "interpretationSummary": "Review mint and freeze authorities, holder concentration, and metadata before interacting with this token.",
+            "scanTarget": "token_mint",
+            "tokenConcentration": {
+              "platform": "solana",
+              "available": true,
+              "limitedMarketIntelligence": false,
+              "isMajorAsset": false,
+              "holderConcentration": "Top 10 holders control 100.0% · RPC ESTIMATE",
+              "largestWallet": "100.0% · RPC ESTIMATE",
+              "largestWalletPct": 99.99716617845674,
+              "top10HolderPct": 99.9999999977667,
+              "holderCount": null,
+              "holderCountDisplay": "Unavailable",
+              "holderProvenance": "RPC ESTIMATE",
+              "liquidityStatus": "DEX liquidity detected · DEXSCREENER",
+              "liquidityDepth": "$5.53B · DEXSCREENER",
+              "liquidityConfidence": "MODERATE",
+              "liquidityConcentration": "Single-pool liquidity · DEXSCREENER",
+              "whaleRisk": "CRITICAL",
+              "tradingBehavior": "Highly concentrated ownership — exit liquidity risk elevated",
+              "tradingActivity": "Moderate · DEXSCREENER",
+              "marketRouting": "Jupiter Routing Limited · DEX: raydium",
+              "jupiterRoutingLabel": "Jupiter Routing Limited",
+              "deploymentAge": "15 days",
+              "tokenAge": "15 days",
+              "deploymentAgeHours": 349.34372194444444,
+              "marketCap": "$5.53B",
+              "marketCapUsd": 5526686901,
+              "fdv": "$5.53B",
+              "fdvUsd": 5526686901,
+              "volume24h": "$451",
+              "volume24hUsd": 451.01,
+              "activeDex": "raydium · DEXSCREENER",
+              "dexListings": "raydium",
+              "pairCount": 1,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "active",
+              "lpStatusLabel": "Active pools — lock status not confirmed",
+              "liquidityUsd": 5526530387.49,
+              "topPairLiquidityUsd": 5526530387.49,
+              "liquidityConfirmed": true,
+              "jupiterRoutable": false,
+              "jupiterClassification": "LIMITED_ROUTING",
+              "routingConfidence": "MEDIUM",
+              "txns24h": 34,
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              },
+              "dataConfidencePenalty": 3,
+              "providerHealth": {
+                "birdeye": "No data",
+                "helius": "Live (RPC)",
+                "dexscreener": "Live",
+                "jupiter": "Live"
+              },
+              "provenance": {
+                "dexscreener": true,
+                "jupiter": true,
+                "rpc": true,
+                "goplus": false,
+                "birdeye": false
+              },
+              "dataSources": {
+                "dexscreener": true,
+                "jupiter": true,
+                "goplus": false,
+                "rpc": true,
+                "birdeye": false
+              }
+            },
+            "verdictActionFrame": "AVOID INTERACTION",
+            "requestedSymbol": "TAO",
+            "confidence": {
+              "score": 90,
+              "band": "HIGH",
+              "providerCoverage": {
+                "rpc": true,
+                "helius": true,
+                "birdeye": false,
+                "dexscreener": true,
+                "jupiter": true,
+                "holders": true,
+                "largestWallet": true,
+                "metadata": false,
+                "mintAuthority": true,
+                "freezeAuthority": true
+              },
+              "solanaLabel": {
+                "score": 90,
+                "tier": "Scanner + Birdeye + Helius + Jupiter",
+                "providersLabel": "Scanner + DexScreener + Jupiter + Helius"
+              },
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              }
+            },
+            "scannerConfidenceScore": 90,
+            "narrativeCategory": "standard",
+            "technicalTrustScore": 29,
+            "technicalTrustLabel": "Weak",
+            "narrativeRiskScore": 48,
+            "narrativeRiskLabel": "Low",
+            "compositeTrustScore": 29,
+            "compositeRiskBand": "HIGH",
+            "riskLayers": {
+              "technical": "Weak",
+              "narrative": "Low",
+              "composite": "HIGH"
+            },
+            "liquidityIntelligence": {
+              "intelligenceScore": 39,
+              "intelligenceBand": "Moderate Liquidity Risk",
+              "intelligenceBandId": "moderate",
+              "liquidityDepthScore": 99,
+              "liquidityDepthLabel": "Exceptional",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "ELEVATED IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "ELEVATED IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "ELEVATED IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "ELEVATED IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "Elevated",
+              "liquidityConcentration": "CRITICAL",
+              "liquidityConcentrationReason": "Most liquidity resides in a single pool or venue, which may increase dependency risk.",
+              "venueDiversity": "LIMITED",
+              "venueEvidence": [
+                "raydium",
+                "Jupiter routing (limited)"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as exceptional based on indexed DEX liquidity, volume, and capitalization ratios. Estimated market impact appears more sensitive at larger notional sizes relative to observed depth, which may warrant additional review before interaction. Liquidity concentration is critical: Most liquidity resides in a single pool or venue, which may increase dependency risk. Trading venue diversity appears limited across indexed DEX and routing sources, which may increase sensitivity during volatile periods. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            },
+            "executiveIntelligence": {
+              "assetLabel": "Bittensor (TAO)",
+              "classification": "AI ASSET",
+              "classificationSecondaryDriver": "Concentrated Holder Distribution",
+              "executiveRiskScore": 71,
+              "executiveRiskBand": "ELEVATED RISK",
+              "executiveRiskBandId": "elevated",
+              "confidenceScore": 82,
+              "confidenceInterpretation": "Scanner-backed evidence",
+              "compositeInterpretation": null,
+              "keyFindings": [
+                "AI / compute narrative asset — verify utility against on-chain evidence",
+                "Mint authority revoked or absent",
+                "Freeze authority revoked or absent",
+                "Strong indexed liquidity (exceptional depth)",
+                "Top 10 holders control ~100.0% of sampled supply"
+              ],
+              "executiveConclusion": "Observations for Bittensor (TAO) indicate a ai asset profile. Indexed liquidity depth appears adequate across observable venues for retail-sized activity in available provider data. Concentration among top holders remains a primary sensitivity factor in the indexed supply sample. Composite executive risk reflects mixed technical, behavioral, and liquidity signals that warrant continued monitoring of provider updates. These statements describe indexed conditions only and do not predict outcomes, imply returns, or constitute investment guidance.",
+              "recommendedNextInvestigation": [
+                "Review Holder Concentration"
+              ],
+              "disclaimer": "Executive Intelligence is generated from publicly observable blockchain, market, and behavioral data. It is educational in nature and does not constitute financial advice, investment recommendations, trading guidance, insurance, custody, or brokerage services.",
+              "subscores": null,
+              "generatedAt": "2026-06-04T00:16:52.401Z"
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 4,
+        "scan": 908,
+        "total": 912
+      },
+      "assetState": "SCANNER_VALIDATED",
+      "classification": "AI ASSET",
+      "executiveRisk": 71,
+      "confidence": 82,
+      "scannerStatus": "success",
+      "errors": [],
+      "failures": [],
+      "pass": true
+    }
+  ],
+  "unknown": [
+    {
+      "asset": "pump_fun_mint",
+      "label": "Random Pump.fun token",
+      "query": "VGz5JN59ozf2Mtsv8R4FbCDUWxtEgmAdKEBZL4Epump",
+      "chain": "solana",
+      "kind": "unknown",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 70,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "solana",
+              "confidence": 20,
+              "recommendedModule": "token",
+              "displayLabel": "Solana Mint (metadata pending)",
+              "symbol": null,
+              "name": null,
+              "address": "VGz5JN59ozf2Mtsv8R4FbCDUWxtEgmAdKEBZL4Epump",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": "mint_detected",
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/solana/analyze",
+          "url": "http://localhost:5001/api/prime/solana/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 596,
+          "body": {
+            "success": true,
+            "product": "surestack_solana_risk_scanner",
+            "analyzedAt": "2026-06-04T00:16:53.067Z",
+            "chain": "solana",
+            "addressType": "SPL_TOKEN_MINT",
+            "address": "VGz5JN59ozf2Mtsv8R4FbCDUWxtEgmAdKEBZL4Epump",
+            "trustScore": 73,
+            "trustBand": "MODERATE",
+            "isScorable": true,
+            "mintAuthority": null,
+            "freezeAuthority": null,
+            "supply": "999980062585466",
+            "decimals": 6,
+            "metadataPresent": false,
+            "holderConcentration": "DISPERSED",
+            "liquiditySignals": "Liquidity not fully indexed — confirm on DEX",
+            "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+            "regulatedStablecoin": false,
+            "findings": [
+              {
+                "code": "MINT_AUTHORITY_REVOKED",
+                "severity": "INFO",
+                "title": "Mint authority revoked",
+                "detail": "Fixed supply posture — mint authority is not set."
+              },
+              {
+                "code": "METADATA_MISSING",
+                "severity": "INFO",
+                "title": "Token metadata not resolved",
+                "detail": "Name/symbol metadata unavailable from RPC — verify token identity manually."
+              },
+              {
+                "code": "TOP10_CONCENTRATION",
+                "severity": "WATCH",
+                "title": "Elevated top 10 concentration",
+                "detail": "Top 10 holders control 69.9% of supply."
+              },
+              {
+                "code": "WHALE_DOMINANCE",
+                "severity": "WATCH",
+                "title": "Large single-holder position",
+                "detail": "Largest wallet holds 24.4% of supply."
+              },
+              {
+                "code": "JUPITER_ROUTING_ACTIVE",
+                "severity": "INFO",
+                "title": "Jupiter routing available",
+                "detail": "Token is tradable via Jupiter aggregator."
+              },
+              {
+                "code": "STRONG_VOLUME_24H",
+                "severity": "INFO",
+                "title": "Strong 24h volume",
+                "detail": "24h volume ~$251,088 (DexScreener)."
+              },
+              {
+                "code": "MULTI_POOL_LIQUIDITY",
+                "severity": "INFO",
+                "title": "Multiple liquidity pools",
+                "detail": "2 pools indexed — broader exit paths."
+              }
+            ],
+            "interpretationSummary": "SPL token mint with revoked mint and freeze authorities — favorable fixed-supply posture.",
+            "scanTarget": "token_mint",
+            "tokenConcentration": {
+              "platform": "solana",
+              "available": true,
+              "limitedMarketIntelligence": false,
+              "isMajorAsset": false,
+              "holderConcentration": "Top 10 holders control 69.9% · RPC ESTIMATE",
+              "largestWallet": "24.4% · RPC ESTIMATE",
+              "largestWalletPct": 24.41784297178256,
+              "top10HolderPct": 69.90044087652365,
+              "holderCount": null,
+              "holderCountDisplay": "Unavailable",
+              "holderProvenance": "RPC ESTIMATE",
+              "liquidityStatus": "DEX liquidity detected · DEXSCREENER",
+              "liquidityDepth": "$27,965 · DEXSCREENER",
+              "liquidityConfidence": "MODERATE",
+              "liquidityConcentration": "Multiple pools (2) · DEXSCREENER",
+              "whaleRisk": "ELEVATED",
+              "tradingBehavior": "Single-wallet dominance detected",
+              "tradingActivity": "Active · DEXSCREENER",
+              "marketRouting": "Jupiter Routing Available · DEX: pumpswap, meteora",
+              "jupiterRoutingLabel": "Jupiter Routing Available",
+              "deploymentAge": "4 days",
+              "tokenAge": "4 days",
+              "deploymentAgeHours": 93.29724027777777,
+              "marketCap": "$137,492",
+              "marketCapUsd": 137492,
+              "fdv": "$137,492",
+              "fdvUsd": 137492,
+              "volume24h": "$251,088",
+              "volume24hUsd": 251087.94,
+              "activeDex": "pumpswap, meteora · DEXSCREENER",
+              "dexListings": "pumpswap, meteora",
+              "pairCount": 2,
+              "bundledWallets": "Not detected from available sources",
+              "lpStatus": "active",
+              "lpStatusLabel": "Active pools — lock status not confirmed",
+              "liquidityUsd": 27964.850000000002,
+              "topPairLiquidityUsd": 27907.33,
+              "liquidityConfirmed": true,
+              "jupiterRoutable": true,
+              "jupiterClassification": "ROUTABLE",
+              "routingConfidence": "HIGH",
+              "txns24h": 4894,
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              },
+              "dataConfidencePenalty": 3,
+              "providerHealth": {
+                "birdeye": "No data",
+                "helius": "Live (RPC)",
+                "dexscreener": "Live",
+                "jupiter": "Live"
+              },
+              "provenance": {
+                "dexscreener": true,
+                "jupiter": true,
+                "rpc": true,
+                "goplus": false,
+                "birdeye": false
+              },
+              "dataSources": {
+                "dexscreener": true,
+                "jupiter": true,
+                "goplus": false,
+                "rpc": true,
+                "birdeye": false
+              }
+            },
+            "verdictActionFrame": "HIGH CONCENTRATION RISK",
+            "confidence": {
+              "score": 90,
+              "band": "HIGH",
+              "providerCoverage": {
+                "rpc": true,
+                "helius": true,
+                "birdeye": false,
+                "dexscreener": true,
+                "jupiter": true,
+                "holders": true,
+                "largestWallet": true,
+                "metadata": false,
+                "mintAuthority": true,
+                "freezeAuthority": true
+              },
+              "solanaLabel": {
+                "score": 90,
+                "tier": "Scanner + Birdeye + Helius + Jupiter",
+                "providersLabel": "Scanner + DexScreener + Jupiter + Helius"
+              },
+              "dataConfidence": {
+                "marketCap": "SAFE",
+                "fdv": "SAFE",
+                "liquidity": "SAFE",
+                "volume24h": "SAFE",
+                "holderCount": "UNKNOWN",
+                "top10HolderPct": "SAFE",
+                "top1HolderPct": "SAFE",
+                "jupiterRouting": "SAFE",
+                "dexListings": "SAFE",
+                "lpStatus": "SAFE"
+              }
+            },
+            "scannerConfidenceScore": 90,
+            "narrativeCategory": "standard",
+            "technicalTrustScore": 73,
+            "technicalTrustLabel": "Moderate",
+            "narrativeRiskScore": 48,
+            "narrativeRiskLabel": "Low",
+            "compositeTrustScore": 73,
+            "compositeRiskBand": "MODERATE",
+            "riskLayers": {
+              "technical": "Moderate",
+              "narrative": "Low",
+              "composite": "MODERATE"
+            },
+            "liquidityIntelligence": {
+              "intelligenceScore": 57,
+              "intelligenceBand": "Elevated Liquidity Risk",
+              "intelligenceBandId": "elevated",
+              "liquidityDepthScore": 36,
+              "liquidityDepthLabel": "Thin",
+              "pending": false,
+              "estimatedMarketImpact": [
+                {
+                  "tradeUsd": 1000,
+                  "tradeLabel": "$1,000",
+                  "level": "MODERATE IMPACT"
+                },
+                {
+                  "tradeUsd": 10000,
+                  "tradeLabel": "$10,000",
+                  "level": "HIGH IMPACT"
+                },
+                {
+                  "tradeUsd": 100000,
+                  "tradeLabel": "$100,000",
+                  "level": "HIGH IMPACT"
+                },
+                {
+                  "tradeUsd": 1000000,
+                  "tradeLabel": "$1,000,000",
+                  "level": "HIGH IMPACT"
+                }
+              ],
+              "estimatedMarketImpactSummary": "High",
+              "liquidityConcentration": "CRITICAL",
+              "liquidityConcentrationReason": "Most liquidity resides in a single pool or venue, which may increase dependency risk.",
+              "venueDiversity": "GOOD",
+              "venueEvidence": [
+                "pumpswap",
+                "meteora",
+                "Jupiter routing"
+              ],
+              "liquidityStability": "STABLE",
+              "liquidityStabilityNote": "Liquidity depth changes over 24h appear within a typical range.",
+              "analystCommentary": "Observed liquidity depth is classified as thin based on indexed DEX liquidity, volume, and capitalization ratios. Estimated market impact appears more sensitive at larger notional sizes relative to observed depth, which may warrant additional review before interaction. Liquidity concentration is critical: Most liquidity resides in a single pool or venue, which may increase dependency risk. Venue diversity is classified as good across indexed listings and routing signals. Liquidity stability is observed as stable; Liquidity depth changes over 24h appear within a typical range. These estimates reflect publicly observable conditions only and may not capture private venues, OTC liquidity, or future market shifts.",
+              "disclaimers": {
+                "global": "Liquidity Intelligence is generated from publicly observable market data and routing conditions. It does not guarantee liquidity, execution quality, slippage outcomes, or transaction completion.",
+                "marketImpact": "Estimates are generated from available liquidity and routing data. Actual execution conditions may vary."
+              },
+              "dataQuality": "observed"
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 70,
+        "scan": 596,
+        "total": 666
+      },
+      "assetState": "MINT_DETECTED",
+      "classification": "UNKNOWN ASSET",
+      "apiClassification": null,
+      "executiveRisk": "—",
+      "confidence": 20,
+      "scannerStatus": "success",
+      "apiFabrication": [],
+      "unverified": true,
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "random_evm",
+      "label": "Random EVM contract",
+      "query": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "chain": "ethereum",
+      "kind": "unknown",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 265,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "wallet",
+              "chain": "ethereum",
+              "confidence": 99,
+              "recommendedModule": "wallet",
+              "displayLabel": "Ethereum Wallet",
+              "symbol": null,
+              "name": null,
+              "address": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": "eoa",
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        },
+        {
+          "route": "POST /api/prime/contracts/analyze",
+          "url": "http://localhost:5001/api/prime/contracts/analyze",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 480,
+          "body": {
+            "success": true,
+            "product": "surestack_contract_intelligence_engine",
+            "tier": "prime_lite",
+            "address": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+            "chainId": 1,
+            "analyzedAt": "2026-06-04T00:16:53.816Z",
+            "isContract": false,
+            "addressType": "EOA",
+            "trustScore": null,
+            "trustBand": null,
+            "honeypotRisk": "NOT_APPLICABLE",
+            "ownershipConcentration": "NOT_APPLICABLE",
+            "upgradeableProxy": false,
+            "proxyImplementation": null,
+            "privilegedFunctions": {
+              "mint": false,
+              "pause": false,
+              "blacklist": false,
+              "owner": false
+            },
+            "deployerHeuristics": "Externally owned account — contract trust scoring does not apply.",
+            "findings": [
+              {
+                "code": "NOT_CONTRACT",
+                "severity": "INFO",
+                "title": "Externally owned account",
+                "detail": "No contract bytecode at this address. Use wallet risk modules for EOA exposure."
+              }
+            ],
+            "interpretationSummary": "This address is an externally owned account (EOA), not a deployed smart contract. Trust scores apply to contract bytecode only.",
+            "dataSources": {
+              "onChain": "live",
+              "goPlus": "skipped",
+              "etherscan": "etherscan_v2"
+            },
+            "aiSummary": "This address is an externally owned account (EOA), not a deployed smart contract. Trust scores apply to contract bytecode only.",
+            "walletExposure": {
+              "status": "unavailable",
+              "unavailableReason": "no_verified_wallet"
+            },
+            "reportId": null,
+            "cached": false,
+            "devBypass": true
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": 200
+      },
+      "latencyMs": {
+        "classify": 265,
+        "scan": 480,
+        "total": 745
+      },
+      "assetState": "MINT_DETECTED",
+      "classification": "UNKNOWN ASSET",
+      "apiClassification": null,
+      "executiveRisk": "—",
+      "confidence": 20,
+      "scannerStatus": "success",
+      "apiFabrication": [],
+      "unverified": true,
+      "errors": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "asset": "unknown_symbol",
+      "label": "Unknown symbol",
+      "query": "ZZZZNOTATOKEN",
+      "chain": "none",
+      "kind": "unknown",
+      "routes": [
+        {
+          "route": "POST /api/prime/intelligence/classify",
+          "url": "http://localhost:5001/api/prime/intelligence/classify",
+          "ok": true,
+          "status": 200,
+          "latencyMs": 3,
+          "body": {
+            "success": true,
+            "classification": {
+              "type": "token",
+              "chain": "ethereum",
+              "confidence": 70,
+              "recommendedModule": "token",
+              "displayLabel": "Token Symbol",
+              "symbol": "ZZZZNOTATOKEN",
+              "name": null,
+              "address": null,
+              "protocolName": null,
+              "url": null,
+              "addressSubtype": null,
+              "syncOnly": false
+            }
+          },
+          "timedOut": false,
+          "error": null
+        }
+      ],
+      "httpStatus": {
+        "classify": 200,
+        "scan": null
+      },
+      "latencyMs": {
+        "classify": 3,
+        "scan": null,
+        "total": 3
+      },
+      "assetState": "UNKNOWN_ASSET",
+      "classification": "UNKNOWN ASSET",
+      "apiClassification": null,
+      "executiveRisk": "—",
+      "confidence": 10,
+      "scannerStatus": "not_requested",
+      "apiFabrication": [],
+      "unverified": true,
+      "errors": [],
+      "failures": [],
+      "pass": true
+    }
+  ],
+  "failedAssets": [],
+  "failedRoutes": [],
+  "warnings": [],
+  "recommendations": [
+    "All E2E API routes passed — proceed to public beta with manual UI screenshot sign-off."
+  ]
+}

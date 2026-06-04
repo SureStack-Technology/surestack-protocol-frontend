@@ -1,0 +1,89 @@
+{
+  "sprint": "P4 Monitoring & Error Tracking Readiness",
+  "currentState": {
+    "sentryIntegrated": false,
+    "sentryFiles": [],
+    "errorHandling": {
+      "frontendErrorBoundary": true,
+      "frontendLogger": true,
+      "backendGlobalHandler": true,
+      "primeApiErrors": true,
+      "providerSoftFail": true
+    },
+    "healthEndpoints": [
+      "GET /health",
+      "GET /api/status"
+    ],
+    "validationScripts": [
+      "scripts/p32LiveValidation.mjs",
+      "scripts/p33ApiValidation.mjs",
+      "scripts/p4LaunchReadiness.mjs"
+    ]
+  },
+  "timeoutCoverage": [
+    {
+      "service": "LunarCrush",
+      "file": "backend/src/services/lunarCrushService.js",
+      "hasTimeout": true
+    },
+    {
+      "service": "Birdeye",
+      "file": "backend/src/services/birdeyeService.js",
+      "hasTimeout": true
+    },
+    {
+      "service": "Solana RPC",
+      "file": "backend/src/services/solanaRiskScanner/solanaRpc.js",
+      "hasTimeout": false
+    },
+    {
+      "service": "Contract intel providers",
+      "file": "backend/src/services/contractIntelligence/",
+      "hasTimeout": false
+    },
+    {
+      "service": "P3.3 API validation",
+      "file": "scripts/p33ApiValidation.mjs",
+      "hasTimeout": true,
+      "ms": 15000
+    }
+  ],
+  "scannerFailureHandling": {
+    "solanaAllProvidersFailed": "503 all_providers_failed",
+    "alchemyRateLimit": "429 alchemy_rate_limited",
+    "partialCoverageMessaging": "src/lib/intelligence/partialCoverageMessaging.mjs"
+  },
+  "recommendations": [
+    {
+      "priority": "P0",
+      "item": "Integrate Sentry (or equivalent) on frontend ErrorBoundary + backend global handler",
+      "rationale": "No production error aggregation today — console-only logging"
+    },
+    {
+      "priority": "P0",
+      "item": "Add structured JSON logging (pino/winston) with requestId correlation",
+      "rationale": "Current logs are ad-hoc console prefixes — hard to alert on"
+    },
+    {
+      "priority": "P1",
+      "item": "Add AbortSignal.timeout to Solana RPC and contract intel provider fetches",
+      "rationale": "Hung upstream calls can block scanner routes beyond client 15s timeout"
+    },
+    {
+      "priority": "P1",
+      "item": "Alert on /health failure, 5xx rate > 1%, p95 scan latency > 12s",
+      "rationale": "Launch gate depends on live scanner reliability"
+    },
+    {
+      "priority": "P2",
+      "item": "Wire provider failure counters (Birdeye, LunarCrush, Alchemy 429) to metrics dashboard",
+      "rationale": "Degraded intelligence should be visible before users report it"
+    }
+  ],
+  "pass": true,
+  "gaps": [
+    "no_sentry_integration",
+    "solana_rpc_no_timeout"
+  ],
+  "completedAt": "2026-06-04T00:27:40.348Z"
+}

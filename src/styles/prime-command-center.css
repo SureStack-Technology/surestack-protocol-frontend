@@ -3566,6 +3566,14 @@
   line-height: 1.2;
 }
 
+.prime-wallet-exp-card__warning {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(120, 53, 15, 0.2);
+}
+
 .prime-wallet-exp-card__score-band {
   font-size: 0.625rem;
   font-weight: 600;
@@ -3748,6 +3756,137 @@
   font-size: 0.75rem;
   line-height: 1.55;
   color: rgb(203 213 225);
+}
+
+.prime-wallet-portfolio {
+  margin-top: 0.85rem;
+  margin-bottom: 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(8, 15, 30, 0.72);
+  padding: 0.85rem;
+}
+
+.prime-wallet-portfolio__header {
+  margin-bottom: 0.75rem;
+}
+
+.prime-wallet-portfolio__title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgb(186 230 253);
+}
+
+.prime-wallet-portfolio__subtitle {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: rgb(100 116 139);
+  margin-top: 0.25rem;
+}
+
+.prime-wallet-portfolio__warning {
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: rgb(253 186 116);
+  background: rgba(120, 53, 15, 0.25);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.prime-wallet-portfolio__total {
+  margin-bottom: 0.75rem;
+}
+
+.prime-wallet-portfolio__total-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(148 163 184);
+}
+
+.prime-wallet-portfolio__total-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+  color: rgb(248 250 252);
+  margin-top: 0.15rem;
+}
+
+.prime-wallet-portfolio__section-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(148 163 184);
+  margin-bottom: 0.4rem;
+}
+
+.prime-wallet-portfolio__concentration {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.prime-wallet-portfolio__table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.85rem;
+}
+
+.prime-wallet-portfolio__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+}
+
+.prime-wallet-portfolio__table th {
+  text-align: left;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(100 116 139);
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prime-wallet-portfolio__table td {
+  padding: 0.4rem;
+  color: rgb(203 213 225);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: top;
+}
+
+.prime-wallet-portfolio__sector {
+  margin-bottom: 0.85rem;
+}
+
+.prime-wallet-portfolio__formula-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prime-wallet-portfolio__formula-list li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.prime-wallet-portfolio__excluded {
+  margin-bottom: 0.85rem;
+}
+
+.prime-wallet-portfolio__metrics {
+  margin-bottom: 0.25rem;
+}
+
+.prime-wallet-portfolio__metric-row {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .prime-wallet-exp-card__disclaimer {
@@ -4236,7 +4375,8 @@
   background: rgba(2, 6, 23, 0.35);
 }
 
-.prime-exec-intel__coverage-item--active span:first-child {
+.prime-exec-intel__coverage-item--active span:first-child,
+.prime-exec-intel__coverage-item--live span:first-child {
   color: rgb(110 231 183);
 }
 
@@ -4244,6 +4384,135 @@
   color: rgb(251 191 36);
 }
 
-.prime-exec-intel__coverage-item--pending span:first-child {
+.prime-exec-intel__coverage-item--pending span:first-child,
+.prime-exec-intel__coverage-item--fallback span:first-child {
   color: rgb(100 116 139);
+}
+
+.prime-exec-intel__coverage-item--rate_limited span:first-child {
+  color: rgb(251 146 60);
+}
+
+.prime-exec-intel__coverage-item--unsupported span:first-child {
+  color: rgb(71 85 105);
+}
+
+/* Risk component breakdown */
+.prime-risk-breakdown {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 1rem 1.1rem;
+  background: rgba(2, 6, 23, 0.45);
+}
+
+.prime-risk-breakdown--compact {
+  padding: 0.75rem 0.85rem;
+}
+
+.prime-risk-breakdown__title {
+  font-size: 0.625rem;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+  margin-bottom: 0.75rem;
+}
+
+.prime-risk-breakdown__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .prime-risk-breakdown__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.prime-risk-breakdown__row {
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.prime-risk-breakdown__row--composite {
+  grid-column: 1 / -1;
+  border-color: rgba(56, 189, 248, 0.2);
+  background: rgba(8, 47, 73, 0.35);
+}
+
+.prime-risk-breakdown__row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.prime-risk-breakdown__label {
+  font-size: 0.6875rem;
+  color: rgb(203 213 225);
+}
+
+.prime-risk-breakdown__weight {
+  font-size: 0.5625rem;
+  font-family: ui-monospace, monospace;
+  color: rgb(100 116 139);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.prime-risk-breakdown__score {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.prime-risk-breakdown__score--low { color: rgb(110 231 183); }
+.prime-risk-breakdown__score--moderate { color: rgb(250 204 21); }
+.prime-risk-breakdown__score--elevated { color: rgb(251 146 60); }
+.prime-risk-breakdown__score--high { color: rgb(248 113 113); }
+.prime-risk-breakdown__score--pending { color: rgb(148 163 184); font-weight: 500; font-size: 0.8125rem; }
+
+.prime-risk-breakdown__primary,
+.prime-risk-breakdown__section {
+  margin-top: 0.85rem;
+  font-size: 0.75rem;
+  color: rgb(148 163 184);
+}
+
+.prime-risk-breakdown__section-title {
+  font-size: 0.625rem;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  margin-bottom: 0.35rem;
+}
+
+.prime-risk-breakdown__list {
+  margin: 0;
+  padding-left: 1rem;
+  color: rgb(203 213 225);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.prime-risk-breakdown__list--positive {
+  list-style: none;
+  padding-left: 0;
+}
+
+.prime-risk-breakdown__list--positive li {
+  color: rgb(167 243 208);
+}
+
+.prime-risk-breakdown__methodology {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }

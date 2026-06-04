@@ -198,10 +198,20 @@ export function isLunarCrushSubscriptionLimited(data) {
  */
 export function resolveLunarCrushFeedMode(primeTrends) {
   if (!primeTrends) return 'pending'
+  if (primeTrends.providerStatus === 'rate_limited') return 'fallback'
   if (isLunarCrushSubscriptionLimited(primeTrends)) return 'scenario'
   if (isLiveLunarCrushStatus(primeTrends.status)) return 'live'
   if (primeTrends.status === 'fallback' || primeTrends.status === 'unavailable') return 'scenario'
   return 'pending'
+}
+
+export function lunarCrushProviderStatusLabel(primeTrends) {
+  if (!primeTrends) return 'Fallback'
+  if (primeTrends.providerStatus === 'rate_limited') return 'Rate limited'
+  if (primeTrends.providerStatus === 'subscription_required') return 'Fallback'
+  if (primeTrends.status === 'live') return 'Live'
+  if (primeTrends.status === 'fallback' || primeTrends.status === 'unavailable') return 'Fallback'
+  return 'Partial'
 }
 
 export function isPrimeLunarCrushLive(primeTrends) {

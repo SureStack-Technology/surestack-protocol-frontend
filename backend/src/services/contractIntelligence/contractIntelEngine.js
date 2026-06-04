@@ -15,13 +15,13 @@ import { attachLiquidityIntelligence } from '../liquidityIntelligence/attachLiqu
 import { attachExecutiveIntelligence } from '../executiveIntelligence/attachExecutiveIntelligence.js'
 import { scoreFromSignals } from './contractIntelScoring.js'
 
-function finalizeEvmReport(payload) {
+function finalizeEvmReport(payload, ctx = {}) {
   let report = payload
   if (payload?.trustScore != null) {
     report = applyConfidenceCalibration(payload, 'evm')
   }
   report = attachLiquidityIntelligence(report)
-  return attachExecutiveIntelligence(report)
+  return attachExecutiveIntelligence(report, ctx)
 }
 
 function buildAlphaExtensions(core, tier) {
@@ -113,7 +113,7 @@ export async function analyzeContractIntelligence(opts) {
       address,
       chainId,
       analyzedAt: new Date().toISOString(),
-      ...finalizeEvmReport(core),
+      ...finalizeEvmReport(core, { address, chainId }),
       aiSummary: core.interpretationSummary,
     }
   }
@@ -169,13 +169,16 @@ export async function analyzeContractIntelligence(opts) {
     }
   }
 
-  const finalized = finalizeEvmReport({
-    ...core,
-    ...alphaExtras,
-    aiSummary,
-    multiContractTrust: multiContractTrust.length ? multiContractTrust : undefined,
-    deploymentMeta,
-  })
+  const finalized = finalizeEvmReport(
+    {
+      ...core,
+      ...alphaExtras,
+      aiSummary,
+      multiContractTrust: multiContractTrust.length ? multiContractTrust : undefined,
+      deploymentMeta,
+    },
+    { address, chainId },
+  )
 
   return {
     success: true,

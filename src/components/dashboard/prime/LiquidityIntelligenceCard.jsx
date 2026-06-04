@@ -1,5 +1,5 @@
 import { Droplets } from 'lucide-react'
-import { buildLiquidityIntelFromScanner } from '@/lib/liquidityIntelligence/buildLiquidityIntelFromScanner.js'
+import { buildLiquidityIntelFromContext } from '@/lib/liquidityIntelligence/buildLiquidityIntelFromScanner.js'
 import {
   LIQUIDITY_INTEL_DISCLAIMER,
   MARKET_IMPACT_DISCLAIMER,
@@ -25,11 +25,15 @@ function MetricRow({ label, value, sub }) {
 
 /**
  * Institutional liquidity intelligence card — educational estimates only.
- * @param {{ scannerReport?: object | null, variant?: 'card' | 'embed' }} props
+ * @param {{ scannerReport?: object | null, report?: object | null, variant?: 'card' | 'embed' }} props
  */
-export default function LiquidityIntelligenceCard({ scannerReport = null, variant = 'card' }) {
-  const intel = buildLiquidityIntelFromScanner(scannerReport)
-  const pending = !scannerReport?.tokenConcentration && intel.dataQuality === 'limited'
+export default function LiquidityIntelligenceCard({
+  scannerReport = null,
+  report = null,
+  variant = 'card',
+}) {
+  const intel = buildLiquidityIntelFromContext({ scannerReport, report })
+  const pending = Boolean(intel.pending)
 
   const rootClass =
     variant === 'embed'

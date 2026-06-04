@@ -1,3 +1,9 @@
+import {
+  getAssetDisplayName,
+  isRawBlockchainTarget,
+  resolveRegistryCanonicalFromRaw,
+} from '@/lib/intelligence/assetDisplayLabel.mjs'
+
 /** Known token aliases → clean display labels (UI only; scan uses raw input). */
 const TOKEN_ALIASES = {
   dogecoin: { symbol: 'DOGE', name: 'Dogecoin' },
@@ -17,9 +23,14 @@ const TOKEN_ALIASES = {
  * @param {string} raw User-entered token query
  * @returns {string} Display label, e.g. "Dogecoin (DOGE)" or "PEPE"
  */
-export function formatTokenDisplayLabel(raw) {
+export function formatTokenDisplayLabel(raw, canonicalAsset = null) {
   const input = String(raw || '').trim()
   if (!input) return ''
+
+  const asset = canonicalAsset || resolveRegistryCanonicalFromRaw(input)
+  if (asset?.resolved) {
+    return getAssetDisplayName(asset, input)
+  }
 
   const key = input.toLowerCase().replace(/^\$/, '').replace(/\s+/g, '')
   const known = TOKEN_ALIASES[key]
@@ -28,7 +39,9 @@ export function formatTokenDisplayLabel(raw) {
     return `${known.name} (${known.symbol})`
   }
 
-  if (/^0x[a-fA-F0-9]{40}$/.test(input)) return input
+  if (isRawBlockchainTarget(input)) {
+    return getAssetDisplayName(resolveRegistryCanonicalFromRaw(input), input) || 'Intelligence target'
+  }
 
   if (/^[a-z0-9]{2,12}$/i.test(input)) return input.toUpperCase()
 

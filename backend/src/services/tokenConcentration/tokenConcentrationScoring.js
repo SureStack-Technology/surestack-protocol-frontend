@@ -142,11 +142,13 @@ export function buildTokenConcentrationIntel({
   dex,
   goPlusParsed,
   isCanonical = false,
+  isStablecoin = false,
   deploymentMeta = null,
 }) {
   const top10Pct = holderMetrics?.top10HolderPct ?? goPlusParsed?.top10HolderPct ?? null
   const top1Pct = holderMetrics?.top1HolderPct ?? goPlusParsed?.top1HolderPct ?? null
   const liquidityUsd = dex?.totalLiquidityUsd ?? null
+  const stablecoinAsset = Boolean(isStablecoin)
 
   const lpLocked = Boolean(goPlusParsed?.lpLocked || goPlusParsed?.lpBurned)
   const lpUnlocked = goPlusParsed?.isInDex && !lpLocked && (goPlusParsed?.lpHolderCount || 0) > 0
@@ -206,16 +208,24 @@ export function buildTokenConcentrationIntel({
   const liquidityStatus =
     liquidityUsd != null && liquidityUsd > 0
       ? liquidityDepthLabel(liquidityUsd)
-      : goPlusParsed?.isInDex
-        ? 'DEX listing detected — depth estimate unavailable'
-        : dex?.confirmed === true && !dex?.hasLiquidity
-          ? 'No DEX liquidity detected'
-          : 'Liquidity intelligence unavailable'
+      : stablecoinAsset
+        ? goPlusParsed?.isInDex
+          ? 'Institutional stablecoin — DEX listed; global liquidity exceeds indexed depth sample'
+          : 'Institutional stablecoin — global liquidity primarily off indexed DEX sampling (CEX / issuer rails)'
+        : goPlusParsed?.isInDex
+          ? 'DEX listing detected — depth estimate unavailable'
+          : isCanonical
+            ? 'Institutional asset — global liquidity primarily off indexed DEX sample (CEX / protocol depth)'
+            : dex?.confirmed === true && !dex?.hasLiquidity
+              ? 'No DEX liquidity detected'
+              : 'Liquidity intelligence unavailable'
 
   let liquidityConcentration = 'Liquidity concentration unavailable'
   if (lpStatus === 'locked') liquidityConcentration = 'LP locked or burned (heuristic)'
   else if (lpStatus === 'unlocked') liquidityConcentration = 'LP not locked — exit liquidity risk'
-  else if (dex?.confirmed === true && !dex?.hasLiquidity) {
+  else if (stablecoinAsset && (!liquidityUsd || liquidityUsd <= 0)) {
+    liquidityConcentration = 'Institutional stablecoin — pooled DEX sample incomplete; global liquidity remains deep'
+  } else if (dex?.confirmed === true && !dex?.hasLiquidity) {
     liquidityConcentration = 'No pooled liquidity detected'
   }
 
@@ -239,6 +249,13 @@ export function buildTokenConcentrationIntel({
     liquidityUsd,
     creatorPct: goPlusParsed?.creatorPct ?? null,
     ownerPct: goPlusParsed?.ownerPct ?? null,
+    isStablecoin: stablecoinAsset,
+    isCanonical,
+    liquidityConfirmed: stablecoinAsset || isCanonical || (liquidityUsd != null && liquidityUsd > 0),
+    pairCount: dex?.pairCount ?? null,
+    volume24hUsd: dex?.volume24hUsd ?? null,
+    topPairLiquidityUsd: dex?.topPairLiquidityUsd ?? null,
+    dexListings: dex?.dexIds?.length ? dex.dexIds.join(', ') : dex?.primaryDex || null,
     dataSources: {
       dexscreener: Boolean(dex),
       goplus: Boolean(goPlusParsed),

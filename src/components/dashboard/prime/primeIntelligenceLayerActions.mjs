@@ -18,6 +18,9 @@ export const MODULE_LABELS = {
 const EXAMPLE_CONTRACT = '0xf280b16ef293d8e534e370794ef26bf312694126'
 const EXAMPLE_WALLET = '0xd8dA6BF26964aF9D7eEd9e03E53402D6A1C8c104'
 
+/** Explicit sample — only loaded when user clicks "Sample contract", not on module select. */
+export const CONTRACT_SAMPLE_ADDRESS = EXAMPLE_CONTRACT
+
 function pickLeadAsset(assets) {
   if (!Array.isArray(assets) || !assets.length) return null
   return assets.find((a) => a.status === 'live') || assets[0]
@@ -78,9 +81,9 @@ function behaviorPrefill(watchlist, assets) {
     behaviorPending: true,
     moduleId: LAYER_ACTION_TYPES.BEHAVIOR,
     previewMessage:
-      'ETH behavior review prepared. Live Birdeye activation pending; scan will use provider-ready context.',
+      'Ethereum behavior analytics coming soon. Contract Trust, Liquidity Intelligence, and Security Signals remain available.',
     moduleLabel: MODULE_LABELS.behavior,
-    hint: 'ETH behavior review ready — live Birdeye signals pending until provider activation.',
+    hint: 'Advanced Ethereum behavior analytics coming soon.',
   }
 }
 
@@ -99,14 +102,16 @@ function contractPrefill(currentQuery) {
     }
   }
   return {
-    query: EXAMPLE_CONTRACT,
+    query: '',
+    skipQueryPrefill: true,
+    awaitingInput: true,
     chain: 'ethereum',
     modeId: 'contract',
     moduleId: LAYER_ACTION_TYPES.CONTRACT,
-    previewMessage:
-      'Contract trust scan prepared. Run Intelligence Scan, then Deep Contract Scan for scanner-backed proof.',
+    previewMessage: 'Enter a contract address to begin analysis.',
     moduleLabel: MODULE_LABELS.contract,
-    hint: 'Example contract loaded — run intelligence scan for Contract Trust analysis.',
+    hint: 'Paste a 0x contract address or choose Sample contract below.',
+    sampleContract: CONTRACT_SAMPLE_ADDRESS,
   }
 }
 

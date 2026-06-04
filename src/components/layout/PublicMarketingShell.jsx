@@ -1,5 +1,4 @@
 import NeuroGridBackground from '@components/visuals/NeuroGridBackground'
-import CanvasBackground from '@components/visuals/CanvasBackground'
 import DataFlowOverlay from '@components/visuals/DataFlowOverlay'
 import RiskTicker from '@/components/ui/RiskTicker.jsx'
 import { PrimeIntelligenceHeroProvider } from '@/contexts/PrimeIntelligenceHeroContext.jsx'
@@ -10,7 +9,6 @@ export default function PublicMarketingShell({ children, showTicker = true }) {
   return (
     <div className="public-premium-shell text-foreground">
       <NeuroGridBackground />
-      <CanvasBackground />
       <DataFlowOverlay />
       <div className="public-premium-vignette" aria-hidden />
       {showTicker && (

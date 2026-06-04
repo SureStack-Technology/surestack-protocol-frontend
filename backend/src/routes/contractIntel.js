@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { makeRequireClerkAuth } from '../middleware/clerkAuth.js'
 import { loadAuthUser } from '../services/authUser.js'
 import { prisma } from '../lib/prisma.js'
+import { makePrimeAuthWithDevBypass, loadPrimeUserForRequest } from '../middleware/primeAuthDevBypass.js'
 import { analyzeContractIntelligence } from '../services/contractIntelligence/contractIntelEngine.js'
 import { applyConfidenceCalibration } from '../services/scannerConfidence/scannerConfidenceEngine.js'
 import { resolveWalletExposureForScan } from '../services/walletExposure/walletExposureResolve.js'
@@ -16,7 +16,7 @@ import {
 } from '../services/contractIntelligence/contractIntelTypes.js'
 
 const router = Router()
-const requirePrimeAuth = makeRequireClerkAuth({ unauthorizedError: 'prime_intel_auth_missing' })
+const requirePrimeAuth = makePrimeAuthWithDevBypass({ unauthorizedError: 'prime_intel_auth_missing' })
 
 async function loadUser(clerkUserId) {
   return loadAuthUser(clerkUserId, {
@@ -41,7 +41,7 @@ function resolveContractTier(membershipTier) {
 
 router.post('/analyze', requirePrimeAuth, async (req, res) => {
   try {
-    const user = await loadUser(req.clerkUserId)
+    const user = await loadPrimeUserForRequest(req, loadAuthUser)
     if (!user) return res.status(404).json({ success: false, error: 'user_not_found' })
 
     const tier = resolveContractTier(user.membershipTier)
@@ -83,6 +83,15 @@ router.post('/analyze', requirePrimeAuth, async (req, res) => {
     let enriched = { ...report, walletExposure }
     if (enriched.trustScore != null) {
       enriched = applyConfidenceCalibration(enriched, 'evm')
+    }
+
+    if (req.devPrimeAuthBypass) {
+      return res.json({
+        ...enriched,
+        reportId: null,
+        cached: false,
+        devBypass: true,
+      })
     }
 
     const row = await persistContractIntelligenceReport(user.id, enriched)

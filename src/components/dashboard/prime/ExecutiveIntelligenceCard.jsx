@@ -1,5 +1,6 @@
 import { Scale } from 'lucide-react'
 import { EXECUTIVE_INTEL_DISCLAIMER } from '@/lib/executiveIntelligence/executiveIntelligenceEngine.mjs'
+import CompositeRiskBreakdown from '@/components/dashboard/prime/CompositeRiskBreakdown.jsx'
 
 export function normalizeList(value) {
   if (Array.isArray(value)) return value.filter(Boolean)
@@ -21,10 +22,24 @@ function riskBandClass(bandId) {
   return 'prime-exec-intel__risk--pending'
 }
 
+function coverageStatusIcon(status) {
+  if (status === 'live' || status === 'active') return '✓'
+  if (status === 'partial') return '⚠'
+  if (status === 'rate_limited') return '⏱'
+  if (status === 'unsupported') return '—'
+  return '○'
+}
+
 /**
- * @param {{ executive?: object | null, coverageSources?: object[] | null, variant?: 'card' | 'embed' }} props
+ * @param {{ executive?: object | null, coverageSources?: object[] | null, coverageNote?: string | null, riskExplainability?: object | null, variant?: 'card' | 'embed' }} props
  */
-export default function ExecutiveIntelligenceCard({ executive = null, coverageSources = null, variant = 'card' }) {
+export default function ExecutiveIntelligenceCard({
+  executive = null,
+  coverageSources = null,
+  coverageNote = null,
+  riskExplainability = null,
+  variant = 'card',
+}) {
   if (!executive) return null
 
   const keyFindings = normalizeList(executive?.keyFindings)
@@ -68,38 +83,77 @@ export default function ExecutiveIntelligenceCard({ executive = null, coverageSo
         <div className="prime-exec-intel__hero-cell">
           <p className="prime-exec-intel__label">Executive risk</p>
           <p className={`prime-exec-intel__score tabular-nums ${riskBandClass(executive.executiveRiskBandId)}`}>
-            {executive.executiveRiskScore}
-            <span className="text-slate-500 font-normal text-sm"> / 100</span>
+            {executive.unverified || executive.classification === 'UNKNOWN ASSET'
+              ? '—'
+              : executive.executiveRiskScore}
+            {!executive.unverified && executive.classification !== 'UNKNOWN ASSET' ? (
+              <span className="text-slate-500 font-normal text-sm"> / 100</span>
+            ) : null}
           </p>
-          <p className="prime-exec-intel__band">{executive.executiveRiskBand}</p>
+          <p className="prime-exec-intel__band">
+            {executive.unverified || executive.classification === 'UNKNOWN ASSET'
+              ? 'Pending validation'
+              : executive.executiveRiskBand}
+          </p>
         </div>
         <div className="prime-exec-intel__hero-cell">
           <p className="prime-exec-intel__label">Intelligence confidence</p>
           <p className="prime-exec-intel__score tabular-nums text-slate-200">
-            {executive.confidenceScore}%
+            {executive.confidenceScore != null && executive.confidenceScore !== '—'
+              ? `${executive.confidenceScore}%`
+              : '—'}
           </p>
           <p className="prime-exec-intel__band">{executive.confidenceInterpretation}</p>
+          {executive.assessmentStage ? (
+            <p className="prime-exec-intel__stage text-[10px] font-mono uppercase tracking-wider text-slate-500 mt-1">
+              {executive.assessmentStage}
+              {executive.assessmentStatus ? ` · ${executive.assessmentStatus}` : ''}
+            </p>
+          ) : null}
         </div>
       </div>
 
       {coverageSources?.length ? (
         <div className="prime-exec-intel__coverage">
-          <p className="prime-exec-intel__section-title">Coverage sources</p>
+          <p className="prime-exec-intel__section-title">Coverage status</p>
           <ul className="prime-exec-intel__coverage-list">
-            {coverageSources.map((source) => (
+            {coverageSources.map((source) => {
+              const tag =
+                source.statusLabel ||
+                (source.status === 'partial'
+                  ? 'Partial'
+                  : source.status === 'fallback' || source.status === 'pending'
+                    ? 'Fallback'
+                    : source.status === 'rate_limited'
+                      ? 'Rate limited'
+                      : source.status === 'unsupported'
+                        ? 'Unsupported'
+                        : null)
+              return (
               <li
                 key={source.label}
                 className={`prime-exec-intel__coverage-item prime-exec-intel__coverage-item--${source.status}`}
               >
-                <span aria-hidden>{source.status === 'active' ? '✓' : source.status === 'partial' ? '⚠' : '○'}</span>
+                <span aria-hidden>{coverageStatusIcon(source.status)}</span>
                 <span>{source.label}</span>
-                {source.status === 'partial' ? <span className="prime-exec-intel__coverage-tag">Partial</span> : null}
-                {source.status === 'pending' ? (
-                  <span className="prime-exec-intel__coverage-tag">Pending</span>
+                {tag && source.status !== 'live' && source.status !== 'active' ? (
+                  <span className="prime-exec-intel__coverage-tag">{tag}</span>
                 ) : null}
               </li>
-            ))}
+              )
+            })}
           </ul>
+          {coverageNote ? (
+            <p className="prime-exec-intel__coverage-note text-[11px] text-slate-400 mt-3 leading-relaxed">
+              {coverageNote}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {riskExplainability && !executive.unverified && executive.classification !== 'UNKNOWN ASSET' ? (
+        <div className="prime-exec-intel__risk-breakdown mt-4">
+          <CompositeRiskBreakdown explainability={riskExplainability} variant="embed" />
         </div>
       ) : null}
 

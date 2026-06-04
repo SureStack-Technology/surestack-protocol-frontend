@@ -1,0 +1,82 @@
+{
+  "sprint": "P4 Payment Validation",
+  "status": "PRE_STRIPE",
+  "stripePackageInstalled": false,
+  "deprecatedCheckoutStub": {
+    "route": "POST /api/billing/founders/checkout-stub",
+    "status": 410,
+    "pass": true,
+    "body": {
+      "deprecated": true,
+      "error": "deprecated",
+      "message": "Paid Founders checkout is deprecated. Founders Pass is a limited early community credential — use /founders-pass and POST /api/membership/founding-member/claim after the full funnel is verified."
+    }
+  },
+  "schemaReady": {
+    "stripeCustomerId": true,
+    "stripeSubscriptionId": true,
+    "subscriptionStatus": true
+  },
+  "activeFlows": {
+    "primeWaitlist": "POST /api/membership/waitlist/pro",
+    "strategicRequest": "POST /api/membership/request/strategic",
+    "foundersClaim": "POST /api/membership/founding-member/claim"
+  },
+  "flows": [
+    {
+      "id": "new_subscription",
+      "implemented": false,
+      "note": "No Stripe Checkout session handler"
+    },
+    {
+      "id": "upgrade",
+      "implemented": false,
+      "note": "No tier promotion webhook"
+    },
+    {
+      "id": "downgrade",
+      "implemented": false,
+      "note": "No subscription update handler"
+    },
+    {
+      "id": "cancel",
+      "implemented": false,
+      "note": "No cancellation webhook"
+    },
+    {
+      "id": "failed_payment",
+      "implemented": false,
+      "note": "SubscriptionStatus.PAST_DUE never updated"
+    },
+    {
+      "id": "webhook_processing",
+      "implemented": false,
+      "note": "No /api/webhooks/stripe route"
+    }
+  ],
+  "syncTargets": {
+    "membershipTierSync": {
+      "implemented": false,
+      "note": "Clerk webhook sets EXPLORER_ACCESS only"
+    },
+    "clerkSync": {
+      "implemented": true,
+      "route": "POST /api/webhooks/clerk"
+    },
+    "databaseSync": {
+      "implemented": true,
+      "model": "User.membershipTier"
+    }
+  },
+  "closedBetaPosture": "Closed beta uses waitlist + manual tier grants. Stripe billing deferred until checkout/webhooks ship.",
+  "pass": true,
+  "blockers": [
+    "new_subscription",
+    "upgrade",
+    "downgrade",
+    "cancel",
+    "failed_payment",
+    "webhook_processing"
+  ],
+  "completedAt": "2026-06-04T00:27:40.281Z"
+}

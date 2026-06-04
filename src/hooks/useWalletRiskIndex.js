@@ -10,7 +10,7 @@ export function useWalletRiskIndex(api, walletKey) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const fetchIndex = useCallback(async () => {
+  const fetchIndex = useCallback(async (opts = {}) => {
     if (!walletKey) {
       setData(null)
       setError(null)
@@ -20,7 +20,8 @@ export function useWalletRiskIndex(api, walletKey) {
     setLoading(true)
     setError(null)
     try {
-      const r = await api('/api/wallet/risk-index')
+      const refresh = opts.refresh ? '?refresh=true' : ''
+      const r = await api(`/api/wallet/risk-index${refresh}`)
       const j = await r.json().catch(() => ({}))
       if (!r.ok) {
         setError(j)
@@ -41,7 +42,9 @@ export function useWalletRiskIndex(api, walletKey) {
     fetchIndex()
   }, [fetchIndex])
 
-  return { data, loading, error, refetch: fetchIndex }
+  const refetch = useCallback(() => fetchIndex({ refresh: true }), [fetchIndex])
+
+  return { data, loading, error, refetch }
 }
 
 export { walletExposureStateLabel as walletRiskBandLabel } from '@/utils/primeIntelligenceFormat.js'

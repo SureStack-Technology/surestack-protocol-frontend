@@ -3,7 +3,7 @@ import React from "react";
 export default function NeuroGridBackground() {
   try {
     return (
-      <div className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
+      <div className="neuro-root pointer-events-none overflow-hidden">
         <div className="neuro-gradient" />
         <div className="neuro-grid" />
         <div className="neuro-glow" />

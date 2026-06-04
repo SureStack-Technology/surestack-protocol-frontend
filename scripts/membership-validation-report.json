@@ -1,0 +1,278 @@
+{
+  "sprint": "P4 Membership Validation",
+  "startedAt": "2026-06-04T00:27:39.280Z",
+  "matrix": [
+    {
+      "id": "logged_out",
+      "label": "Logged Out",
+      "profile": null,
+      "apiExpectation": {
+        "unauthenticated": 401,
+        "primeRoute": "blocked"
+      },
+      "uiExpectations": [
+        "Public marketing pages accessible",
+        "Dashboard requires Clerk sign-in"
+      ]
+    },
+    {
+      "id": "explorer_access",
+      "label": "Explorer Access",
+      "profile": {
+        "membershipTier": "EXPLORER_ACCESS"
+      },
+      "apiExpectation": {
+        "primeRoute": 402,
+        "explorerRoute": 200
+      },
+      "uiExpectations": [
+        "Explorer Intelligence Console shell",
+        "Upgrade prompts for Prime features",
+        "Complimentary Prime analyst quota (1 run)",
+        "Simulator limited to 2 scenarios",
+        "Approval inventory capped at 12 rows"
+      ]
+    },
+    {
+      "id": "prime_intelligence",
+      "label": "Prime Intelligence",
+      "profile": {
+        "membershipTier": "INTELLIGENCE_PRO"
+      },
+      "apiExpectation": {
+        "primeRoute": 200,
+        "birdeyeRoute": 200
+      },
+      "uiExpectations": [
+        "Prime Intelligence workspace labels",
+        "Full scanner + contract analyzer access",
+        "Birdeye / social intelligence unlocked",
+        "Full simulator scenario set"
+      ]
+    },
+    {
+      "id": "founders_pass",
+      "label": "Founders Pass",
+      "profile": {
+        "membershipTier": "EXPLORER_ACCESS",
+        "foundingMember": true,
+        "founderCredentialStatus": "ACTIVE"
+      },
+      "apiExpectation": {
+        "note": "Community credential — does not elevate paid tier"
+      },
+      "uiExpectations": [
+        "Founders Pass badge / credential UI",
+        "Tier remains Explorer unless manually upgraded",
+        "Funnel: wallet + X + engagement + Telegram verification"
+      ]
+    },
+    {
+      "id": "invalid_membership",
+      "label": "Invalid Membership",
+      "profile": {
+        "membershipTier": "GOLD_TIER"
+      },
+      "apiExpectation": {
+        "primeRoute": 402,
+        "note": "Unknown tier treated as non-Prime"
+      },
+      "uiExpectations": [
+        "Default console labels",
+        "No premium feature unlock"
+      ]
+    }
+  ],
+  "tierLogic": {
+    "cases": [
+      {
+        "case": "explorer → prime gate",
+        "result": {
+          "ok": false,
+          "status": 402,
+          "error": "tier_required",
+          "requiredTier": "INTELLIGENCE_PRO"
+        },
+        "pass": true
+      },
+      {
+        "case": "prime → prime gate",
+        "result": {
+          "ok": true
+        },
+        "pass": true
+      },
+      {
+        "case": "atlas → prime gate",
+        "result": {
+          "ok": true
+        },
+        "pass": true
+      },
+      {
+        "case": "invalid → prime gate",
+        "result": {
+          "ok": false,
+          "status": 402,
+          "error": "tier_required",
+          "requiredTier": "INTELLIGENCE_PRO"
+        },
+        "pass": true
+      },
+      {
+        "case": "dev override INTELLIGENCE_PRO",
+        "result": {
+          "membershipTier": "INTELLIGENCE_PRO",
+          "devMembershipOverrideActive": true
+        },
+        "pass": true
+      },
+      {
+        "case": "hasIntelligenceProOrHigher prime",
+        "pass": true
+      },
+      {
+        "case": "hasIntelligenceProOrHigher explorer",
+        "pass": true
+      },
+      {
+        "case": "isExplorerTier explorer",
+        "pass": true
+      }
+    ],
+    "pass": true
+  },
+  "frontendEntitlements": {
+    "cases": [
+      {
+        "id": "explorer",
+        "tier": "EXPLORER_ACCESS",
+        "hasPrime": false,
+        "isExplorerOnly": true,
+        "consoleVariant": "explorer",
+        "foundingMember": false,
+        "pass": true,
+        "failures": []
+      },
+      {
+        "id": "prime",
+        "tier": "INTELLIGENCE_PRO",
+        "hasPrime": true,
+        "isExplorerOnly": false,
+        "consoleVariant": "prime",
+        "foundingMember": false,
+        "pass": true,
+        "failures": []
+      },
+      {
+        "id": "atlas",
+        "tier": "STRATEGIC_ACCESS",
+        "hasPrime": true,
+        "isExplorerOnly": false,
+        "consoleVariant": "atlas",
+        "foundingMember": false,
+        "pass": true,
+        "failures": []
+      },
+      {
+        "id": "founders",
+        "tier": "EXPLORER_ACCESS",
+        "hasPrime": false,
+        "isExplorerOnly": true,
+        "consoleVariant": "explorer",
+        "foundingMember": true,
+        "pass": true,
+        "failures": []
+      },
+      {
+        "id": "invalid",
+        "tier": "GOLD_TIER",
+        "hasPrime": false,
+        "isExplorerOnly": false,
+        "consoleVariant": "explorer",
+        "foundingMember": false,
+        "pass": true,
+        "failures": []
+      }
+    ],
+    "pass": true
+  },
+  "apiProbes": {
+    "backendReachable": true,
+    "devBypassActive": true,
+    "probes": {
+      "health": {
+        "ok": true,
+        "status": 200,
+        "latencyMs": 34,
+        "body": {
+          "status": "ok",
+          "timestamp": "2026-06-04T00:27:39.307Z",
+          "uptime": 664.737203333
+        },
+        "error": null,
+        "timedOut": false
+      },
+      "unauthClassify": {
+        "status": 200,
+        "pass": true,
+        "note": "Dev bypass allows unauthenticated Prime routes — disable DEV_FORCE_MEMBERSHIP_TIER for strict auth testing"
+      },
+      "unauthContract": {
+        "status": 200,
+        "pass": true
+      }
+    },
+    "tierGates": {
+      "primeRoutes": [
+        "POST /api/prime/contracts/analyze",
+        "POST /api/prime/solana/analyze",
+        "GET /api/intelligence/birdeye/*",
+        "GET /api/intelligence/social/trends"
+      ],
+      "explorerRoutes": [
+        "GET /api/intelligence/market/sentiment",
+        "POST /api/prime/analyst/run (quota)"
+      ]
+    }
+  },
+  "routeAccess": {
+    "protectedRoutes": [
+      "/dashboard",
+      "/membership",
+      "/billing"
+    ],
+    "publicRoutes": [
+      "/",
+      "/pricing",
+      "/founders-pass",
+      "/legal/terms"
+    ],
+    "note": "Frontend route gating is Clerk auth + onboarding; tier gating is API + UI feature flags"
+  },
+  "featureGating": {
+    "explorer": [
+      "Limited simulator",
+      "1 complimentary analyst run",
+      "12-row approval inventory",
+      "Upgrade CTAs"
+    ],
+    "prime": [
+      "Full scanners",
+      "Birdeye",
+      "Social trends",
+      "Full simulator",
+      "400-row approval inventory"
+    ],
+    "foundersPass": [
+      "Credential badge",
+      "Does not auto-upgrade paid tier"
+    ]
+  },
+  "pass": true,
+  "warnings": [
+    "DEV_FORCE_MEMBERSHIP_TIER active — unauthenticated API probes succeed",
+    "Founders Pass admin verification (X/engagement/Telegram) requires manual ops — no admin API"
+  ],
+  "completedAt": "2026-06-04T00:27:40.275Z"
+}

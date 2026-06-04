@@ -18,6 +18,16 @@ function markSubscriptionRequired() {
   console.info('[lunarCrush] subscription_required — 10m cooldown, using scenario fallback')
 }
 
+function rateLimitedFallbackPayload(kind) {
+  const base = kind === 'prime' ? FALLBACK_PRIME : FALLBACK_EXPLORER
+  return {
+    ...base,
+    status: 'fallback',
+    providerStatus: 'rate_limited',
+    updatedAt: new Date().toISOString(),
+  }
+}
+
 function subscriptionFallbackPayload(kind) {
   const base = kind === 'prime' ? FALLBACK_PRIME : FALLBACK_EXPLORER
   return {
@@ -113,6 +123,10 @@ async function fetchJson(path, searchParams = {}) {
       }
       return { __subscriptionRequired: true }
     }
+    if (res.status === 429) {
+      console.warn('[lunarCrush] HTTP 429 rate limit exceeded', path)
+      return { __rateLimited: true }
+    }
     if (!res.ok) {
       const text = await res.text().catch(() => '')
       console.warn('[lunarCrush] HTTP', res.status, path, text.slice(0, 120))
@@ -161,6 +175,10 @@ async function loadMarketBundle() {
     coins?.__subscriptionRequired
   ) {
     return { __subscriptionRequired: true }
+  }
+
+  if (btcTopic?.__rateLimited || topics?.__rateLimited || coins?.__rateLimited) {
+    return { __rateLimited: true }
   }
 
   return { btcTopic, topics, coins }
@@ -309,6 +327,9 @@ export async function getExplorerMarketSentiment() {
     if (bundle?.__subscriptionRequired) {
       return subscriptionFallbackPayload('explorer')
     }
+    if (bundle?.__rateLimited) {
+      return rateLimitedFallbackPayload('explorer')
+    }
     if (!bundle?.btcTopic?.data) {
       return { ...FALLBACK_EXPLORER, updatedAt: new Date().toISOString() }
     }
@@ -332,6 +353,9 @@ export async function getPrimeSocialTrends() {
     const bundle = await loadMarketBundle()
     if (bundle?.__subscriptionRequired) {
       return subscriptionFallbackPayload('prime')
+    }
+    if (bundle?.__rateLimited) {
+      return rateLimitedFallbackPayload('prime')
     }
     if (!bundle?.btcTopic?.data && !bundle?.topics?.data?.length) {
       return { ...FALLBACK_PRIME, updatedAt: new Date().toISOString() }

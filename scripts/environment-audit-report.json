@@ -1,0 +1,180 @@
+{
+  "sprint": "P4 Production Environment Audit",
+  "nodeEnv": "development",
+  "envFilesFound": {
+    "backend/.env": true,
+    ".env": true,
+    ".env.local": true
+  },
+  "checks": [
+    {
+      "key": "NODE_ENV",
+      "category": "runtime",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "DATABASE_URL",
+      "category": "database",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "CLERK_SECRET_KEY",
+      "category": "clerk",
+      "required": true,
+      "present": true,
+      "mode": "test",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "CLERK_WEBHOOK_SECRET",
+      "category": "clerk",
+      "required": true,
+      "present": false,
+      "mode": "missing",
+      "documentedInExample": true,
+      "warnings": [
+        "missing_or_placeholder"
+      ],
+      "pass": false
+    },
+    {
+      "key": "VITE_CLERK_PUBLISHABLE_KEY",
+      "category": "clerk",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "ALCHEMY_API_KEY",
+      "category": "alchemy",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "SOLANA_RPC_URL",
+      "category": "solana",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "HELIUS_API_KEY",
+      "category": "solana",
+      "required": false,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": false,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "BIRDEYE_API_KEY",
+      "category": "providers",
+      "required": false,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "LUNARCRUSH_API_KEY",
+      "category": "providers",
+      "required": false,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "RESEND_API_KEY",
+      "category": "email",
+      "required": false,
+      "present": false,
+      "mode": "missing",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "ALLOWED_ORIGINS",
+      "category": "security",
+      "required": true,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": true,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "DEV_FORCE_MEMBERSHIP_TIER",
+      "category": "dev_bypass",
+      "required": false,
+      "present": true,
+      "mode": "configured",
+      "documentedInExample": false,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "STRIPE_SECRET_KEY",
+      "category": "stripe",
+      "required": false,
+      "present": false,
+      "mode": "missing",
+      "documentedInExample": false,
+      "warnings": [],
+      "pass": true
+    },
+    {
+      "key": "STRIPE_WEBHOOK_SECRET",
+      "category": "stripe",
+      "required": false,
+      "present": false,
+      "mode": "missing",
+      "documentedInExample": false,
+      "warnings": [],
+      "pass": true
+    }
+  ],
+  "stripeSeparation": {
+    "stripeSdkInstalled": false,
+    "liveKeysPresent": false,
+    "testKeysPresent": false,
+    "note": "Stripe not integrated — live/test separation N/A until billing ships"
+  },
+  "productionReadiness": {
+    "devBypassDisabledInProd": true,
+    "clerkProductionKeys": true,
+    "solanaRpcConfigured": true,
+    "alchemyConfigured": true
+  },
+  "pass": false,
+  "warnings": [
+    "CLERK_WEBHOOK_SECRET: missing_or_placeholder"
+  ],
+  "completedAt": "2026-06-04T00:27:40.283Z"
+}

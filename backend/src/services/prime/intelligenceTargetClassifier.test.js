@@ -23,6 +23,20 @@ describe('intelligenceTargetClassifier sync', () => {
     assert.equal(c.address, SYMBOL_REGISTRY.LINK.address)
   })
 
+  it('resolves LINK contract address as registry token, not generic contract', () => {
+    const c = classifyTargetSync('0x514910771AF9Ca656af840dff83E8264EcF986CA')
+    assert.equal(c.type, 'token')
+    assert.equal(c.recommendedModule, 'token')
+    assert.equal(c.symbol, 'LINK')
+    assert.equal(c.canonicalAsset?.category, 'ORACLE_INFRASTRUCTURE')
+  })
+
+  it('resolves Chainlink name to LINK registry entry', () => {
+    const c = classifyTargetSync('Chainlink')
+    assert.equal(c.symbol, 'LINK')
+    assert.equal(c.recommendedModule, 'token')
+  })
+
   it('detects BONK solana mint', () => {
     const c = classifyTargetSync('DezXAZ8z7PnrnRJjz3wXBoRgixCa6Y7YaB1pPB263')
     assert.equal(c.type, 'token')

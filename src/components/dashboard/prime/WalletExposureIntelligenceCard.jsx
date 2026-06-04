@@ -1,6 +1,10 @@
 import { Shield } from 'lucide-react'
 import { buildWalletExposureIntel } from '@/lib/walletExposureIntelligence/buildWalletExposureIntel.js'
-import { WALLET_EXPOSURE_DISCLAIMER } from '@/lib/walletExposureIntelligence/walletExposureIntelligenceEngine.mjs'
+import {
+  EXPOSURE_STATUS_INSUFFICIENT_VALUATION,
+  WALLET_EXPOSURE_DISCLAIMER,
+} from '@/lib/walletExposureIntelligence/walletExposureIntelligenceEngine.mjs'
+import WalletExposurePortfolioBreakdown from '@/components/dashboard/prime/WalletExposurePortfolioBreakdown.jsx'
 
 function threatTone(level) {
   const l = String(level || '').toUpperCase()
@@ -49,6 +53,7 @@ export default function WalletExposureIntelligenceCard({
 }) {
   const profile = buildWalletExposureIntel(riskData, { approvalRows, hasWallet })
   const pending = !hasWallet || profile.dataQuality === 'pending'
+  const insufficientValuation = profile.exposureStatus === EXPOSURE_STATUS_INSUFFICIENT_VALUATION
 
   const rootClass =
     variant === 'embed' ? 'prime-wallet-exp-card prime-wallet-exp-card--embed' : 'prime-wallet-exp-card'
@@ -70,21 +75,37 @@ export default function WalletExposureIntelligenceCard({
         <div className="prime-wallet-exp-card__score-block shrink-0 text-right">
           <p className="prime-wallet-exp-card__score-label">Exposure score</p>
           <p className="prime-wallet-exp-card__score-value tabular-nums">
-            {pending ? '—' : profile.exposureScore}
+            {pending || insufficientValuation ? '—' : profile.exposureScore}
             <span className="text-slate-500 font-normal text-sm"> / 100</span>
           </p>
           <p className="prime-wallet-exp-card__score-band">{profile.exposureBand}</p>
         </div>
       </div>
 
+      {insufficientValuation ? (
+        <div className="prime-wallet-exp-card__warning" role="status">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-amber-200/90">Exposure status</p>
+          <p className="text-sm text-amber-100 mt-1">{profile.exposureStatus}</p>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{profile.exposureStatusReason}</p>
+        </div>
+      ) : null}
+
       <div className="prime-wallet-exp-card__grid">
         <div className="prime-wallet-exp-card__panel">
           <p className="prime-wallet-exp-card__panel-title">Asset allocation</p>
-          <AllocationBars rows={profile.assetAllocation} labelKey="category" />
+          {insufficientValuation ? (
+            <p className="text-xs text-slate-500">Not computed — no reliable USD valuation.</p>
+          ) : (
+            <AllocationBars rows={profile.assetAllocation} labelKey="category" />
+          )}
         </div>
         <div className="prime-wallet-exp-card__panel">
           <p className="prime-wallet-exp-card__panel-title">Sector allocation</p>
-          <AllocationBars rows={profile.sectorAllocation} labelKey="sector" />
+          {insufficientValuation ? (
+            <p className="text-xs text-slate-500">Not computed — no reliable USD valuation.</p>
+          ) : (
+            <AllocationBars rows={profile.sectorAllocation} labelKey="sector" />
+          )}
         </div>
       </div>
 
@@ -95,6 +116,7 @@ export default function WalletExposureIntelligenceCard({
           sub={profile.assetConcentrationReason}
         />
         <MetricRow label="Sector risk" value={profile.sectorRisk} sub={profile.sectorRiskReason} />
+        <MetricRow label="Largest position" value={profile.largestPosition ?? 'N/A'} />
         <MetricRow
           label="Contract exposure"
           value={`${profile.contractExposureScore} / 100`}
@@ -147,6 +169,8 @@ export default function WalletExposureIntelligenceCard({
         <p className="prime-wallet-exp-card__analyst-label">AI analyst commentary</p>
         <p className="prime-wallet-exp-card__analyst-body">{profile.analystCommentary}</p>
       </div>
+
+      <WalletExposurePortfolioBreakdown breakdown={profile.portfolioBreakdown} profile={profile} />
 
       <p className="prime-wallet-exp-card__disclaimer">{WALLET_EXPOSURE_DISCLAIMER}</p>
     </section>

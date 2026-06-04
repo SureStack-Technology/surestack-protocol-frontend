@@ -9,6 +9,8 @@ import { SEPOLIA_CHAIN_ID } from './walletRiskTypes.js'
 import { buildNarrative } from './walletRiskNarrative.js'
 import { riskCacheGet, riskCacheSet } from './walletRiskCache.js'
 import { persistWalletRiskTimeline } from '../prime/walletRiskIntelPersistence.js'
+import { enrichPortfolioHoldings } from '../../../../shared/lib/walletExposure/enrichPortfolioHoldings.mjs'
+import { WALLET_HOLDINGS_CATALOG_VERSION } from '../../../../shared/lib/walletExposure/walletHoldingsCatalog.mjs'
 
 function isReferenceSummary(text) {
   return /reference mode/i.test(String(text || ''))
@@ -108,7 +110,7 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
   const hasAlchemy = Boolean(alchemyKey && String(alchemyKey).trim())
   /** Bust cache when switching between offline and live so reference payloads are not reused after configuring Alchemy. */
   const exposureChainId = resolvePrimeApprovalChainId(null, chainId)
-  const cacheKey = `risk:v2:${userId}:${wallet}:${chainId}:${exposureChainId}:${hasAlchemy ? 'live' : 'ref'}`
+  const cacheKey = `risk:v3:${userId}:${wallet}:${chainId}:${exposureChainId}:${WALLET_HOLDINGS_CATALOG_VERSION}:${hasAlchemy ? 'live' : 'ref'}`
 
   if (!refresh) {
     const hit = riskCacheGet(cacheKey)
@@ -157,6 +159,27 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
     }
   } else {
     signals = offlinePlaceholderSignals()
+  }
+
+  if (hasAlchemy && Array.isArray(signals.portfolioHoldings)) {
+    signals.portfolioHoldings = enrichPortfolioHoldings(signals.portfolioHoldings)
+    const priced = signals.portfolioHoldings.filter((h) => h.hasReliablePrice && h.usdValue > 0)
+    console.info(
+      '[walletExposure] holdings:',
+      JSON.stringify({
+        wallet,
+        total: signals.portfolioHoldings.length,
+        priced: priced.length,
+        symbols: signals.portfolioHoldings.slice(0, 12).map((h) => ({
+          symbol: h.symbol,
+          contract: h.contract,
+          coingeckoId: h.coingeckoId,
+          usd: h.usdValue,
+          reliable: h.hasReliablePrice,
+          source: h.resolutionSource,
+        })),
+      }),
+    )
   }
 
   let { score, band, findings } = scoreWalletRisk(signals)
@@ -209,6 +232,9 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
           stableSharePct: Number(signals.stableSharePct) || 0,
           stablecoinBalanceCount: Number(signals.stablecoinBalanceCount) || 0,
           topTokenSharePct: Number(signals.topTokenSharePct) || 0,
+          topAssetSymbol: signals.topAssetSymbol || null,
+          topAssetContract: signals.topAssetContract || null,
+          portfolioHoldings: signals.portfolioHoldings || [],
           uniqueCounterparties: Number(signals.uniqueCounterparties) || 0,
           unlimitedApprovalUnknownCount: Number(signals.unlimitedApprovalUnknownCount) || 0,
           transferCount: Number(signals.transferCount) || 0,
@@ -330,6 +356,9 @@ export async function getWalletRiskIndexResponse({ userId, refresh }) {
       stableSharePct: Number(signals.stableSharePct) || 0,
       stablecoinBalanceCount: Number(signals.stablecoinBalanceCount) || 0,
       topTokenSharePct: Number(signals.topTokenSharePct) || 0,
+      topAssetSymbol: signals.topAssetSymbol || null,
+      topAssetContract: signals.topAssetContract || null,
+      portfolioHoldings: signals.portfolioHoldings || [],
       uniqueCounterparties: Number(signals.uniqueCounterparties) || 0,
       unlimitedApprovalUnknownCount: Number(signals.unlimitedApprovalUnknownCount) || 0,
       transferCount: Number(signals.transferCount) || 0,

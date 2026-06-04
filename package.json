@@ -39,7 +39,10 @@
     "simulate:events": "npx hardhat run scripts/simulateEvents.js --network sepolia",
     "generate:report": "node scripts/generate-report.js",
     "verify:claim": "npx hardhat run scripts/verify-claim.js --network sepolia",
-    "fix:aliases": "node scripts/fix-alias-imports.js"
+    "fix:aliases": "node scripts/fix-alias-imports.js",
+    "validate:p32": "node scripts/p32LiveValidation.mjs",
+    "validate:p33": "node scripts/p33ApiValidation.mjs",
+    "validate:p4": "node scripts/p4LaunchReadiness.mjs"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.3",

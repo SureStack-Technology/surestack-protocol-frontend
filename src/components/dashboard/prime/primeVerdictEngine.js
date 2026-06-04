@@ -300,15 +300,15 @@ export function resolveTerminalConfidence({
   if (modeId === 'token') {
     if (isSolanaToken) {
       if (scannerReport?.success === true || scannerSignals?.hasScan) return 'Scanner-backed'
-      if (!solanaMintResolved) return 'Partial provider coverage'
-      return 'Mint proof available — awaiting scan'
+      if (!solanaMintResolved) return 'Preliminary'
+      return 'Mint resolved — awaiting scan'
     }
     if (tokenResolution?.confirmationRequired && !tokenContractConfirmed) {
       return 'Preliminary — confirm contract'
     }
-    if (!tokenContractConfirmed) return 'Partial provider coverage'
+    if (!tokenContractConfirmed) return 'Preliminary'
     if (scannerSignals?.hasScan) return 'Scanner-backed'
-    return 'Contract proof available — awaiting scan'
+    return 'Registry validated — awaiting scan'
   }
 
   if (modeId === 'protocol') {
@@ -424,10 +424,10 @@ export function buildRecommendation(report) {
     return 'Review candidate contracts and click Use this contract before running Contract Analyzer.'
   }
   if (report.modeId === 'token' && report.tokenContractConfirmed && !report.scannerSignals?.hasScan) {
-    return 'Run Contract Analyzer on the confirmed token contract for scanner-backed trust proof before exposure decisions.'
+    return 'Token identified and contract resolved — run Intelligence Scan for scanner-backed contract, liquidity, and trust analysis.'
   }
   if (report.modeId === 'token' && !report.tokenContractConfirmed && !report.isSolanaToken) {
-    return 'Contract proof unavailable until the token contract is resolved. Use scenario narrative only — do not treat as bytecode proof.'
+      return UNRESOLVED_ASSET_COPY
   }
   if (report.modeId === 'protocol' && !report.scannerSignals?.hasScan) {
     return 'Confirm the official protocol URL, then run Contract Analyzer on recommended router or spender contracts before signing.'

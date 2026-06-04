@@ -140,13 +140,24 @@ export function buildSolanaTokenConcentrationIntel({
   const liquidityDisplay = formatUsd(liquidityUsd) || 'Unavailable'
   const volumeDisplay = formatUsd(volume24hUsd) || 'Unavailable'
   const holderCountDisplay = formatCount(holderCount) || 'Unavailable'
+  const top10SamplePct = holderMetrics?.top10SamplePct ?? null
+  const incompleteSample = Boolean(holderMetrics?.incompleteHolderSample)
   const top10Display =
-    top10Pct != null ? `${top10Pct.toFixed(1)}%` : 'Unavailable'
+    top10Pct != null
+      ? `${top10Pct.toFixed(1)}%`
+      : incompleteSample && top10SamplePct != null
+        ? `Sample only (${top10SamplePct.toFixed(1)}% of top holders)`
+        : 'Unavailable'
   const top1Display = top1Pct != null ? `${top1Pct.toFixed(1)}%` : 'Unavailable'
 
   let holderConcentration = 'Holder distribution estimate unavailable'
   if (top10Pct != null) {
     holderConcentration = tag(`Top 10 holders control ${top10Pct.toFixed(1)}%`, holderProv)
+  } else if (incompleteSample && top10SamplePct != null) {
+    holderConcentration = tag(
+      `Top-holder RPC sample only (${top10SamplePct.toFixed(1)}% of sampled slice — not full supply)`,
+      holderProv || 'RPC ESTIMATE',
+    )
   } else if (top1Pct != null) {
     holderConcentration = tag(
       `Largest holder ~${top1Pct.toFixed(1)}% (top 10 sample incomplete)`,

@@ -44,6 +44,24 @@ const ETHEREUM_MAINNET = {
     narrativeHint:
       'Established fiat-backed stablecoin with verified source and institutional usage — administrative upgrade paths exist by design.',
   },
+  '0xdac17f958d2ee523a2206206994597c13d831ec7': {
+    id: 'usdt',
+    label: 'Tether USD (USDT)',
+    class: 'canonical_token',
+    scoreFloor: 84,
+    scoreCeiling: 94,
+    narrativeHint:
+      'Established fiat-backed stablecoin with broad global liquidity — review issuer attestations and redemption mechanics as standard stablecoin diligence.',
+  },
+  '0x6b175474e89094c44da98b954eedeac495271d0f': {
+    id: 'dai',
+    label: 'Dai Stablecoin (DAI)',
+    class: 'canonical_token',
+    scoreFloor: 84,
+    scoreCeiling: 93,
+    narrativeHint:
+      'Decentralized stablecoin with verified source and long production history — review collateral and governance surfaces as standard DeFi diligence.',
+  },
   '0x514910771af9ca656af840dff83e8264ecf986ca': {
     id: 'link',
     label: 'Chainlink (LINK)',

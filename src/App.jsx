@@ -44,6 +44,7 @@ import { installRuntimeProbe } from './diagnostics/runtimeProbe'
 import { log } from './diagnostics/logger'
 import { withTrace } from './diagnostics/withTrace'
 import HealthCheck from './pages/HealthCheck'
+import ParticleBackground from '@/components/ui/ParticleBackground.jsx'
 
 // Wrap critical components with tracing
 const TDashboard = withTrace(Dashboard, 'Dashboard')
@@ -287,6 +288,7 @@ function App() {
       <Web3Provider>
         <SimulationProvider>
           <Router>
+            <ParticleBackground />
             <AppContent />
             <Toaster position="bottom-right" />
           </Router>

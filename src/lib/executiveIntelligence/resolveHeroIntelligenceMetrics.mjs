@@ -19,6 +19,8 @@ function isExecutiveIntelPending(intel) {
   )
 }
 
+import { getAssetDisplayName, getAssetShortSymbol, getReportCanonicalAsset } from '../intelligence/assetDisplayLabel.mjs'
+
 function num(v) {
   const n = Number(v)
   return Number.isFinite(n) ? n : null
@@ -42,8 +44,12 @@ export function resolveHeroIntelligenceMetrics({
   const sr = scannerReport || report?.scannerReport || null
   if (!hasScannerEvidence(report, sr)) return null
 
+  const canonical = getReportCanonicalAsset(report)
   const symbol = String(
-    report.targetClassification?.symbol || report.tokenResolution?.symbol || report.displayTarget || '',
+    getAssetShortSymbol(canonical, '') ||
+      report.targetClassification?.symbol ||
+      report.tokenResolution?.symbol ||
+      '',
   )
     .trim()
     .toUpperCase()
@@ -87,7 +93,8 @@ export function resolveHeroIntelligenceMetrics({
     volatility: volatility ?? Math.max(0.1, Math.round((riskScore / 10) * 10) / 10),
     riskScore: Math.round(riskScore),
     riskBand: riskBand ? String(riskBand).replace(/\s+RISK$/i, '').toUpperCase() : null,
-    assetLabel: executive?.assetLabel || report.displayTarget || symbol || null,
+    assetLabel:
+      executive?.assetLabel || getAssetDisplayName(canonical, report.displayTarget || report.query) || symbol || null,
     active: true,
   }
 }

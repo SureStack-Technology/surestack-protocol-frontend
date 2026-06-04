@@ -23,10 +23,14 @@ export function holderMetricsFromLargestAccounts(largestAccounts) {
   if (total <= 0) return null
 
   const top1 = (amounts[0] / total) * 100
-  const top10 = (amounts.slice(0, 10).reduce((s, n) => s + n, 0) / total) * 100
+  const top10Sample = (amounts.slice(0, 10).reduce((s, n) => s + n, 0) / total) * 100
+  // RPC getTokenLargestAccounts returns only the top holder slice — top-10 of that sample is ~100% by definition.
+  const incompleteHolderSample = rows.length > 0 && rows.length <= 12
   return {
     top1HolderPct: top1,
-    top10HolderPct: top10,
+    top10HolderPct: incompleteHolderSample ? null : top10Sample,
+    top10SamplePct: top10Sample,
+    incompleteHolderSample,
     top5HolderPct: (amounts.slice(0, 5).reduce((s, n) => s + n, 0) / total) * 100,
     estimate: true,
   }

@@ -132,7 +132,11 @@ export default function PrimeIntelligenceLayersGrid({
   const layers = useMemo(
     () => ({
       narrative: buildNarrativeLayer(primeTrends),
-      behavior: buildBehaviorLayer(watchlist, birdeyeAssets),
+      behavior: buildBehaviorLayer(
+        watchlist,
+        birdeyeAssets,
+        analysisModeId === 'solana_token' ? 'solana' : 'ethereum',
+      ),
       contract: buildContractTrustLayer({
         showRiskScanner,
         scannerReport,

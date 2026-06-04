@@ -15,7 +15,7 @@ const SHOWCASE_DISCLOSURE =
   'Narrative Intelligence Model uses indexed market observations to interpret premium LunarCrush signals when live provider access is limited.'
 
 const CATEGORY_FALLBACK_DISCLOSURE =
-  'Category narrative model uses token-type templates until LunarCrush live data is enabled. Meme tokens may use the narrative intelligence model; other categories do not include meme trending assets.'
+  'Narrative generated from category intelligence (provider unavailable). Meme tokens may use the narrative intelligence model; other categories use token-type templates.'
 
 function moodClass(mood) {
   if (mood === 'bullish') return 'text-emerald-300'

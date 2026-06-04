@@ -6,6 +6,16 @@ const CHAIN_SLUG = {
   137: 'polygon',
 }
 
+/** DexScreener chainId values that map to our terminal chain slug. */
+const CHAIN_ALIASES = {
+  ethereum: new Set(['ethereum', '1', 'eth', 'mainnet']),
+  base: new Set(['base', '8453']),
+  arbitrum: new Set(['arbitrum', '42161', 'arb']),
+  optimism: new Set(['optimism', '10', 'op']),
+  polygon: new Set(['polygon', '137', 'matic']),
+  solana: new Set(['solana', '101', '103', 'sol']),
+}
+
 /**
  * @param {object} p — raw DexScreener pair
  */
@@ -35,17 +45,37 @@ function normalizePair(p) {
 
 /**
  * @param {object[]} pairs
- * @param {'solana' | string | null} slug
+ * @param {string | null} slug
+ * @param {string | null} [tokenAddress]
  */
-function filterPairsForChain(pairs, slug) {
+function filterPairsForChain(pairs, slug, tokenAddress = null) {
   if (!slug) return pairs
+  const aliases = CHAIN_ALIASES[slug] || new Set([slug])
+  const addr = tokenAddress ? String(tokenAddress).toLowerCase() : null
+
   let filtered = pairs.filter((p) => {
     const cid = String(p.chainId || '').toLowerCase()
-    return cid === slug || cid === 'solana' || cid.includes('sol')
+    if (!aliases.has(cid)) return false
+    if (!addr) return true
+    const base = String(p.baseToken?.address || '').toLowerCase()
+    const quote = String(p.quoteToken?.address || '').toLowerCase()
+    return base === addr || quote === addr
   })
+
+  if (filtered.length === 0 && addr) {
+    filtered = pairs.filter((p) => {
+      const cid = String(p.chainId || '').toLowerCase()
+      if (!aliases.has(cid)) return false
+      const base = String(p.baseToken?.address || '').toLowerCase()
+      const quote = String(p.quoteToken?.address || '').toLowerCase()
+      return base === addr || quote === addr
+    })
+  }
+
   if (slug === 'solana' && filtered.length === 0 && pairs.length > 0) {
     filtered = pairs
   }
+
   return filtered
 }
 
@@ -54,16 +84,16 @@ function filterPairsForChain(pairs, slug) {
  * @param {number | 'solana'} chainId
  */
 async function fetchDexScreenerRaw(address, chainId) {
+  const slug = chainId === 'solana' ? 'solana' : CHAIN_SLUG[Number(chainId)] || null
   const res = await fetch(
     `https://api.dexscreener.com/latest/dex/tokens/${encodeURIComponent(address)}`,
     { headers: { Accept: 'application/json' } },
   )
-  if (!res.ok) return { error: true }
+  if (!res.ok) return { error: true, ranked: [], slug }
   const json = await res.json()
   if (json?.pairs == null) return { ranked: [], slug }
   const pairs = Array.isArray(json.pairs) ? json.pairs : []
-  const slug = chainId === 'solana' ? 'solana' : CHAIN_SLUG[Number(chainId)] || null
-  const filtered = filterPairsForChain(pairs, slug)
+  const filtered = filterPairsForChain(pairs, slug, address)
   const ranked = filtered.map(normalizePair).sort((a, b) => b.liquidityUsd - a.liquidityUsd)
   return { ranked, slug }
 }
@@ -144,6 +174,7 @@ export async function fetchDexScreenerToken(address, chainId) {
       pairCreatedAt: market.pairCreatedAt,
       topPairLiquidityUsd: market.topPairLiquidityUsd,
       dexIds: market.dexIds,
+      volume24hUsd: market.volume24hUsd,
     }
   }
 
@@ -176,8 +207,14 @@ export async function fetchDexScreenerToken(address, chainId) {
       pairCreatedAt: oldest || top.pairCreatedAt,
       topPairLiquidityUsd: top.liquidityUsd,
       dexIds: [...new Set(ranked.map((p) => p.dexId).filter(Boolean))],
+      volume24hUsd: ranked.reduce((s, p) => s + (p.volume24hUsd || 0), 0),
     }
   } catch {
     return null
   }
+}
+
+/** @internal — test hook for chain filtering */
+export function filterDexScreenerPairsForChain(pairs, slug, tokenAddress = null) {
+  return filterPairsForChain(pairs, slug, tokenAddress)
 }

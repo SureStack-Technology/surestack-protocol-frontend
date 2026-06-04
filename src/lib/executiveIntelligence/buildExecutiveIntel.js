@@ -6,8 +6,22 @@ import {
   resolveEffectiveNarrativeCategory,
 } from '@/lib/executiveIntelligence/executiveIntelligenceEngine.mjs'
 import { buildLiquidityIntelFromScanner } from '@/lib/liquidityIntelligence/buildLiquidityIntelFromScanner.js'
-import { assessBehaviorCoverage } from '@/utils/behaviorIntelligenceStatus.js'
+import { assessBehaviorCoverage, buildBehaviorContextMessage } from '@/utils/behaviorIntelligenceStatus.js'
 import { isPrimeLunarCrushLive } from '@/data/lunarCrushScenarioShowcase.js'
+import {
+  buildPreliminaryExecutiveIntel,
+  canBuildPreliminaryExecutiveIntel,
+  resolveAssessmentStage,
+  ASSESSMENT_STAGES,
+} from '@/lib/executiveIntelligence/preliminaryExecutiveIntel.mjs'
+import { buildUnverifiedAssetExecutiveIntel } from '@/lib/executiveIntelligence/buildUnverifiedAssetIntel.mjs'
+import {
+  allowsExecutiveRisk,
+  hasVerifiedMetadata,
+  hasScannerValidation,
+  resolveAssetIntelligenceState,
+} from '@/lib/intelligence/assetIntelligenceState.mjs'
+import { getAssetDisplayName } from '@/lib/intelligence/assetDisplayLabel.mjs'
 
 /**
  * Synthesize executive intelligence from Prime terminal scan context.
@@ -15,24 +29,13 @@ import { isPrimeLunarCrushLive } from '@/data/lunarCrushScenarioShowcase.js'
  */
 /** @param {object} [report] @param {object} [scannerReport] */
 export function hasScannerEvidence(report, scannerReport = null) {
-  const sr = scannerReport || report?.scannerReport || null
-  return Boolean(
-    sr?.success === true ||
-    sr?.success !== false && sr?.product === 'surestack_solana_risk_scanner' ||
-    report?.scannerSignals?.hasScan ||
-    sr?.scannerValidation === 'Complete' ||
-    sr?.trustScore != null ||
-    sr?.compositeTrustScore != null ||
-    sr?.technicalTrustScore != null ||
-    report?.liquidityIntelligence?.score != null ||
-    sr?.liquidityIntelligence?.score != null ||
-    sr?.liquidityIntelligence?.intelligenceScore != null,
-  )
+  return hasScannerValidation(report, scannerReport)
 }
 
 /** @param {object | null | undefined} intel */
 export function isExecutiveIntelPending(intel) {
   if (!intel) return true
+  if (intel.preliminary || intel.assessmentStage === ASSESSMENT_STAGES.PRELIMINARY) return false
   return Boolean(
     intel.pending ||
     intel.classification === 'Assessment pending' ||
@@ -57,11 +60,32 @@ export function resolveExecutiveIntelligence({
   if (!report) return null
 
   const sr = scannerReport || report?.scannerReport || null
+  const assetState = resolveAssetIntelligenceState({
+    report,
+    scannerReport: sr,
+    primeTrends,
+    watchlist,
+  })
+
+  if (
+    (report.modeId === 'token' || report.modeId === 'contract') &&
+    !allowsExecutiveRisk(assetState)
+  ) {
+    return buildUnverifiedAssetExecutiveIntel(report, { state: assetState })
+  }
+
   const evidence = hasScannerEvidence(report, sr)
 
   if (evidence) {
+    if (
+      (report.modeId === 'token' || report.modeId === 'contract') &&
+      !hasVerifiedMetadata(report, sr)
+    ) {
+      return buildUnverifiedAssetExecutiveIntel(report, { state: assetState })
+    }
+
     const built = buildExecutiveIntelFromScan({
-      report: { ...report, scannerReport: sr },
+      report: { ...report, scannerReport: sr, assetIntelligenceState: assetState },
       scannerReport: sr,
       primeTrends,
       watchlist,
@@ -69,7 +93,7 @@ export function resolveExecutiveIntelligence({
       walletExposureProfile: walletExposureProfile ?? report?.walletExposureProfile ?? null,
     })
     if (built && !isExecutiveIntelPending(built)) {
-      return built
+      return { ...built, assetIntelligenceState: assetState }
     }
 
     if (sr?.executiveIntelligence && !isExecutiveIntelPending(sr.executiveIntelligence)) {
@@ -77,6 +101,7 @@ export function resolveExecutiveIntelligence({
         report,
         scannerReport: sr,
         walletExposureProfile: walletExposureProfile ?? report?.walletExposureProfile ?? null,
+        assetIntelligenceState: assetState,
       })
     }
   }
@@ -85,7 +110,14 @@ export function resolveExecutiveIntelligence({
     return normalizeExecutiveIntel(report.executiveIntelligence)
   }
 
-  return buildPendingExecutiveIntel(report)
+  if (canBuildPreliminaryExecutiveIntel(report)) {
+    return {
+      ...buildPreliminaryExecutiveIntel(report, { primeTrends, watchlist, birdeyeAssets }),
+      assetIntelligenceState: assetState,
+    }
+  }
+
+  return buildUnverifiedAssetExecutiveIntel(report, { state: assetState })
 }
 
 /** Pre-scan / partial-coverage executive placeholder. */
@@ -98,7 +130,13 @@ export function buildPendingExecutiveIntel(report) {
     report.query
   const tokenName = report.targetClassification?.name || report.tokenResolution?.name
   return {
-    assetLabel: formatScanAssetLabel(symbol, tokenName, report.query, report.modeId),
+    assetLabel: formatScanAssetLabel(
+      symbol,
+      tokenName,
+      report.query,
+      report.modeId,
+      report.canonicalAsset || report.targetClassification?.canonicalAsset,
+    ),
     classification: 'Assessment pending',
     executiveRiskScore: '—',
     executiveRiskBand: 'PENDING',
@@ -145,18 +183,34 @@ export function buildExecutiveIntelFromScan({
     report?.liquidityIntelligence ||
     sr?.liquidityIntelligence ||
     null
-  const behaviorCoverage = assessBehaviorCoverage(watchlist, birdeyeAssets)
+  const behaviorCoverage = assessBehaviorCoverage(
+    watchlist,
+    birdeyeAssets,
+    report?.chainId || report?.chain || 'ethereum',
+  )
   const leadAsset = birdeyeAssets?.find((a) => a.status === 'live') || birdeyeAssets?.[0]
 
+  const canonicalAsset = report.canonicalAsset || report.targetClassification?.canonicalAsset || null
   const symbol =
+    canonicalAsset?.symbol ||
     report.targetClassification?.symbol ||
     report.tokenResolution?.symbol ||
     report.displayTarget ||
     report.query
-  const tokenName = report.targetClassification?.name || report.tokenResolution?.name
+  const tokenName =
+    canonicalAsset?.name ||
+    report.targetClassification?.name ||
+    report.tokenResolution?.name
   const narrativeCategory =
+    canonicalAsset?.narrativeCategory ||
     report.narrativeCategory ||
-    resolveEffectiveNarrativeCategory({ symbol, tokenName, query: report.query, scannerReport: sr })
+    resolveEffectiveNarrativeCategory({
+      symbol,
+      tokenName,
+      query: report.query,
+      address: canonicalAsset?.address,
+      scannerReport: sr,
+    })
 
   return normalizeExecutiveIntel(
     computeExecutiveIntelligence({
@@ -164,12 +218,19 @@ export function buildExecutiveIntelFromScan({
       query: report.query,
       symbol,
       tokenName,
-      assetLabel: formatScanAssetLabel(symbol, tokenName, report.query, report.modeId),
+      canonicalAsset,
+      assetLabel: formatScanAssetLabel(
+      symbol,
+      tokenName,
+      report.query,
+      report.modeId,
+      report.canonicalAsset || report.targetClassification?.canonicalAsset,
+    ),
       narrativeCategory,
       narrativeElevated: report.narrativeElevated,
       composite: report.composite,
       scannerReport: sr,
-      walletExposureProfile,
+      walletExposureProfile: report.modeId === 'wallet' ? walletExposureProfile : null,
       liquidityIntel,
       executiveRiskScore: deriveExecutiveRiskScore(report, sr),
       behaviorInputs: {
@@ -185,6 +246,14 @@ export function buildExecutiveIntelFromScan({
         walletLinked: Boolean(report.walletSnapshot?.hasWallet),
       },
     }),
+    {
+      report,
+      scannerReport: sr,
+      primeTrends,
+      watchlist,
+      birdeyeAssets,
+      behaviorCoverage,
+    },
   )
 }
 
@@ -227,19 +296,31 @@ function deriveExecutiveRiskScore(report, scannerReport) {
 }
 
 /** Reconcile backend executive intel when meme classification was missed server-side. */
-function reconcileExecutiveIntelligence(intel, { report, scannerReport, walletExposureProfile = null }) {
+function reconcileExecutiveIntelligence(
+  intel,
+  { report, scannerReport, walletExposureProfile = null, assetIntelligenceState = null },
+) {
   if (!intel) return null
+  if (assetIntelligenceState && !allowsExecutiveRisk(assetIntelligenceState)) {
+    return buildUnverifiedAssetExecutiveIntel(report, { state: assetIntelligenceState })
+  }
+  const canonicalAsset = report.canonicalAsset || report.targetClassification?.canonicalAsset || null
   const symbol =
+    canonicalAsset?.symbol ||
     report.targetClassification?.symbol ||
     report.tokenResolution?.symbol ||
     report.displayTarget ||
     report.query
-  const tokenName = report.targetClassification?.name || report.tokenResolution?.name
+  const tokenName =
+    canonicalAsset?.name ||
+    report.targetClassification?.name ||
+    report.tokenResolution?.name
   const narrativeCategory = resolveEffectiveNarrativeCategory({
-    narrativeCategory: report.narrativeCategory,
+    narrativeCategory: canonicalAsset?.narrativeCategory || report.narrativeCategory,
     symbol,
     tokenName,
     query: report.query,
+    address: canonicalAsset?.address,
     scannerReport,
   })
   const executiveRiskScore = Number(intel.executiveRiskScore)
@@ -247,6 +328,7 @@ function reconcileExecutiveIntelligence(intel, { report, scannerReport, walletEx
     modeId: report.modeId || 'token',
     executiveRiskScore,
     narrativeCategory,
+    canonicalAsset,
     narrativeElevated: report.narrativeElevated,
     composite: report.composite,
     scannerReport,
@@ -268,11 +350,28 @@ function reconcileExecutiveIntelligence(intel, { report, scannerReport, walletEx
   })
 }
 
-/** @param {object | null} intel */
-function normalizeExecutiveIntel(intel) {
+/** @param {object | null} intel @param {object} [meta] */
+function normalizeExecutiveIntel(intel, meta = {}) {
   if (!intel) return null
+  const providerFlags = {
+    hasScan: hasScannerEvidence(meta.report, meta.scannerReport),
+    lunarLive: isPrimeLunarCrushLive(meta.primeTrends),
+    behaviorCoverage: meta.behaviorCoverage?.mode,
+  }
+  const stage =
+    intel.assessmentStage ||
+    resolveAssessmentStage(meta.report, meta.scannerReport, providerFlags)
+  const assessmentStatus =
+    stage === ASSESSMENT_STAGES.FULLY_VALIDATED
+      ? 'Fully validated'
+      : stage === ASSESSMENT_STAGES.SCANNER_VALIDATED
+        ? 'Scanner validated'
+        : intel.assessmentStatus || 'Awaiting scanner validation'
+
   return {
     ...intel,
+    assessmentStage: stage,
+    assessmentStatus,
     keyFindings: normalizeExecutiveList(intel.keyFindings),
     recommendedNextInvestigation: normalizeExecutiveList(intel.recommendedNextInvestigation),
   }
@@ -291,18 +390,12 @@ export function normalizeExecutiveList(value) {
   return []
 }
 
-function formatScanAssetLabel(symbol, name, query, modeId) {
+function formatScanAssetLabel(symbol, name, query, modeId, canonicalAsset = null) {
   if (modeId === 'wallet') {
     return query && query !== '(workspace baseline)' ? `Wallet · ${query}` : 'Linked wallet profile'
   }
-  const sym = symbol ? String(symbol).trim().toUpperCase() : null
-  const nm = name ? String(name).trim() : null
-  if (nm && sym) {
-    if (new RegExp(`\\(${sym}\\)`, 'i').test(nm)) return nm
-    if (nm.toUpperCase() === sym) return sym
-    return `${nm} (${sym})`
-  }
-  if (symbol) return String(symbol)
-  if (query && query !== '(workspace baseline)') return String(query)
-  return 'Intelligence target'
+  return getAssetDisplayName(
+    canonicalAsset || (symbol ? { symbol, name, resolved: true } : null),
+    query,
+  )
 }

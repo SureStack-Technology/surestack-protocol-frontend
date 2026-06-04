@@ -7,31 +7,55 @@ import {
   DEFAULT_SHOWCASE_SCENARIO_ID,
   getLunarCrushScenarioById,
 } from '@/data/lunarCrushScenarioShowcase.js'
+import {
+  isStablecoinSymbol,
+  lookupStablecoinByAddress,
+  resolveStablecoinMatch,
+} from '@/shared/constants/stablecoinRegistry.mjs'
+import { CATEGORY_NARRATIVE_DISCLOSURE } from '@/lib/intelligence/providerCoverageStatus.mjs'
+import {
+  getAssetDisplayName,
+  isRawBlockchainTarget,
+  resolveRegistryCanonicalFromRaw,
+} from '@/lib/intelligence/assetDisplayLabel.mjs'
 
 const MEME_SYMBOLS = new Set(['PEPE', 'SHIB', 'BONK', 'WIF', 'DOGE'])
 const ORACLE_SYMBOLS = new Set(['LINK'])
 const DEFI_BLUE_CHIP_SYMBOLS = new Set(['UNI', 'AAVE', 'CRV', 'MKR', 'COMP', 'SUSHI', 'SNX'])
-const STABLECOIN_SYMBOLS = new Set(['USDC', 'USDT', 'DAI', 'FRAX', 'LUSD'])
+const AI_SYMBOLS = new Set(['FET', 'RNDR', 'RENDER', 'TAO', 'WLD', 'OCEAN', 'AGIX', 'ARKM'])
 const L2_ECOSYSTEM_SYMBOLS = new Set(['ARB', 'OP', 'MATIC', 'POL', 'IMX', 'STRK'])
 
-/** @typedef {'meme'|'oracle'|'defi'|'stablecoin'|'l2'|'unknown'} TokenNarrativeCategory */
+/** @typedef {'meme'|'oracle'|'defi'|'stablecoin'|'l2'|'ai'|'unknown'} TokenNarrativeCategory */
 
 /**
  * @param {string} symbol
+ * @param {string} [address]
  * @returns {TokenNarrativeCategory}
  */
-export function getTokenNarrativeCategory(symbol) {
+export function getTokenNarrativeCategory(symbol, address = null) {
   const sym = String(symbol || '')
     .trim()
     .toUpperCase()
     .replace(/^\$/, '')
+  if (address && lookupStablecoinByAddress(address)) return 'stablecoin'
+  if (sym && isStablecoinSymbol(sym)) return 'stablecoin'
   if (!sym) return 'unknown'
   if (MEME_SYMBOLS.has(sym)) return 'meme'
   if (ORACLE_SYMBOLS.has(sym)) return 'oracle'
-  if (STABLECOIN_SYMBOLS.has(sym)) return 'stablecoin'
+  if (AI_SYMBOLS.has(sym)) return 'ai'
   if (DEFI_BLUE_CHIP_SYMBOLS.has(sym)) return 'defi'
   if (L2_ECOSYSTEM_SYMBOLS.has(sym)) return 'l2'
   return 'unknown'
+}
+
+/**
+ * Resolve narrative category from symbol, query, or scanner context.
+ * @param {object} ctx
+ */
+export function resolveTokenNarrativeCategory(ctx = {}) {
+  const stable = resolveStablecoinMatch(ctx)
+  if (stable) return 'stablecoin'
+  return getTokenNarrativeCategory(ctx.symbol || ctx.query, ctx.address || ctx.scannerReport?.address)
 }
 
 const CATEGORY_COPY = {
@@ -103,9 +127,26 @@ const CATEGORY_COPY = {
       'Enable live LunarCrush for ecosystem-wide social velocity',
     ],
   },
+  ai: {
+    scenarioTitle: 'AI / Compute Narrative Monitoring',
+    summary:
+      'AI and compute tokens are monitored for adoption narratives, utility milestones, and speculative rotation. Elevated social velocity may reflect product announcements or thematic market cycles rather than on-chain utility alone.',
+    riskInterpretation:
+      'AI narrative shifts often track product launches, compute demand discourse, and thematic speculation — cross-check with contract trust and liquidity depth.',
+    trendingNarratives: [
+      { topic: 'ai_adoption', title: 'Adoption & utility milestones', rank: 1 },
+      { topic: 'compute_demand', title: 'Compute / inference demand discourse', rank: 2 },
+      { topic: 'speculation', title: 'Thematic speculation & rotation', rank: 3 },
+    ],
+    recommendedActions: [
+      'Cross-check narrative spikes with on-chain liquidity and contract trust',
+      'Review token utility claims against verifiable product integrations',
+      'Enable live LunarCrush for real-time social velocity on this asset',
+    ],
+  },
   unknown: {
-    scenarioTitle: 'Narrative provider pending',
-    summary: 'Narrative intelligence unavailable until live provider data is enabled.',
+    scenarioTitle: 'Category narrative fallback',
+    summary: CATEGORY_NARRATIVE_DISCLOSURE,
     riskInterpretation:
       'No category narrative template applies — enable LunarCrush live feed or paste a known token symbol for category fallback.',
     trendingNarratives: [],
@@ -154,6 +195,7 @@ export function buildCategoryNarrativeFallback(targetSymbol, displayLabel) {
     category,
     scenarioTitle: copy.scenarioTitle,
     narrativeText: `${display} — ${copy.summary}`,
+    providerNote: CATEGORY_NARRATIVE_DISCLOSURE,
   }
 }
 
@@ -162,11 +204,17 @@ export function buildCategoryNarrativeFallback(targetSymbol, displayLabel) {
  * @param {string} [targetSymbol]
  */
 export function buildCategoryNarrativePanelData(targetSymbol) {
-  const sym = String(targetSymbol || '')
+  const raw = String(targetSymbol || '').trim()
+  const canonical = resolveRegistryCanonicalFromRaw(raw)
+  const sym = String(
+    canonical?.symbol ||
+      (isRawBlockchainTarget(raw) ? '' : raw.toUpperCase().replace(/^\$/, '')),
+  )
     .trim()
     .toUpperCase()
     .replace(/^\$/, '')
-  const category = getTokenNarrativeCategory(sym)
+  const displayLabel = getAssetDisplayName(canonical, raw) || sym || 'Token'
+  const category = getTokenNarrativeCategory(sym, canonical?.address)
 
   if (category === 'meme') {
     const scenario = getLunarCrushScenarioById(DEFAULT_SHOWCASE_SCENARIO_ID)
@@ -183,7 +231,6 @@ export function buildCategoryNarrativePanelData(targetSymbol) {
   }
 
   const copy = CATEGORY_COPY[category] || CATEGORY_COPY.unknown
-  const display = sym || 'Token'
   return {
     viewMode: 'category_fallback',
     category,
@@ -192,7 +239,7 @@ export function buildCategoryNarrativePanelData(targetSymbol) {
     severity: category === 'unknown' ? 'LOW' : 'MEDIUM',
     marketMood: 'neutral',
     sentimentScore: null,
-    intelligenceBrief: `${display} — ${copy.summary}`,
+    intelligenceBrief: `${displayLabel} — ${copy.summary}`,
     riskInterpretation: copy.riskInterpretation,
     trendingNarratives: copy.trendingNarratives || [],
     trendingAssets: [],

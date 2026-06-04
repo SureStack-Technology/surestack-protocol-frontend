@@ -11,6 +11,7 @@ import {
   normalizedBalanceHuman,
   stableTokenSymbol,
 } from '../walletExposure/exposureCatalog.js'
+import { buildPortfolioHoldingsFromBalances, fetchCoingeckoUsdPrices } from './portfolioHoldingsBuilder.js'
 
 const ERC20_ALLOWANCE_IFACE = new Interface([
   'function allowance(address owner, address spender) view returns (uint256)',
@@ -278,6 +279,19 @@ export async function fetchWalletSignals(address, chainId, apiKey) {
   const dexInteractionCount = dexTransferCount
   const insufficientHistory = transferCount < 4 && parsed.length < 2 && approvalInventoryRows.length === 0
 
+  let portfolioHoldings = []
+  let topAssetSymbol = null
+  let topAssetContract = null
+  try {
+    const ethUsd = await fetchCoingeckoUsdPrices(['ethereum']).then((p) => p.ethereum ?? null)
+    const built = await buildPortfolioHoldingsFromBalances(parsed, nativeWei, ethUsd)
+    portfolioHoldings = built.portfolioHoldings
+    topAssetSymbol = built.topAssetSymbol
+    topAssetContract = built.topAssetContract
+  } catch {
+    portfolioHoldings = []
+  }
+
   return {
     exposureChainId: chainId,
     topTokenSharePct,
@@ -315,5 +329,9 @@ export async function fetchWalletSignals(address, chainId, apiKey) {
     hasNftScan,
     hasNftHoldings: nftHoldingsCount > 0,
     providerLive: true,
+    portfolioHoldings,
+    topAssetSymbol,
+    topAssetContract,
   }
 }
+

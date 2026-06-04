@@ -289,6 +289,9 @@ function wrapSuccess(core) {
   const withLiquidity = attachLiquidityIntelligence(layered)
   const withExecutive = attachExecutiveIntelligence(withLiquidity, {
     symbol: withLiquidity?.requestedSymbol,
+    address: withLiquidity?.address,
+    query: withLiquidity?.address,
+    isSolanaToken: true,
   })
   return {
     success: true,

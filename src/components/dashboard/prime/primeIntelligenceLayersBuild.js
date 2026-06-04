@@ -3,10 +3,10 @@ import {
   getLunarCrushScenarioById,
   resolveLunarCrushFeedMode,
 } from '@/data/lunarCrushScenarioShowcase.js'
-import { assessBehaviorCoverage, isBehaviorFieldPopulated } from '@/utils/behaviorIntelligenceStatus.js'
+import { assessBehaviorCoverage, isBehaviorFieldPopulated, ETHEREUM_BEHAVIOR_INTEL } from '@/utils/behaviorIntelligenceStatus.js'
 import { buildContractAnalyzerSummary } from '@/components/dashboard/prime/primeContractAnalyzerFields.js'
 import { walletRiskBandLabel } from '@/hooks/useWalletRiskIndex.js'
-import { LAYER_ACTION_TYPES, LAYER_BUTTON_LABELS } from '@/components/dashboard/prime/primeIntelligenceLayerActions.js'
+import { LAYER_ACTION_TYPES, LAYER_BUTTON_LABELS } from '@/components/dashboard/prime/primeIntelligenceLayerActions.mjs'
 import { buildLiquidityIntelFromScanner } from '@/lib/liquidityIntelligence/buildLiquidityIntelFromScanner.js'
 
 const VIEW_AFTER_SCAN = 'Launch via button or enter a target above'
@@ -101,7 +101,7 @@ export function buildNarrativeLayer(primeTrends) {
     statusNote:
       primeTrends?.providerStatus === 'subscription_required'
         ? 'Narrative intelligence model active'
-        : 'Partial provider coverage',
+        : 'Narrative intelligence model active',
     story: [
       { kind: 'headline', label: 'Intelligence model', value: scenario?.title || scenario?.label || 'Narrative model' },
       { kind: 'prose', label: 'Narrative', value: narrative },
@@ -116,9 +116,34 @@ export function buildNarrativeLayer(primeTrends) {
 }
 
 /** @returns {{ status: string, statusTone: string, statusNote?: string, story: StoryLine[], footerHint: string }} */
-export function buildBehaviorLayer(watchlist, assets = []) {
-  const coverage = assessBehaviorCoverage(watchlist, assets)
+export function buildBehaviorLayer(watchlist, assets = [], chain = 'ethereum') {
+  const coverage = assessBehaviorCoverage(watchlist, assets, chain)
   const lead = pickLeadAsset(assets)
+  const isSolana = String(chain || 'ethereum').toLowerCase() === 'solana'
+
+  if (coverage.mode === 'unsupported' && !isSolana) {
+    return {
+      status: 'Coming soon',
+      statusTone: 'ready',
+      statusNote: ETHEREUM_BEHAVIOR_INTEL.headline,
+      story: [
+        { kind: 'headline', label: 'Behavior intelligence', value: ETHEREUM_BEHAVIOR_INTEL.headline },
+        {
+          kind: 'prose',
+          label: 'Future coverage',
+          value: ETHEREUM_BEHAVIOR_INTEL.futureCoverage.join('; '),
+        },
+        {
+          kind: 'row',
+          label: 'Available now',
+          value: ETHEREUM_BEHAVIOR_INTEL.availableNow.map((item) => `✓ ${item}`).join(' · '),
+        },
+      ],
+      footerHint: VIEW_AFTER_SCAN,
+      actionType: LAYER_ACTION_TYPES.BEHAVIOR,
+      buttonLabel: LAYER_BUTTON_LABELS.behavior,
+    }
+  }
 
   if (coverage.mode === 'full' && lead) {
     const topAsset = lead.watchlistSymbol || lead.symbol || 'Watchlist'
@@ -179,20 +204,20 @@ export function buildBehaviorLayer(watchlist, assets = []) {
   }
 
   return {
-    status: 'Provider Ready',
+    status: 'Coming soon',
     statusTone: 'ready',
-    statusNote: 'Birdeye activation pending.',
+    statusNote: ETHEREUM_BEHAVIOR_INTEL.headline,
     story: [
-      { kind: 'headline', label: 'Provider state', value: 'Behavior Engine Ready' },
+      { kind: 'headline', label: 'Behavior intelligence', value: ETHEREUM_BEHAVIOR_INTEL.headline },
       {
         kind: 'prose',
-        label: 'Will unlock',
-        value: 'Whale behavior, liquidity concentration, and smart-money movement on major assets.',
+        label: 'Future coverage',
+        value: ETHEREUM_BEHAVIOR_INTEL.futureCoverage.join('; '),
       },
       {
         kind: 'row',
-        label: 'Action',
-        value: 'Behavior intelligence expands when live provider feeds are enabled.',
+        label: 'Available now',
+        value: ETHEREUM_BEHAVIOR_INTEL.availableNow.map((item) => `✓ ${item}`).join(' · '),
       },
     ],
     footerHint: VIEW_AFTER_SCAN,

@@ -13,6 +13,8 @@ const COMPOSITE_WEIGHTS = {
   walletExposure: 0.2,
 }
 
+export { COMPOSITE_WEIGHTS }
+
 /**
  * Map qualitative risk level to 0–100 risk score (higher = riskier).
  * @param {string} level

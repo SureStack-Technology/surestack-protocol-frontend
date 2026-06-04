@@ -57,7 +57,7 @@ export function estimateMarketImpactLevel(tradeUsd, liquidityUsd, volume24hUsd) 
   const vol = num(volume24hUsd)
 
   if (!liq || liq <= 0) {
-    if (trade <= 1_000) return 'MODERATE IMPACT'
+    if (trade <= 10_000) return 'MODERATE IMPACT'
     return 'HIGH IMPACT'
   }
 
@@ -76,6 +76,12 @@ export function estimateMarketImpactLevel(tradeUsd, liquidityUsd, volume24hUsd) 
  * @returns {number} 0–100 depth score (higher = deeper)
  */
 export function computeLiquidityDepthScore(input) {
+  if (input?.isStablecoin) return 92
+  if (input?.isCanonical || input?.isMajorAsset) {
+    const liquidityUsd = num(input.liquidityUsd) ?? 0
+    const volume24hUsd = num(input.volume24hUsd) ?? 0
+    if (liquidityUsd <= 0 && volume24hUsd <= 0) return 88
+  }
   const liquidityUsd = num(input.liquidityUsd) ?? 0
   const cexLiquidityUsd = num(input.cexLiquidityUsd) ?? 0
   const totalLiq = liquidityUsd + cexLiquidityUsd
@@ -84,7 +90,10 @@ export function computeLiquidityDepthScore(input) {
   const volume24hUsd = num(input.volume24hUsd) ?? 0
   const pairCount = num(input.pairCount) ?? 0
 
-  if (totalLiq <= 0 && volume24hUsd <= 0) return 28
+  if (totalLiq <= 0 && volume24hUsd <= 0) {
+    if (input?.isCanonical || input?.isMajorAsset) return 88
+    return null
+  }
 
   let score = 35
   if (totalLiq >= 50_000_000) score = 96
@@ -134,6 +143,12 @@ export function computeLiquidityConcentration(input) {
   const pairCount = num(input.pairCount) ?? 0
 
   if (totalLiq <= 0) {
+    if (input?.isCanonical || input?.isMajorAsset) {
+      return {
+        level: 'HEALTHY',
+        reason: 'Institutional asset — global liquidity primarily off indexed DEX sample (CEX / protocol depth).',
+      }
+    }
     return {
       level: 'CRITICAL',
       reason: 'Indexed liquidity appears minimal or unavailable across observed venues.',
@@ -190,11 +205,20 @@ export function computeVenueDiversity(input) {
   else if (cexCount >= 1) score += 1
 
   let level = 'POOR'
-  if (score >= 6) level = 'EXCELLENT'
+  if (input?.isCanonical || input?.isMajorAsset) {
+    if (dexCount >= 2 || score >= 2) level = 'GOOD'
+    else level = 'GOOD'
+  } else if (score >= 6) level = 'EXCELLENT'
   else if (score >= 4) level = 'GOOD'
   else if (score >= 2) level = 'LIMITED'
 
-  if (!evidence.length) evidence.push('Venue coverage not fully indexed')
+  if (!evidence.length) {
+    if (input?.isCanonical || input?.isMajorAsset) {
+      evidence.push('Institutional asset — multi-venue liquidity expected off indexed sample')
+    } else {
+      evidence.push('Venue coverage not fully indexed')
+    }
+  }
 
   return { level, evidence: evidence.slice(0, 6) }
 }
@@ -285,19 +309,24 @@ function stabilityRisk(level) {
  * @param {object} input — normalized market fields
  */
 export function computeLiquidityIntelligence(input = {}) {
-  const depthScore = computeLiquidityDepthScore(input)
-  const depth = liquidityDepthClassification(depthScore)
+  const depthScoreRaw = computeLiquidityDepthScore(input)
+  const pending = depthScoreRaw == null
+  const depthScore = pending ? null : depthScoreRaw
+  const depth = pending ? { label: 'Awaiting scan', band: 'pending' } : liquidityDepthClassification(depthScore)
   const concentration = computeLiquidityConcentration(input)
   const venue = computeVenueDiversity(input)
   const stability = computeLiquidityStability(input)
 
   const liquidityUsd = num(input.liquidityUsd)
   const volume24hUsd = num(input.volume24hUsd)
+  const impactLiq =
+    liquidityUsd ??
+    (input?.isCanonical || input?.isMajorAsset || input?.isStablecoin ? 50_000_000 : null)
 
   const marketImpact = TRADE_SIZE_USD.map((usd) => ({
     tradeUsd: usd,
     tradeLabel: usd >= 1_000_000 ? '$1,000,000' : `$${usd.toLocaleString('en-US')}`,
-    level: estimateMarketImpactLevel(usd, liquidityUsd, volume24hUsd),
+    level: estimateMarketImpactLevel(usd, impactLiq, volume24hUsd),
   }))
 
   const impactRanks = marketImpact.map((r) => impactSeverityRank(r.level))
@@ -312,18 +341,23 @@ export function computeLiquidityIntelligence(input = {}) {
           ? 'Elevated'
           : 'High'
 
-  const depthRisk = clamp(100 - depthScore, 0, 100)
-  const liqRisk = Math.round(
-    depthRisk * 0.34 +
-      concentrationRisk(concentration.level) * 0.22 +
-      venueRisk(venue.level) * 0.2 +
-      stabilityRisk(stability.level) * 0.14 +
-      ((avgImpact - 1) / 3) * 100 * 0.1,
-  )
-  const intelligenceScore = clamp(liqRisk, 0, 100)
-  const intelligenceBand = liquidityIntelligenceRiskBand(intelligenceScore)
+  const depthRisk = pending ? null : clamp(100 - depthScore, 0, 100)
+  const liqRisk = pending
+    ? null
+    : Math.round(
+        depthRisk * 0.34 +
+          concentrationRisk(concentration.level) * 0.22 +
+          venueRisk(venue.level) * 0.2 +
+          stabilityRisk(stability.level) * 0.14 +
+          ((avgImpact - 1) / 3) * 100 * 0.1,
+      )
+  const intelligenceScore = pending ? null : clamp(liqRisk, 0, 100)
+  const intelligenceBand = pending
+    ? { label: 'Assessment pending', band: 'pending' }
+    : liquidityIntelligenceRiskBand(intelligenceScore)
 
   const commentary = buildLiquidityAnalystCommentary({
+    pending,
     depth,
     depthScore,
     concentration,
@@ -340,6 +374,7 @@ export function computeLiquidityIntelligence(input = {}) {
     intelligenceBandId: intelligenceBand.band,
     liquidityDepthScore: depthScore,
     liquidityDepthLabel: depth.label,
+    pending,
     estimatedMarketImpact: marketImpact,
     estimatedMarketImpactSummary: marketImpactSummary,
     liquidityConcentration: concentration.level,
@@ -354,11 +389,14 @@ export function computeLiquidityIntelligence(input = {}) {
       marketImpact: MARKET_IMPACT_DISCLAIMER,
     },
     dataQuality:
-      liquidityUsd != null || volume24hUsd != null ? 'observed' : 'limited',
+      pending ? 'pending' : liquidityUsd != null || volume24hUsd != null ? 'observed' : 'limited',
   }
 }
 
 function buildLiquidityAnalystCommentary(ctx) {
+  if (ctx.pending) {
+    return 'Liquidity intelligence will populate after scanner-backed market indexing. Registry-tier assets typically exhibit deep global liquidity — run Intelligence Scan for indexed depth, venue diversity, and market impact estimates.'
+  }
   const parts = []
   parts.push(
     `Observed liquidity depth is classified as ${ctx.depth.label.toLowerCase()} based on indexed DEX liquidity, volume, and capitalization ratios.`,
@@ -408,6 +446,9 @@ function buildLiquidityAnalystCommentary(ctx) {
 export function marketInputFromTokenConcentration(tc = {}) {
   if (!tc || typeof tc !== 'object') return {}
   return {
+    isStablecoin: Boolean(tc.isStablecoin),
+    isCanonical: Boolean(tc.isCanonical),
+    isMajorAsset: Boolean(tc.isMajorAsset || tc.isCanonical),
     liquidityUsd: tc.liquidityUsd ?? null,
     cexLiquidityUsd: tc.cexLiquidityUsd ?? null,
     marketCapUsd: tc.marketCapUsd ?? null,

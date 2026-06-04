@@ -22,9 +22,11 @@ import {
   simulateScenarioAgainstSignals,
 } from '../services/prime/scenarioIntelligenceEngine.js'
 import { classifyIntelligenceTarget } from '../services/prime/intelligenceTargetClassifier.js'
+import { makePrimeAuthWithDevBypass } from '../middleware/primeAuthDevBypass.js'
 
 const router = Router()
 const requirePrimeAuth = makeRequireClerkAuth({ unauthorizedError: 'prime_intel_auth_missing' })
+const requirePrimeAuthDev = makePrimeAuthWithDevBypass({ unauthorizedError: 'prime_intel_auth_missing' })
 
 async function loadUser(clerkUserId) {
   return loadAuthUser(clerkUserId, {
@@ -489,7 +491,7 @@ router.post('/simulator/run', requirePrimeAuth, async (req, res) => {
   }
 })
 
-router.post('/intelligence/classify', requirePrimeAuth, async (req, res) => {
+router.post('/intelligence/classify', requirePrimeAuthDev, async (req, res) => {
   try {
     const input = String(req.body?.input ?? req.body?.query ?? '').trim()
     if (!input) {

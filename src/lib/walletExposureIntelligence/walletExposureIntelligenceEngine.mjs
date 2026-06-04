@@ -1,3 +1,8 @@
+import { buildPortfolioBreakdown } from './portfolioBreakdown.mjs'
+import { enrichPortfolioHoldings } from '../../../shared/lib/walletExposure/enrichPortfolioHoldings.mjs'
+
+export const EXPOSURE_STATUS_INSUFFICIENT_VALUATION = 'INSUFFICIENT VALUATION DATA'
+
 export const WALLET_EXPOSURE_DISCLAIMER =
   'Wallet Exposure Intelligence is generated from publicly observable wallet activity and blockchain data. It does not constitute investment advice, portfolio management, trading recommendations, or financial planning.'
 
@@ -51,6 +56,136 @@ export function sectorRiskLevel(sectorPct) {
 function bandLevel(bands, id) {
   const b = (bands || []).find((x) => x.id === id)
   return num(b?.level) ?? 0
+}
+
+/**
+ * @param {object[]} portfolioHoldings
+ */
+export function pricedPortfolioValueFromHoldings(portfolioHoldings = []) {
+  return (portfolioHoldings || [])
+    .filter((h) => h.hasReliablePrice && Number(h.usdValue) > 0)
+    .reduce((s, h) => s + Number(h.usdValue), 0)
+}
+
+/**
+ * Sector allocation from verified USD marks only.
+ * @param {object[]} portfolioHoldings
+ */
+function allocationFromPricedHoldings(portfolioHoldings) {
+  const breakdown = buildPortfolioBreakdown({ portfolioHoldings })
+  const pct = (label) => breakdown.sectorMix.find((s) => s.label === label)?.pct ?? 0
+  const stablePct = pct('Stablecoin')
+  const memePct = pct('Meme')
+  const blueChipPct = pct('Blue Chip')
+  const infraPct = pct('Infrastructure')
+  const defiPct = pct('DeFi')
+  const aiPct = pct('AI')
+  const nftPct = pct('NFT')
+  const topShare = breakdown.concentrationAsset?.portfolioPct ?? 0
+  const topSymbol = breakdown.concentrationAsset?.symbol || null
+
+  const assetAllocation = normalizeAllocation([
+    { category: 'Stablecoins', pct: stablePct },
+    { category: 'Blue Chip Assets', pct: blueChipPct },
+    { category: 'Infrastructure Assets', pct: infraPct },
+    { category: 'Meme Assets', pct: memePct },
+    { category: 'DeFi Assets', pct: defiPct },
+    { category: 'AI Assets', pct: aiPct },
+    { category: 'NFT Assets', pct: nftPct },
+  ]).filter((r) => r.pct > 0)
+
+  const sectorAllocation = normalizeAllocation([
+    { sector: 'Stablecoins', pct: stablePct },
+    { sector: 'Blue Chip', pct: blueChipPct },
+    { sector: 'Infrastructure', pct: infraPct },
+    { sector: 'Meme', pct: memePct },
+    { sector: 'DeFi', pct: defiPct },
+    { sector: 'NFT', pct: nftPct },
+    { sector: 'AI', pct: aiPct },
+  ]).filter((r) => r.pct > 0)
+
+  const topAssets = breakdown.top10Holdings.slice(0, 5).map((h) => ({
+    symbol: h.symbol,
+    pct: h.portfolioPct ?? 0,
+  }))
+
+  return {
+    stablePct,
+    memePct,
+    blueChipPct,
+    infraPct,
+    defiPct,
+    aiPct,
+    nftPct,
+    topShare,
+    topSymbol,
+    assetAllocation,
+    sectorAllocation,
+    topAssets,
+    largestPosition: topSymbol
+      ? `${breakdown.concentrationAsset?.asset || topSymbol} (${topSymbol})`
+      : 'N/A',
+  }
+}
+
+/**
+ * @param {object} input
+ * @param {{ portfolioHoldings: object[], pricedPortfolioValue: number }} ctx
+ */
+function buildInsufficientValuationExposureProfile(input, ctx) {
+  const metrics = input.metrics || {}
+  const approvalRows = input.approvalRows || []
+  const approvalCount = approvalRows.length
+  const unlimitedUnknown = approvalRows.filter(
+    (r) => r.unlimited && r.spenderCategory === 'UNKNOWN_SPENDER',
+  ).length
+
+  let exposureScore = num(input.exposureScore)
+  if (exposureScore == null && num(input.safetyScore) != null) {
+    exposureScore = clamp(Math.round(100 - Number(input.safetyScore)), 0, 100)
+  }
+
+  return {
+    exposureStatus: EXPOSURE_STATUS_INSUFFICIENT_VALUATION,
+    exposureStatusReason: 'No holdings have reliable USD valuation.',
+    exposureScore: exposureScore ?? null,
+    exposureBand: EXPOSURE_STATUS_INSUFFICIENT_VALUATION,
+    exposureBandId: 'insufficient_valuation',
+    assetAllocation: [],
+    sectorAllocation: [],
+    topAssets: [],
+    assetConcentration: 'N/A',
+    assetConcentrationReason: 'Requires priced portfolio holdings.',
+    sectorRisk: 'N/A',
+    sectorRiskReason: 'Requires priced portfolio holdings.',
+    largestPosition: 'N/A',
+    contractExposureScore: null,
+    contractExposureLabel: 'N/A',
+    contractExposureDetail: `${approvalCount} active approvals observed; valuation required for concentration metrics.`,
+    counterpartyExposure: 'N/A',
+    counterparties: [],
+    exposureDrivers: [
+      {
+        rank: 'Primary',
+        label: 'Insufficient valuation data',
+        detail: 'No holdings have reliable USD valuation.',
+      },
+    ],
+    threatIndicators: [
+      {
+        label: 'Portfolio valuation incomplete',
+        level: 'MEDIUM',
+      },
+    ],
+    analystCommentary:
+      'Wallet Exposure Intelligence requires reliable USD marks on holdings before concentration, sector allocation, or exposure percentages can be computed. Connect a wallet and refresh when price feeds are available.',
+    disclaimer: WALLET_EXPOSURE_DISCLAIMER,
+    dataQuality: 'partial',
+    pricedPortfolioValue: ctx.pricedPortfolioValue,
+    portfolioHoldingsCount: ctx.portfolioHoldings.length,
+    unpricedHoldingsCount: ctx.portfolioHoldings.filter((h) => !h.hasReliablePrice || !h.usdValue).length,
+    assessmentPending: false,
+  }
 }
 
 function normalizeAllocation(rows) {
@@ -201,10 +336,25 @@ export function computeWalletExposureIntelligenceProfile(input = {}) {
   const hints = input.exposureHints || {}
   const metrics = input.metrics || {}
   const approvalRows = input.approvalRows || []
+  const portfolioHoldings = enrichPortfolioHoldings(hints.portfolioHoldings || input.portfolioHoldings || [])
+  const pricedPortfolioValue = pricedPortfolioValueFromHoldings(portfolioHoldings)
+  const hasWallet = Boolean(input.hasWallet)
+  const holdingsObserved = portfolioHoldings.length > 0
 
-  const stablePct = num(hints.stableSharePct) ?? num(metrics.stableSharePct) ?? 0
+  if (hasWallet && holdingsObserved && pricedPortfolioValue <= 0) {
+    return buildInsufficientValuationExposureProfile(input, {
+      portfolioHoldings,
+      pricedPortfolioValue,
+    })
+  }
+
+  const usePricedHoldings = hasWallet && holdingsObserved && pricedPortfolioValue > 0
+  const pricedAlloc = usePricedHoldings ? allocationFromPricedHoldings(portfolioHoldings) : null
+
+  const stablePct = pricedAlloc?.stablePct ?? num(hints.stableSharePct) ?? num(metrics.stableSharePct) ?? 0
   const volatilePct = num(hints.volatileSharePct) ?? num(metrics.volatileSharePct) ?? 0
-  const topShare = num(hints.topTokenSharePct) ?? num(metrics.topTokenSharePct) ?? 0
+  const topShare =
+    pricedAlloc?.topShare ?? num(hints.topTokenSharePct) ?? num(metrics.topTokenSharePct) ?? 0
 
   const dexBand = bandLevel(bands, 'dex')
   const nftBand = bandLevel(bands, 'nft')
@@ -222,70 +372,104 @@ export function computeWalletExposureIntelligenceProfile(input = {}) {
     num(metrics.unknownSpenderCount) ??
     approvalRows.filter((r) => r.spenderCategory === 'UNKNOWN_SPENDER').length
 
-  let memePct =
-    stablePct < 20 && topShare >= 35
-      ? Math.min(48, topShare * 0.9)
-      : stablePct < 15 && volatilePct > 55
-        ? Math.min(35, volatilePct * 0.45)
-        : Math.max(5, volatilePct * 0.12)
-
-  let defiPct = clamp(
-    (dexBand / 7) * 22 + dexInteractions * 1.8 + (protocolBand / 7) * 14,
-    0,
-    40,
-  )
-  let nftPct = clamp(nftCount * 3 + (nftBand / 7) * 12, 0, 22)
-  let blueChipPct = clamp(Math.max(0, volatilePct - memePct) * 0.5, 0, 45)
-  let infraPct = clamp((protocolBand / 7) * 10, 0, 15)
+  let memePct = pricedAlloc?.memePct ?? 0
+  let defiPct = pricedAlloc?.defiPct ?? 0
+  let nftPct = pricedAlloc?.nftPct ?? 0
+  let blueChipPct = pricedAlloc?.blueChipPct ?? 0
+  let infraPct = 0
   let gamingPct = 0
-  let aiPct = clamp(dexInteractions > 6 ? 4 : 2, 0, 8)
-  let yieldPct = clamp((protocolBand / 7) * 8, 0, 12)
+  let aiPct = pricedAlloc?.aiPct ?? 0
+  let yieldPct = 0
 
-  let assetAllocation = normalizeAllocation([
-    { category: 'Stablecoins', pct: stablePct },
-    { category: 'Blue Chip Assets', pct: blueChipPct },
-    { category: 'Meme Assets', pct: memePct },
-    { category: 'DeFi Assets', pct: defiPct },
-    { category: 'AI Assets', pct: aiPct },
-    { category: 'NFT Assets', pct: nftPct },
-    { category: 'Gaming Assets', pct: gamingPct },
-    { category: 'Infrastructure Assets', pct: infraPct },
-    { category: 'Yield Exposure', pct: yieldPct },
-  ])
-
-  let unknownPct = 100 - assetAllocation.reduce((s, r) => s + r.pct, 0)
-  if (unknownPct > 3) {
-    assetAllocation = normalizeAllocation([
-      ...assetAllocation.filter((r) => r.category !== 'Unknown Assets'),
-      { category: 'Unknown Assets', pct: Math.max(0, unknownPct) },
-    ])
+  if (!usePricedHoldings && hasWallet) {
+    memePct = 0
+    defiPct = 0
+    nftPct = 0
+    blueChipPct = 0
+    aiPct = 0
+  } else if (!usePricedHoldings) {
+    memePct =
+      stablePct < 20 && topShare >= 35
+        ? Math.min(48, topShare * 0.9)
+        : stablePct < 15 && volatilePct > 55
+          ? Math.min(35, volatilePct * 0.45)
+          : Math.max(5, volatilePct * 0.12)
+    defiPct = clamp((dexBand / 7) * 22 + dexInteractions * 1.8 + (protocolBand / 7) * 14, 0, 40)
+    nftPct = clamp(nftCount * 3 + (nftBand / 7) * 12, 0, 22)
+    blueChipPct = clamp(Math.max(0, volatilePct - memePct) * 0.5, 0, 45)
+    infraPct = clamp((protocolBand / 7) * 10, 0, 15)
+    aiPct = clamp(dexInteractions > 6 ? 4 : 2, 0, 8)
+    yieldPct = clamp((protocolBand / 7) * 8, 0, 12)
   }
 
-  const sectorAllocation = normalizeAllocation([
-    { sector: 'Stablecoins', pct: stablePct },
-    { sector: 'Blue Chip', pct: blueChipPct + infraPct * 0.5 },
-    { sector: 'Meme', pct: memePct },
-    { sector: 'DeFi', pct: defiPct + yieldPct },
-    { sector: 'NFT', pct: nftPct },
-    { sector: 'Other', pct: Math.max(0, aiPct + gamingPct) },
-  ]).filter((r) => r.pct > 0)
+  let assetAllocation =
+    pricedAlloc?.assetAllocation ??
+    normalizeAllocation([
+      { category: 'Stablecoins', pct: stablePct },
+      { category: 'Blue Chip Assets', pct: blueChipPct },
+      { category: 'Meme Assets', pct: memePct },
+      { category: 'DeFi Assets', pct: defiPct },
+      { category: 'AI Assets', pct: aiPct },
+      { category: 'NFT Assets', pct: nftPct },
+      { category: 'Gaming Assets', pct: gamingPct },
+      { category: 'Infrastructure Assets', pct: infraPct },
+      { category: 'Yield Exposure', pct: yieldPct },
+    ])
 
-  const topAssets = inferTopAssets({
-    ...input,
-    exposureHints: hints,
-    approvalRows,
-    topTokenSharePct: topShare,
-    stableSymbolsHeld: metrics.stableSymbolsHeld || hints.stableSymbolsHeld || [],
-  })
+  if (!pricedAlloc) {
+    let unknownPct = 100 - assetAllocation.reduce((s, r) => s + r.pct, 0)
+    if (unknownPct > 3) {
+      assetAllocation = normalizeAllocation([
+        ...assetAllocation.filter((r) => r.category !== 'Unknown Assets'),
+        { category: 'Unknown Assets', pct: Math.max(0, unknownPct) },
+      ])
+    }
+  }
 
-  const concentrationLevel = assetConcentrationLevel(topShare || memePct)
-  const concentrationReason =
-    topShare >= 28
-      ? `Largest position represents ${topShare.toFixed(0)}% of sampled wallet exposure.`
-      : 'Largest position concentration appears within typical sampled ranges.'
+  const sectorAllocation =
+    pricedAlloc?.sectorAllocation ??
+    normalizeAllocation([
+      { sector: 'Stablecoins', pct: stablePct },
+      { sector: 'Blue Chip', pct: blueChipPct + infraPct * 0.5 },
+      { sector: 'Meme', pct: memePct },
+      { sector: 'DeFi', pct: defiPct + yieldPct },
+      { sector: 'NFT', pct: nftPct },
+      { sector: 'Other', pct: Math.max(0, aiPct + gamingPct) },
+    ]).filter((r) => r.pct > 0)
+
+  const topAssets =
+    pricedAlloc?.topAssets ??
+    inferTopAssets({
+      ...input,
+      exposureHints: hints,
+      approvalRows,
+      topTokenSharePct: topShare,
+      stableSymbolsHeld: metrics.stableSymbolsHeld || hints.stableSymbolsHeld || [],
+    })
+
+  const largestPosition = pricedAlloc?.largestPosition ?? topAssets[0]?.symbol ?? 'N/A'
+
+  const concentrationLevel = usePricedHoldings
+    ? assetConcentrationLevel(topShare)
+    : hasWallet
+      ? 'N/A'
+      : assetConcentrationLevel(topShare || memePct)
+  const concentrationReason = usePricedHoldings
+    ? topShare >= 28
+      ? `Largest position represents ${topShare.toFixed(2)}% of priced portfolio value.`
+      : 'Largest position concentration appears within typical priced portfolio ranges.'
+    : hasWallet
+      ? 'Requires priced portfolio holdings.'
+      : topShare >= 28
+        ? `Largest position represents ${topShare.toFixed(0)}% of sampled wallet exposure.`
+        : 'Largest position concentration appears within typical sampled ranges.'
 
   const dominantSector = [...sectorAllocation].sort((a, b) => b.pct - a.pct)[0]
-  const sectorRisk = sectorRiskLevel(dominantSector?.pct ?? 0)
+  const sectorRisk = usePricedHoldings
+    ? sectorRiskLevel(dominantSector?.pct ?? 0)
+    : hasWallet
+      ? 'N/A'
+      : sectorRiskLevel(dominantSector?.pct ?? 0)
 
   let contractScore = clamp(
     Math.round(
@@ -412,6 +596,9 @@ export function computeWalletExposureIntelligenceProfile(input = {}) {
     exposureScore,
     exposureBand: exposureBand.label,
     exposureBandId: exposureBand.band,
+    exposureStatus: null,
+    pricedPortfolioValue: usePricedHoldings ? pricedPortfolioValue : null,
+    largestPosition,
     assetAllocation,
     sectorAllocation,
     topAssets,
@@ -440,18 +627,33 @@ export function computeWalletExposureIntelligenceProfile(input = {}) {
  */
 export function walletExposureProfileFromRiskData(riskData, opts = {}) {
   if (!riskData && !opts.approvalRows?.length) {
-    return computeWalletExposureIntelligenceProfile({ hasWallet: false })
+    const empty = computeWalletExposureIntelligenceProfile({ hasWallet: false })
+    empty.portfolioBreakdown = buildPortfolioBreakdown({ portfolioHoldings: [], profile: empty })
+    return empty
   }
 
   const metrics = riskData?.exposureIntelligence?.metrics || riskData?.exposureInputSummary || {}
-  return computeWalletExposureIntelligenceProfile({
+  const hints = {
+    ...(riskData?.exposureHints || {}),
+    portfolioHoldings: enrichPortfolioHoldings(riskData?.exposureHints?.portfolioHoldings || []),
+  }
+  const profile = computeWalletExposureIntelligenceProfile({
     safetyScore: riskData?.score,
     assessmentPending: riskData?.assessmentPending,
-    exposureHints: riskData?.exposureHints,
+    exposureHints: hints,
     exposureIntelligence: riskData?.exposureIntelligence,
     metrics,
     approvalRows: opts.approvalRows || [],
     hasWallet: opts.hasWallet !== false,
     findings: riskData?.findings || [],
   })
+
+  profile.portfolioBreakdown = buildPortfolioBreakdown({
+    portfolioHoldings: hints.portfolioHoldings || [],
+    nftHoldingsCount: num(hints.nftHoldingsCount) ?? num(metrics.nftHoldingsCount) ?? 0,
+    profile,
+    exposureHints: hints,
+  })
+
+  return profile
 }

@@ -57,6 +57,7 @@ test('USDC stablecoin low risk classification', () => {
     providerFlags: { hasScan: true },
   })
   assert.equal(intel.classification, 'STABLECOIN ASSET')
+  assert.equal(intel.classificationSecondaryDriver, 'Reserve Transparency')
 })
 
 test('BONK narrative driven classification', () => {

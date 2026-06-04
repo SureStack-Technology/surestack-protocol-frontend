@@ -8,6 +8,15 @@ import {
   normalizeSolanaAddress,
 } from '../solanaRiskScanner/solanaTypes.js'
 import { resolveSolanaArchetype } from '../solanaRiskScanner/solanaArchetypes.js'
+import {
+  buildSymbolRegistryMap,
+  lookupPrimeToken,
+  lookupPrimeTokenByAddress,
+} from '../../shared/constants/primeTokenRegistry.js'
+import {
+  classificationFromCanonical,
+  resolveCanonicalAssetSync,
+} from '../../../../src/lib/intelligence/canonicalAssetResolver.mjs'
 
 const ETH_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 const SOLANA_BASE58_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
@@ -23,18 +32,8 @@ export const SOLANA_MINT_REGISTRY = {
   So11111111111111111111111111111111111111112: { symbol: 'SOL', name: 'Wrapped SOL' },
 }
 
-/** @type {Record<string, { symbol: string, chain: string, address: string }>} */
-export const SYMBOL_REGISTRY = {
-  LINK: { symbol: 'LINK', chain: 'ethereum', address: '0x514910771af9ca656af840dff83e8264ecf986ca' },
-  UNI: { symbol: 'UNI', chain: 'ethereum', address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984' },
-  AAVE: { symbol: 'AAVE', chain: 'ethereum', address: '0x7fc66500c84a76ad7e9c93481fe6c2e88f4923e6' },
-  PEPE: { symbol: 'PEPE', chain: 'ethereum', address: '0x6982508145454ce325ddbe47a25d4ec3d2311933' },
-  USDC: { symbol: 'USDC', chain: 'ethereum', address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' },
-  SHIB: { symbol: 'SHIB', chain: 'ethereum', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' },
-  BONK: { symbol: 'BONK', chain: 'solana', address: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-  WIF: { symbol: 'WIF', chain: 'solana', address: 'EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm' },
-  JUP: { symbol: 'JUP', chain: 'solana', address: 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN' },
-}
+/** @type {Record<string, { symbol: string, name: string, chain: string, address: string }>} */
+export const SYMBOL_REGISTRY = buildSymbolRegistryMap()
 
 const PROTOCOL_HOSTS = [
   { hosts: ['app.uniswap.org', 'uniswap.org'], name: 'Uniswap' },
@@ -147,10 +146,16 @@ export function parseTargetInput(raw) {
 
   const symbol = normalizeSymbol(input)
   if (symbol) {
+    if (lookupPrimeToken(symbol)) {
+      return { kind: 'symbol', input, symbol }
+    }
+    if (/[a-z]|\s/.test(input)) {
+      return { kind: 'name', input, name: input }
+    }
     return { kind: 'symbol', input, symbol }
   }
 
-  return { kind: 'unknown', input }
+  return { kind: 'name', input, name: input }
 }
 
 function buildResult({
@@ -226,6 +231,10 @@ export function classifyTargetSync(rawOrParsed, connectedWalletAddress = null) {
   }
 
   if (parsed.kind === 'evm_address') {
+    const canonical = resolveCanonicalAssetSync(parsed.address)
+    if (canonical.resolved && canonical.source === 'registry') {
+      return { ...classificationFromCanonical(canonical), syncOnly: true }
+    }
     return buildResult({
       type: 'contract',
       chain: 'ethereum',
@@ -238,7 +247,18 @@ export function classifyTargetSync(rawOrParsed, connectedWalletAddress = null) {
     })
   }
 
+  if (parsed.kind === 'name') {
+    const canonical = resolveCanonicalAssetSync(parsed.name || parsed.input)
+    if (canonical.resolved) {
+      return { ...classificationFromCanonical(canonical), syncOnly: true }
+    }
+  }
+
   if (parsed.kind === 'solana_address') {
+    const canonical = resolveCanonicalAssetSync(parsed.address)
+    if (canonical.resolved && canonical.source === 'registry') {
+      return { ...classificationFromCanonical(canonical), syncOnly: true }
+    }
     const known = SOLANA_MINT_REGISTRY[parsed.address]
     if (known) {
       return buildResult({
@@ -267,6 +287,10 @@ export function classifyTargetSync(rawOrParsed, connectedWalletAddress = null) {
   }
 
   if (parsed.kind === 'symbol') {
+    const canonical = resolveCanonicalAssetSync(parsed.symbol)
+    if (canonical.resolved && canonical.source === 'registry') {
+      return { ...classificationFromCanonical(canonical), syncOnly: true }
+    }
     const reg = SYMBOL_REGISTRY[parsed.symbol]
     if (reg) {
       const isSolana = reg.chain === 'solana'
@@ -277,6 +301,7 @@ export function classifyTargetSync(rawOrParsed, connectedWalletAddress = null) {
         recommendedModule: 'token',
         displayLabel: isSolana ? 'Solana Token' : 'Token',
         symbol: reg.symbol,
+        name: reg.name,
         address: reg.address,
         syncOnly: true,
       })
@@ -306,6 +331,12 @@ export function classifyTargetSync(rawOrParsed, connectedWalletAddress = null) {
  */
 async function classifyEthereumAddress(address) {
   const addr = String(address).toLowerCase()
+  const registryHit = lookupPrimeTokenByAddress(addr)
+  if (registryHit) {
+    const canonical = resolveCanonicalAssetSync(addr)
+    return { ...classificationFromCanonical(canonical), syncOnly: false }
+  }
+
   const signals = await fetchOnChainContractSignals(addr, 1)
 
   if (signals.mode === 'reference') {
@@ -360,6 +391,11 @@ async function classifyEthereumAddress(address) {
  */
 async function classifySolanaAddress(address) {
   const normalized = normalizeSolanaAddress(address)
+  const registryCanonical = resolveCanonicalAssetSync(address)
+  if (registryCanonical.resolved && registryCanonical.source === 'registry') {
+    return { ...classificationFromCanonical(registryCanonical), syncOnly: false }
+  }
+
   if (!normalized) {
     return buildResult({
       type: 'unknown',
@@ -393,9 +429,9 @@ async function classifySolanaAddress(address) {
     return buildResult({
       type: 'token',
       chain: 'solana',
-      confidence: 65,
+      confidence: 20,
       recommendedModule: 'token',
-      displayLabel: 'Solana Token (market intel)',
+      displayLabel: 'Solana Mint (metadata pending)',
       address: normalized,
       addressSubtype: 'mint_market_only',
     })
@@ -409,16 +445,18 @@ async function classifySolanaAddress(address) {
     parsedType === 'mint'
   ) {
     const sym = known?.symbol || archetype?.label?.match(/\(([^)]+)\)/)?.[1] || null
+    const name = known?.name || (archetype?.label && !archetype.label.includes('(') ? archetype.label : null)
+    const hasMetadata = Boolean(sym && name)
     return buildResult({
       type: 'token',
       chain: 'solana',
-      confidence: 97,
+      confidence: hasMetadata ? 97 : 20,
       recommendedModule: 'token',
-      displayLabel: 'Solana Token',
+      displayLabel: hasMetadata ? 'Solana Token' : 'Solana Mint (metadata pending)',
       symbol: sym,
-      name: known?.name || archetype?.label || null,
+      name,
       address: normalized,
-      addressSubtype: 'spl_mint',
+      addressSubtype: hasMetadata ? 'spl_mint' : 'mint_detected',
     })
   }
 
@@ -458,6 +496,10 @@ export async function classifyIntelligenceTarget(raw, connectedWalletAddress = n
   }
 
   if (parsed.kind === 'symbol') {
+    const canonical = resolveCanonicalAssetSync(parsed.symbol)
+    if (canonical.resolved && canonical.source === 'registry') {
+      return { ...classificationFromCanonical(canonical), syncOnly: false }
+    }
     const reg = SYMBOL_REGISTRY[parsed.symbol]
     if (reg) {
       return buildResult({
@@ -467,6 +509,7 @@ export async function classifyIntelligenceTarget(raw, connectedWalletAddress = n
         recommendedModule: 'token',
         displayLabel: reg.chain === 'solana' ? 'Solana Token' : 'Token',
         symbol: reg.symbol,
+        name: reg.name,
         address: reg.address,
         syncOnly: false,
       })
@@ -480,6 +523,14 @@ export async function classifyIntelligenceTarget(raw, connectedWalletAddress = n
     } catch {
       return { ...sync, confidence: 50, syncOnly: false }
     }
+  }
+
+  if (parsed.kind === 'name') {
+    const canonical = resolveCanonicalAssetSync(parsed.name || parsed.input)
+    if (canonical.resolved) {
+      return { ...classificationFromCanonical(canonical), syncOnly: false }
+    }
+    return { ...sync, syncOnly: false }
   }
 
   if (parsed.kind === 'solana_address') {

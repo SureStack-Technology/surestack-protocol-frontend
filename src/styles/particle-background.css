@@ -1,0 +1,48 @@
+/* Global particle layer — portaled to body at --ss-layer-particle */
+
+.theme-particle-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ss-layer-particle);
+  pointer-events: none;
+}
+
+.surestack-particle-bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ss-layer-particle);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Accent wash only — base depth comes from body --ss-bg-surface */
+.surestack-particle-bg__gradient {
+  position: absolute;
+  inset: 0;
+  background: var(--ss-bg-accent-glow);
+  opacity: 0.38;
+}
+
+.surestack-particle-bg__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.82;
+  filter: blur(0.2px);
+}
+
+.surestack-particle-bg--debug {
+  z-index: 9999 !important;
+}
+
+.surestack-particle-bg--debug .surestack-particle-bg__canvas {
+  opacity: 1 !important;
+  background: rgba(34, 211, 238, 0.1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surestack-particle-bg__canvas {
+    opacity: 0.65;
+  }
+}

@@ -1,14 +1,14 @@
 .theme-shell {
   position: relative;
   min-height: 100vh;
-  background: var(--bg-root);
+  background: transparent;
   color: var(--fg-text);
   overflow-x: hidden;
 }
 
 .theme-content-layer {
   position: relative;
-  z-index: 2;
+  z-index: var(--ss-layer-content);
   min-height: 100vh;
 }
 
@@ -21,15 +21,16 @@
 }
 
 .theme-canvas-layer {
-  z-index: 0;
+  z-index: var(--ss-layer-base);
 }
 
 .theme-neuro-layer {
-  z-index: 1;
+  z-index: var(--ss-layer-neuro);
 }
 
 .theme-overlay-layer {
-  z-index: 1;
+  z-index: var(--ss-layer-soft-overlay);
+  opacity: 0.45;
 }
 
 .theme-content-shell {
@@ -43,7 +44,7 @@
 .glassmorphism {
   position: relative;
   border-radius: 20px;
-  background: rgba(6, 17, 34, 0.68);
+  background: var(--ss-bg-panel);
   border: 1px solid var(--glass-border);
   box-shadow: 0 0 18px var(--glow-blue);
   backdrop-filter: blur(14px) saturate(125%);
@@ -66,7 +67,7 @@
 .holo-card {
   position: relative;
   border-radius: 18px;
-  background: rgba(8, 24, 45, 0.62);
+  background: var(--ss-bg-panel);
   border: 1px solid var(--glass-border);
   box-shadow: 0 0 18px var(--glow-blue);
   backdrop-filter: blur(14px) saturate(125%);
@@ -199,25 +200,50 @@
 }
 
 .theme-canvas-layer {
-  z-index: 0;
+  z-index: var(--ss-layer-base);
 }
 
 .theme-neuro-layer {
-  z-index: 10;
+  z-index: var(--ss-layer-neuro);
 }
 
 .theme-overlay-layer {
-  z-index: 15;
+  z-index: var(--ss-layer-soft-overlay);
+  opacity: 0.45;
 }
 
 .theme-content-layer {
   position: relative;
-  z-index: 20;
+  z-index: var(--ss-layer-content);
 }
 
 .content-shell {
   position: relative;
-  z-index: 30;
+  z-index: var(--ss-layer-content);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Dashboard chrome — subtle glass contrast on same navy base */
+.dashboard-sidebar-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 13, 25, 0.78) 0%,
+    rgba(8, 13, 25, 0.62) 50%,
+    rgba(8, 13, 25, 0.72) 100%
+  );
+  border-right: 1px solid var(--ss-glass-border-soft);
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+}
+
+.dashboard-header-glass {
+  background: var(--ss-bg-glass);
+  border-bottom: 1px solid var(--ss-glass-border-soft);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
 
 [class*="bg-white"],
@@ -398,11 +424,7 @@
   }
 }
 
-.content-shell {
-  background: rgba(6, 17, 34, 0.4);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
+/* content-shell background defined above — transparent for particle visibility */
 
 .glass-card::before {
   background: radial-gradient(circle at 85% 0%, var(--glow-cyan), transparent 60%);
@@ -420,7 +442,7 @@
 }
 
 *[class*="card"] {
-  background: rgba(6, 17, 34, 0.65) !important;
+  background: var(--ss-bg-panel) !important;
   backdrop-filter: blur(16px) saturate(140%) !important;
   -webkit-backdrop-filter: blur(16px) saturate(140%) !important;
   border-color: var(--glass-border) !important;

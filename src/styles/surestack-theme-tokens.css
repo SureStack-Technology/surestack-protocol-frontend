@@ -1,0 +1,75 @@
+/**
+ * SureStack visual identity tokens — deep navy institutional base.
+ * Import before theme.css, particle-background.css, public-premium.css.
+ */
+
+:root {
+  /* Deep surfaces */
+  --ss-bg-deep: #020617;
+  --ss-bg-main: #030712;
+  --ss-bg-panel: rgba(8, 13, 25, 0.72);
+  --ss-bg-glass: rgba(8, 13, 25, 0.58);
+  --ss-bg-void: #020617;
+
+  /* Unified page backdrop — accents only, no white/cyan wash */
+  --ss-bg-surface:
+    radial-gradient(circle at 20% 15%, rgba(34, 211, 238, 0.1), transparent 32%),
+    radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.1), transparent 34%),
+    radial-gradient(circle at 50% 90%, rgba(20, 184, 166, 0.08), transparent 38%),
+    linear-gradient(180deg, #020617 0%, #030712 45%, #020617 100%);
+
+  /* Subtle accent-only layer (neuro / vignette / particle wash) */
+  --ss-bg-accent-glow:
+    radial-gradient(circle at 20% 15%, rgba(34, 211, 238, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.08), transparent 34%),
+    radial-gradient(circle at 50% 88%, rgba(20, 184, 166, 0.06), transparent 38%);
+
+  /* Brand primaries */
+  --ss-cyan: #22d3ee;
+  --ss-blue: #38bdf8;
+  --ss-deep-blue: #2563eb;
+  --ss-teal: #14b8a6;
+  --ss-protocol-blue: #0657b4;
+  --ss-violet-accent: #8b5cf6;
+
+  /* Particle field */
+  --ss-particle-primary: #22d3ee;
+  --ss-particle-secondary: #38bdf8;
+  --ss-particle-tertiary: #14b8a6;
+  --ss-particle-accent: #8b5cf6;
+  --ss-particle-link: rgba(56, 189, 248, 0.22);
+  --ss-particle-glow-cyan: rgba(34, 211, 238, 0.18);
+  --ss-particle-glow-blue: rgba(37, 99, 235, 0.16);
+
+  /* Glass surfaces */
+  --ss-glass-bg: var(--ss-bg-glass);
+  --ss-glass-border: rgba(34, 211, 238, 0.14);
+  --ss-glass-border-soft: rgba(56, 189, 248, 0.1);
+
+  /* Layer stack */
+  --ss-layer-base: 0;
+  --ss-layer-neuro: 5;
+  --ss-layer-particle: 12;
+  --ss-layer-soft-overlay: 14;
+  --ss-layer-content: 20;
+
+  /* Legacy aliases */
+  --void-bg: var(--ss-bg-deep);
+  --navy-bg: var(--ss-bg-void);
+  --primary-cyan: var(--ss-cyan);
+  --primary-blue: var(--ss-protocol-blue);
+  --primary-magenta: var(--ss-violet-accent);
+  --bg-root: var(--ss-bg-main);
+  --bg-panel: var(--ss-bg-panel);
+  --fg-text: #cbd5e1;
+  --accent-cyan: var(--ss-cyan);
+  --accent-blue: var(--ss-deep-blue);
+  --accent-magenta: var(--ss-violet-accent);
+  --glass-border: var(--ss-glass-border);
+  --glow-cyan: var(--ss-particle-glow-cyan);
+  --glow-blue: rgba(37, 99, 235, 0.22);
+  --glow-magenta: rgba(139, 92, 246, 0.08);
+  --surface-cyan-soft: rgba(6, 87, 180, 0.18);
+  --surface-cyan-hover: rgba(6, 87, 180, 0.26);
+  --surface-magenta-soft: rgba(139, 92, 246, 0.1);
+}
