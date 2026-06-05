@@ -25,8 +25,8 @@ export default function AboutPage() {
             <Link to="/pricing" className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2">
               SureStack Intelligence
             </Link>
-            <Link to="/enterprise" className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2">
-              Enterprise
+            <Link to="/founders-pass" className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2">
+              Founders Pass
             </Link>
             <Link to="/membership" className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2">
               Membership

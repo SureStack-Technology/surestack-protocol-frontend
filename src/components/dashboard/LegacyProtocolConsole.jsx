@@ -132,9 +132,6 @@ export default function LegacyProtocolConsole() {
           <p>
             <strong className="text-cyan-200">Atlas Intelligence workspace</strong> — {ATLAS_INTELLIGENCE_DESCRIPTION}
           </p>
-          <Link to="/enterprise" className="text-cyan-200 underline underline-offset-2 shrink-0 font-semibold text-sm">
-            Enterprise Intelligence &amp; API
-          </Link>
         </motion.div>
       ) : null}
 

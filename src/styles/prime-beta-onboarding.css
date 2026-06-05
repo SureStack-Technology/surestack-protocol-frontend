@@ -1,0 +1,223 @@
+/* Prime Intelligence Beta — Telegram onboarding */
+
+.prime-beta-onboarding {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(139, 92, 246, 0.32);
+  background: linear-gradient(145deg, rgba(15, 10, 35, 0.92), rgba(8, 12, 28, 0.88));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38), 0 0 48px rgba(139, 92, 246, 0.1);
+  padding: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .prime-beta-onboarding {
+    padding: 2rem;
+  }
+}
+
+.prime-beta-onboarding--compact {
+  padding: 1.25rem 1.35rem;
+}
+
+.prime-beta-onboarding--dashboard {
+  border-color: rgba(99, 102, 241, 0.22);
+  background: linear-gradient(145deg, rgba(12, 14, 32, 0.95), rgba(8, 10, 24, 0.9));
+}
+
+.prime-beta-onboarding__glow {
+  pointer-events: none;
+  position: absolute;
+  top: -4rem;
+  right: -3rem;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.22), transparent 68%);
+}
+
+.prime-beta-onboarding__header {
+  position: relative;
+  z-index: 1;
+}
+
+.prime-beta-onboarding__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: rgba(196, 181, 253, 0.92);
+}
+
+.prime-beta-onboarding__title {
+  margin-top: 0.5rem;
+  font-family: var(--font-heading, inherit);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+@media (min-width: 640px) {
+  .prime-beta-onboarding__title {
+    font-size: 1.65rem;
+  }
+}
+
+.prime-beta-onboarding__summary {
+  margin-top: 0.75rem;
+  max-width: 48rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: rgba(203, 213, 225, 0.92);
+}
+
+.prime-beta-onboarding__summary--compact {
+  font-size: 0.8125rem;
+}
+
+.prime-beta-onboarding__notes {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.prime-beta-onboarding__note {
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: rgba(148, 163, 184, 0.95);
+  border-left: 2px solid rgba(139, 92, 246, 0.35);
+  padding-left: 0.75rem;
+}
+
+.prime-beta-onboarding__note--explorer {
+  border-left-color: rgba(16, 185, 129, 0.45);
+}
+
+.prime-beta-onboarding__note strong {
+  color: rgba(226, 232, 240, 0.95);
+  font-weight: 600;
+}
+
+.prime-beta-onboarding__flow {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .prime-beta-onboarding__flow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+}
+
+.prime-beta-onboarding__flow-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 0.75rem 0.85rem;
+}
+
+.prime-beta-onboarding__flow-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  background: rgba(139, 92, 246, 0.14);
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  color: rgba(221, 214, 254, 0.95);
+}
+
+.prime-beta-onboarding__flow-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgba(241, 245, 249, 0.96);
+}
+
+.prime-beta-onboarding__flow-detail {
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.prime-beta-onboarding__flow-arrow {
+  display: none;
+  color: rgba(167, 139, 250, 0.65);
+}
+
+@media (min-width: 768px) {
+  .prime-beta-onboarding__flow-arrow {
+    display: block;
+    position: absolute;
+    right: -0.55rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+}
+
+.prime-beta-onboarding__flow-inline {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.85rem;
+  font-size: 0.6875rem;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  color: rgba(167, 139, 250, 0.88);
+}
+
+.prime-beta-onboarding__actions {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.prime-beta-onboarding__cta-primary,
+.prime-beta-onboarding__cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.prime-beta-onboarding--dashboard .prime-beta-onboarding__cta-primary {
+  font-size: 13px;
+  padding: 0.65rem 1rem;
+}
+
+.prime-beta-onboarding--dashboard .prime-beta-onboarding__cta-secondary {
+  font-size: 13px;
+  padding: 0.65rem 1rem;
+}
+
+.prime-beta-onboarding__compliance {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.6875rem;
+  line-height: 1.55;
+  color: rgba(100, 116, 139, 0.95);
+}

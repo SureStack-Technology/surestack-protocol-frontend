@@ -13,11 +13,13 @@ import {
   ALPHA_INTELLIGENCE_PRICE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
+  PRIME_INTELLIGENCE_BETA_BADGE,
   PRIME_INTELLIGENCE_FEATURES,
   PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
   getTierDisplayName,
 } from '@/constants/intelligenceTiers.js'
+import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
 import '@/styles/explorer-console.css'
 
 const EXPLORER_PLAN_LINE =
@@ -192,11 +194,14 @@ export default function CurrentPlanCard({
                   <Lock className="text-slate-500 shrink-0 mt-0.5" size={16} aria-hidden />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-200">Prime Intelligence — {PRIME_INTELLIGENCE_PRICE}</p>
-                    <p className="text-[11px] text-slate-500">Early Access</p>
+                    <p className="text-[11px] text-slate-500">{PRIME_INTELLIGENCE_BETA_BADGE}</p>
                   </div>
                 </div>
-                <Link to="/membership" className="explorer-btn-outline !text-[11px] !py-1.5 !px-3 shrink-0">
-                  Join Prime Intelligence
+                <Link
+                  to={`/membership#${PRIME_BETA_SECTION_ID}`}
+                  className="explorer-btn-outline !text-[11px] !py-1.5 !px-3 shrink-0"
+                >
+                  Apply for Prime Beta
                 </Link>
               </div>
 
@@ -229,16 +234,6 @@ export default function CurrentPlanCard({
                   className="explorer-btn-outline !text-[11px] !py-1.5 !px-3 shrink-0 border-cyan-500/25 text-cyan-100/95"
                 >
                   Request Atlas Intelligence access
-                </Link>
-              </div>
-
-              <div className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-slate-900/35 px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-200">Enterprise Intelligence</p>
-                  <p className="text-[11px] text-slate-500">Request Enterprise Access</p>
-                </div>
-                <Link to="/enterprise" className="explorer-btn-tertiary !text-[11px] !py-1.5 !px-3 shrink-0">
-                  Request Enterprise Access
                 </Link>
               </div>
             </div>

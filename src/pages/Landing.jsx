@@ -43,10 +43,9 @@ export default function LandingPage() {
                 Real-time crypto intelligence for digital asset confidence
               </h1>
               <p className="mt-6 text-lg text-slate-300 max-w-xl leading-relaxed">
-                SureStack helps individuals and organizations better understand digital asset risk through AI-powered
-                intelligence, market monitoring, and digital asset protection guidance. Explorer Access provides secure access
-                to the SureStack intelligence environment, while advanced intelligence tiers unlock deeper analytics and
-                strategic insights.
+                SureStack delivers digital asset risk intelligence — AI-powered monitoring, wallet and protocol
+                analytics, and threat awareness for decision support. Explorer Access is free and public. Prime
+                Intelligence Beta opens through Telegram verification and admin approval.
               </p>
               <div className="flex flex-wrap gap-3 pt-9">
                 <Link to="/sign-up" className="public-cta-primary gap-2">
@@ -54,9 +53,6 @@ export default function LandingPage() {
                 </Link>
                 <Link to="/pricing" className="public-cta-secondary">
                   Explore Intelligence
-                </Link>
-                <Link to="/enterprise" className="public-cta-enterprise">
-                  Request Enterprise Access
                 </Link>
               </div>
               <div className="flex flex-wrap items-center gap-4 pt-8 text-[11px] uppercase tracking-[0.22em] text-slate-500">

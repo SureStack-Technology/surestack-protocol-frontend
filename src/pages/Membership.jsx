@@ -15,15 +15,17 @@ import {
   ALPHA_INTELLIGENCE_FEATURES,
   ALPHA_INTELLIGENCE_PRICE,
   ENTERPRISE_INTELLIGENCE_FEATURES,
-  ENTERPRISE_INTELLIGENCE_TAGLINE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
   EXPLORER_UPGRADE_CTA,
   MARKETING_ONLY_TIERS,
   MEMBERSHIP_LADDER_PREMIUM_INTRO,
+  PRIME_INTELLIGENCE_BETA_BADGE,
   PRIME_INTELLIGENCE_FEATURES,
   PRIME_INTELLIGENCE_PRICE,
 } from '@/constants/intelligenceTiers.js'
+import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
+import PrimeBetaTelegramOnboarding from '@/components/marketing/PrimeBetaTelegramOnboarding.jsx'
 
 const EXPLORER_FEATURES = [
   'Secure account access',
@@ -95,7 +97,6 @@ function AccessCard({
 export default function MembershipPage() {
   const { api } = useAuthApi()
   const { profile, loading: profileLoading } = useDashboardProfile()
-  const [primeLoading, setPrimeLoading] = useState(false)
   const [alphaLoading, setAlphaLoading] = useState(false)
   const [atlasLoading, setAtlasLoading] = useState(false)
 
@@ -104,27 +105,6 @@ export default function MembershipPage() {
 
   const showDevOverrideBadge =
     import.meta.env.DEV && Boolean(profile?.devMembershipOverrideActive)
-
-  const joinPrimeWaitlist = async () => {
-    if (hasPrime) {
-      toast.success('Prime Intelligence is active on your account.')
-      return
-    }
-    setPrimeLoading(true)
-    try {
-      const res = await api('/api/membership/waitlist/pro', {
-        method: 'POST',
-        body: { note: 'Prime Intelligence waitlist' },
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'waitlist_failed')
-      toast.success(data.message || 'You are on the Prime Intelligence waitlist.')
-    } catch (e) {
-      toast.error(e?.message || 'Could not join waitlist')
-    } finally {
-      setPrimeLoading(false)
-    }
-  }
 
   const joinAlphaInterest = async () => {
     if (hasAtlas) {
@@ -174,7 +154,7 @@ export default function MembershipPage() {
       ? hasAtlas
         ? 'Included with Atlas'
         : 'Active on your account'
-      : 'Flagship paid tier · Early Access'
+      : PRIME_INTELLIGENCE_BETA_BADGE
 
   const primeStatusTone = hasPrime ? 'emerald' : 'violet'
 
@@ -211,8 +191,8 @@ export default function MembershipPage() {
         ) : null}
         {isExplorerOnly ? (
           <div className="rounded-xl border border-violet-500/25 bg-violet-950/20 px-4 py-3 text-xs text-slate-300 max-w-3xl">
-            <strong className="text-violet-200">Note:</strong> waitlist and requests do not change your server tier until
-            checkout and fulfillment complete.
+            <strong className="text-violet-200">Explorer Access is free.</strong> Prime Intelligence Beta requires
+            Telegram verification and admin approval — billing checkout is not required during the testing phase.
           </div>
         ) : (
           <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 text-xs text-slate-300 max-w-3xl">
@@ -222,7 +202,9 @@ export default function MembershipPage() {
         )}
       </motion.header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      {!hasPrime ? <PrimeBetaTelegramOnboarding className="max-w-5xl" /> : null}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <AccessCard
           title="Explorer Access"
           price="Free"
@@ -289,15 +271,18 @@ export default function MembershipPage() {
               </Link>
             </>
           ) : (
-            <button
-              type="button"
-              disabled={primeLoading || profileLoading}
-              onClick={joinPrimeWaitlist}
-              className="btn-outline w-full justify-center py-2.5 text-sm border-violet-400/35 text-violet-100 inline-flex items-center gap-2 disabled:opacity-50"
-            >
-              {primeLoading ? <Loader2 className="animate-spin" size={18} /> : null}
-              Join Prime Intelligence
-            </button>
+            <>
+              <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">
+                Apply through Telegram verification first. Sign up with the same email and wait for admin approval.
+              </p>
+              <a
+                href={`#${PRIME_BETA_SECTION_ID}`}
+                className="btn-outline w-full justify-center py-2.5 text-sm border-violet-400/35 text-violet-100 inline-flex items-center gap-2"
+              >
+                Apply for Prime Beta
+                <ArrowRight size={16} />
+              </a>
+            </>
           )}
         </AccessCard>
 
@@ -371,34 +356,26 @@ export default function MembershipPage() {
           )}
         </AccessCard>
 
+        {hasEnterprise ? (
         <AccessCard
           title={MARKETING_ONLY_TIERS.ENTERPRISE_INTELLIGENCE}
           price="Custom"
-          statusLabel={
-            profileLoading
-              ? 'Loading…'
-              : hasEnterprise
-                ? 'Active on your account'
-                : 'Request Enterprise Access'
-          }
-          tagline={ENTERPRISE_INTELLIGENCE_TAGLINE}
-          statusTone={hasEnterprise ? 'emerald' : 'amber'}
+          statusLabel={profileLoading ? 'Loading…' : 'Active on your account'}
+          tagline="Institutional intelligence workspace"
+          statusTone="emerald"
           features={ENTERPRISE_INTELLIGENCE_FEATURES}
-          borderClass={
-            hasEnterprise
-              ? 'border-emerald-500/35 shadow-[0_0_40px_rgba(16,185,129,0.12)]'
-              : 'border-amber-500/30 shadow-[0_0_36px_rgba(245,158,11,0.12)]'
-          }
+          borderClass="border-emerald-500/35 shadow-[0_0_40px_rgba(16,185,129,0.12)]"
           compact
         >
           <Link
-            to={hasEnterprise ? '/dashboard' : '/enterprise'}
+            to="/dashboard"
             className="btn-brand w-full justify-center py-2.5 text-sm inline-flex items-center gap-2 bg-gradient-to-r from-amber-600/90 to-violet-700/90 border-0"
           >
-            {hasEnterprise ? 'Open console' : 'Explore Enterprise Intelligence'}
+            Open console
             <ArrowRight size={16} />
           </Link>
         </AccessCard>
+        ) : null}
       </div>
 
       <AccessCard
@@ -420,7 +397,7 @@ export default function MembershipPage() {
       >
         <p className="text-xs text-slate-500 mb-2">
           Community credential only — no paid Digital Asset Risk Intelligence analytics. Separate from Prime Intelligence,
-          Alpha Intelligence, Atlas Intelligence, and Enterprise Intelligence.
+          Alpha Intelligence, and Atlas Intelligence.
         </p>
         <Link
           to="/founders-pass"
@@ -442,9 +419,6 @@ export default function MembershipPage() {
         </Link>
         <Link to="/billing" className="btn-outline px-5 py-2.5 text-sm border-white/15 text-slate-200">
           Membership fees
-        </Link>
-        <Link to="/enterprise" className="btn-outline px-5 py-2.5 text-sm border-white/15 text-slate-200">
-          Institutional overview
         </Link>
       </motion.div>
 

@@ -40,9 +40,6 @@ export default function PublicMarketingHeader({ current = 'landing' }) {
           <Link to="/founders-pass" className={navClass(current === 'founders')}>
             Founders Pass
           </Link>
-          <Link to="/enterprise" className={navClass(current === 'enterprise')}>
-            Enterprise
-          </Link>
           <Link to="/about" className={navClass(current === 'about')}>
             About
           </Link>

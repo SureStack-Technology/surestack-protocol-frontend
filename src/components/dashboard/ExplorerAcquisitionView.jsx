@@ -10,6 +10,8 @@ import { formatWalletVerifyError } from '@/utils/walletVerifyErrors.js'
 import { useWeb3 } from '@/contexts/Web3Context.jsx'
 import { clearExplorerWalletConsoleSkip } from '@/utils/dashboardPersonalization'
 import { EXPLORER_UPGRADE_CTA } from '@/constants/intelligenceTiers.js'
+import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
+import PrimeBetaTelegramOnboarding from '@/components/marketing/PrimeBetaTelegramOnboarding.jsx'
 
 /** Wallet panel footer copy by effective membership tier. */
 function walletPanelTierMessaging(profile) {
@@ -418,25 +420,26 @@ export function ExplorerIntelligenceAccessPanel() {
       <p className="text-[13px] text-slate-400 mt-2 leading-relaxed flex-1">
         Explorer delivers a credible first intelligence check — verified wallet continuity, orientation, snapshot wallet
         risk, one complimentary AI Wallet Risk Analyst session, and two preset scenarios — without continuous monitoring or the full analyst and
-        scenario surface. Prime Intelligence is the flagship upgrade for always-on monitoring, full scenarios, timelines,
-        and Alert Center. Still Digital Asset Risk Intelligence — not custody, insurance, brokerage, advisory, or managed
+        scenario surface. <strong className="text-emerald-300/90 font-medium">Explorer Access remains free and public.</strong>{' '}
+        Prime Intelligence Beta is approval-based: join Telegram, complete verification, sign up with the same email, and wait for admin review.
+        Still Digital Asset Risk Intelligence — not custody, insurance, brokerage, advisory, or managed
         incident response.{' '}
         <strong className="text-slate-300 font-medium">Founders Pass</strong> remains a separate community credential.
       </p>
       <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t border-white/[0.06]">
-        <Link to="/membership" className="explorer-btn-gradient text-[13px] !py-2.5 !px-4 inline-flex items-center gap-2">
-          {EXPLORER_UPGRADE_CTA}
+        <Link
+          to={`/membership#${PRIME_BETA_SECTION_ID}`}
+          className="explorer-btn-gradient text-[13px] !py-2.5 !px-4 inline-flex items-center gap-2"
+        >
+          Apply for Prime Beta
           <ArrowRight size={15} />
         </Link>
         <Link to="/pricing" className="explorer-btn-outline text-[13px] !py-2.5 !px-4 inline-flex items-center">
-          Compare tiers
+          Explore Intelligence
         </Link>
-        <Link
-          to="/enterprise"
-          className="explorer-btn-tertiary text-[13px] !py-2.5 !px-3 inline-flex items-center"
-        >
-          Request Enterprise Access
-        </Link>
+      </div>
+      <div className="mt-5">
+        <PrimeBetaTelegramOnboarding variant="compact" showExplorerNote={false} className="prime-beta-onboarding--dashboard" />
       </div>
     </motion.div>
   )

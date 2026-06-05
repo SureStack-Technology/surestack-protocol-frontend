@@ -22,7 +22,7 @@ export const EXPLORER_UPGRADE_CTA = 'Unlock continuous monitoring with Prime Int
 
 /** Membership ladder hero — concise premium positioning (UI). */
 export const MEMBERSHIP_LADDER_PREMIUM_INTRO =
-  'Digital Asset Risk Intelligence for wallets, protocols, and treasury operations. Explorer provides your first intelligence check. Prime is the flagship intelligence tier. Alpha serves advanced operators. Atlas powers treasury and protocol teams. Enterprise delivers custom institutional infrastructure. Founders Pass remains a separate community credential.'
+  'Digital Asset Risk Intelligence for wallets, protocols, and treasury operations. Explorer provides your first intelligence check — free and public. Prime Intelligence Beta is approval-based through Telegram. Alpha serves advanced operators. Atlas powers treasury and protocol teams. Founders Pass remains a separate community credential.'
 
 /** Prime tier — recurring brief product name (UI). */
 export const WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF = 'AI Market & Threat Intelligence Briefs'
@@ -35,7 +35,8 @@ export const EXPLORER_AI_WALLET_ANALYST_FEATURE =
 export const PRIME_INTELLIGENCE_PRICE = '$99/mo'
 export const ALPHA_INTELLIGENCE_PRICE = '$199/mo'
 
-/** Prime Intelligence feature list — single source for pricing / membership / dashboard cards (UI). */
+/** Prime Intelligence — beta onboarding (UI; Telegram-first approval flow). */
+export const PRIME_INTELLIGENCE_BETA_BADGE = 'Beta · approval required'
 export const PRIME_INTELLIGENCE_FEATURES = [
   'Continuous intelligence refresh',
   'Adaptive Threat Intelligence Terminal',

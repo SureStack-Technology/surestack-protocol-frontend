@@ -173,7 +173,7 @@ export default function FoundersPass() {
           </div>
           <p className="text-sm text-slate-400 max-w-2xl leading-relaxed border-t border-white/10 pt-5">
             This credential is separate from paid Digital Asset Risk Intelligence memberships, including Explorer Access,
-            Prime Intelligence, Alpha Intelligence, Atlas Intelligence, and Enterprise Intelligence.
+            Prime Intelligence, Alpha Intelligence, and Atlas Intelligence.
           </p>
           <div className="flex flex-wrap gap-3 items-center text-xs text-slate-400">
             <span className="inline-flex items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-emerald-100">

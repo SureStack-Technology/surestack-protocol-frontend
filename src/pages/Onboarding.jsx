@@ -18,10 +18,13 @@ import {
   ATLAS_INTELLIGENCE_DESCRIPTION,
   ATLAS_INTELLIGENCE_PRICE,
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
+  PRIME_INTELLIGENCE_BETA_BADGE,
   PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
   formatActivePlanLabel,
 } from '@/constants/intelligenceTiers.js'
+import PrimeBetaTelegramOnboarding from '@/components/marketing/PrimeBetaTelegramOnboarding.jsx'
+import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
 
 const UPGRADE_TIERS = [
   {
@@ -29,11 +32,11 @@ const UPGRADE_TIERS = [
     label: 'Prime Intelligence',
     description:
       `${PRIME_INTELLIGENCE_PRICE} — your AI digital asset risk co-pilot: continuous intelligence refresh, Adaptive Threat Intelligence Terminal, Executive Verdict Engine, full Scenario Intelligence Simulator, Wallet Health Timeline, Alert Center, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and flagship paid tier depth.`,
-    badge: 'Flagship paid tier',
+    badge: PRIME_INTELLIGENCE_BETA_BADGE,
     badgeClass:
       'border-violet-400/35 bg-violet-500/10 text-violet-200',
-    ctaLabel: 'Join Prime Intelligence',
-    ctaTo: '/membership',
+    ctaLabel: 'Apply for Prime Beta',
+    ctaTo: `/membership#${PRIME_BETA_SECTION_ID}`,
   },
   {
     id: 'ALPHA_INTELLIGENCE',
@@ -243,12 +246,13 @@ export default function OnboardingPage() {
           </motion.div>
 
           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed text-center px-1 border border-white/10 rounded-xl bg-slate-950/50 py-3 sm:py-3.5">
-            Paid Digital Asset Risk Intelligence tiers (Prime Intelligence, Alpha Intelligence, and Atlas Intelligence) unlock
-            from{' '}
-            <Link to="/membership" className="text-violet-300 hover:text-violet-200 underline underline-offset-2">
-              Membership
+            <strong className="text-emerald-300/90">Explorer Access is free and public</strong> on your account after signup.
+            Prime Intelligence Beta is approval-based — join Telegram, complete verification, and sign up with the same email.
+            See{' '}
+            <Link to={`/membership#${PRIME_BETA_SECTION_ID}`} className="text-violet-300 hover:text-violet-200 underline underline-offset-2">
+              Apply for Prime Beta
             </Link>{' '}
-            when billing is available — not from this screen.
+            for the onboarding flow.
           </p>
 
           <div className="public-premium-card p-5 sm:p-6 rounded-xl border border-safe/40 bg-safe/[0.06] space-y-4 ring-1 ring-safe/20">
@@ -283,6 +287,8 @@ export default function OnboardingPage() {
               ) : null}
             </p>
           </div>
+
+          <PrimeBetaTelegramOnboarding variant="compact" className="rounded-xl" />
 
           <div>
             <h2 className="font-heading text-slate-400 text-xs uppercase tracking-[0.25em] mb-3 px-0.5">

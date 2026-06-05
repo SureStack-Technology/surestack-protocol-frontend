@@ -137,9 +137,6 @@ export default function ModernIntelligenceDashboard({
             <p>
               <strong className="text-cyan-200">Atlas Intelligence workspace</strong> — {ATLAS_INTELLIGENCE_DESCRIPTION}
             </p>
-            <Link to="/enterprise" className="text-cyan-200 underline underline-offset-2 shrink-0 font-semibold text-sm">
-              Enterprise Intelligence &amp; API
-            </Link>
           </motion.div>
         ) : null}
 
@@ -157,14 +154,14 @@ export default function ModernIntelligenceDashboard({
               <p className="text-[13px] text-slate-400 mt-2 leading-relaxed flex-1">
                 {isPrime
                   ? 'Your Prime Intelligence workspace is active. Atlas Intelligence adds team workflows, strategic reporting, and operator-grade surfaces when you are ready to scale.'
-                  : 'Atlas and Enterprise Intelligence extend this console with institutional workflows, APIs, and dedicated solutions architecture.'}
+                  : 'Atlas Intelligence extends this console with team workflows, strategic reporting, and operator-grade surfaces.'}
               </p>
               <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t border-white/[0.06]">
                 <Link to="/membership" className="explorer-btn-gradient text-[13px] !py-2.5 !px-4">
                   View membership ladder
                 </Link>
-                <Link to="/enterprise" className="explorer-btn-outline text-[13px] !py-2.5 !px-4">
-                  Enterprise Intelligence
+                <Link to="/pricing" className="explorer-btn-outline text-[13px] !py-2.5 !px-4">
+                  Explore Intelligence
                 </Link>
               </div>
             </motion.div>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Check, Building2, Sparkles } from 'lucide-react'
+import { ArrowRight, Check, Sparkles } from 'lucide-react'
 import PublicMarketingShell from '@/components/layout/PublicMarketingShell.jsx'
 import PublicMarketingHeader from '@/components/layout/PublicMarketingHeader.jsx'
 import { CARRIER_DISCLAIMER } from '@/constants/complianceCopy.js'
@@ -12,16 +12,16 @@ import {
   ATLAS_INTELLIGENCE_SHORT_DESCRIPTOR,
   ALPHA_INTELLIGENCE_FEATURES,
   ALPHA_INTELLIGENCE_PRICE,
-  ENTERPRISE_INTELLIGENCE_FEATURES,
-  ENTERPRISE_INTELLIGENCE_TAGLINE,
   EXPLORER_AI_WALLET_ANALYST_FEATURE,
   EXPLORER_POSITIONING_TAGLINE,
   INTELLIGENCE_ACCESS_HEADING,
-  MARKETING_ONLY_TIERS,
+  PRIME_INTELLIGENCE_BETA_BADGE,
   PRIME_INTELLIGENCE_FEATURES,
   PRIME_INTELLIGENCE_PRICE,
   WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF,
 } from '@/constants/intelligenceTiers.js'
+import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
+import PrimeBetaTelegramOnboarding from '@/components/marketing/PrimeBetaTelegramOnboarding.jsx'
 
 const tiers = [
   {
@@ -46,13 +46,13 @@ const tiers = [
   },
   {
     name: 'Prime Intelligence',
-    badge: 'Flagship · retail',
+    badge: PRIME_INTELLIGENCE_BETA_BADGE,
     price: PRIME_INTELLIGENCE_PRICE,
     description:
-      `Your AI digital asset risk co-pilot — continuous intelligence refresh, Adaptive Threat Intelligence Terminal, Universal Contract Analyzer, Executive Verdict Engine, full Scenario Intelligence Simulator, full AI Wallet Risk Analyst, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and Alert Center. Analytics and awareness for self-directed decisions — not a licensed carrier, broker, investment advisor, or retained incident response firm.`,
+      `Your AI digital asset risk co-pilot — continuous intelligence refresh, Adaptive Threat Intelligence Terminal, Universal Contract Analyzer, Executive Verdict Engine, full Scenario Intelligence Simulator, full AI Wallet Risk Analyst, ${WEEKLY_MARKET_THREAT_INTELLIGENCE_BRIEF}, and Alert Center. Currently available to approved beta users via Telegram verification and admin review. Analytics and awareness for self-directed decisions — not a licensed carrier, broker, investment advisor, or retained incident response firm.`,
     features: PRIME_INTELLIGENCE_FEATURES,
-    cta: 'Join Prime Intelligence',
-    ctaTo: '/membership',
+    cta: 'Apply for Prime Beta',
+    ctaTo: `#${PRIME_BETA_SECTION_ID}`,
     highlight: false,
   },
   {
@@ -78,17 +78,6 @@ const tiers = [
     ctaTo: '/membership',
     highlight: false,
   },
-  {
-    name: MARKETING_ONLY_TIERS.ENTERPRISE_INTELLIGENCE,
-    badge: 'White glove',
-    price: 'Custom',
-    description: `${ENTERPRISE_INTELLIGENCE_TAGLINE} White-label consoles, SSO, audit logs, private deployment options, compliance surfaces, and SLA-backed monitoring — coordinated with your solutions architecture team.`,
-    features: ENTERPRISE_INTELLIGENCE_FEATURES,
-    cta: 'Institutional overview',
-    ctaTo: '/enterprise',
-    highlight: false,
-    institutional: true,
-  },
 ]
 
 export default function PricingPage() {
@@ -109,9 +98,9 @@ export default function PricingPage() {
           </h1>
           <p className="text-slate-400 text-sm md:text-[15px] leading-relaxed">
             AI-powered Digital Asset Risk Intelligence — wallet, protocol, market, and treasury analytics with threat
-            awareness and AI decision-support. Explorer Access is genuinely useful for your first risk check, with clear
-            limits that make Prime Intelligence the obvious upgrade. Prime is the flagship paid tier; Alpha and Atlas add
-            operator and organizational depth.{' '}
+            awareness and AI decision-support. <strong className="text-emerald-300/95">Explorer Access</strong> is free
+            and public for your first risk check. Prime Intelligence Beta is approval-based during testing — join
+            Telegram, verify, and sign up with the same email. Alpha and Atlas add operator and organizational depth.{' '}
             <strong className="text-white/90">Founders Pass</strong> remains a separate community credential — not a paid
             intelligence tier.
           </p>
@@ -134,14 +123,9 @@ export default function PricingPage() {
                     {tier.badge}
                   </span>
                 )}
-                {!tier.highlight && !tier.institutional && (
+                {!tier.highlight && (
                   <span className="text-[10px] uppercase tracking-[0.22em] text-violet-300/90 px-2.5 py-1 rounded-full border border-violet-500/30 bg-violet-950/40">
                     {tier.badge}
-                  </span>
-                )}
-                {tier.institutional && (
-                  <span className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/90 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/30 inline-flex items-center gap-1">
-                    <Building2 size={12} /> {tier.badge}
                   </span>
                 )}
               </div>
@@ -169,11 +153,7 @@ export default function PricingPage() {
               <Link
                 to={tier.ctaTo}
                 className={`mt-8 inline-flex items-center justify-center gap-2 ${
-                  tier.highlight
-                    ? 'public-cta-primary'
-                    : tier.institutional
-                      ? 'public-cta-enterprise'
-                      : 'public-cta-secondary'
+                  tier.highlight ? 'public-cta-primary' : 'public-cta-secondary'
                 }`}
               >
                 {tier.cta}
@@ -182,6 +162,15 @@ export default function PricingPage() {
             </motion.article>
           ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-10"
+        >
+          <PrimeBetaTelegramOnboarding />
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
