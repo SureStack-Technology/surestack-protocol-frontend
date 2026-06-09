@@ -1,6 +1,9 @@
 import { Router } from 'express'
 import { Webhook } from 'svix'
-import { prisma } from '../lib/prisma.js'
+import {
+  extractClerkProfileFromWebhookUser,
+  upsertUserFromClerkProfile,
+} from '../services/clerkSync.js'
 import { sendWelcomeEmail, sendEmailVerifiedNotice } from '../services/email.js'
 
 const router = Router()
@@ -40,93 +43,40 @@ router.post('/', async (req, res) => {
 
   try {
     if (type === 'user.created') {
-      const u = evt.data
-      const email =
-        u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ||
-        u.email_addresses?.[0]?.email_address
-
-      if (!email) {
+      const profile = extractClerkProfileFromWebhookUser(evt.data)
+      if (!profile) {
         console.warn('[webhook] user.created without email')
         return res.status(200).json({ received: true })
       }
 
-      const primary = u.email_addresses?.find((e) => e.id === u.primary_email_address_id)
-      const verified = primary?.verification?.status === 'verified'
-
-      await prisma.user.upsert({
-        where: { clerkId: u.id },
-        create: {
-          clerkId: u.id,
-          email,
-          emailVerified: Boolean(verified),
-          firstName: u.first_name || null,
-          lastName: u.last_name || null,
-          imageUrl: u.image_url || null,
-          membershipTier: 'EXPLORER_ACCESS',
-          subscriptionStatus: 'NONE',
-          onboardingCompleted: false,
-          onboardingStep: 0,
-        },
-        update: {
-          email,
-          firstName: u.first_name || null,
-          lastName: u.last_name || null,
-          imageUrl: u.image_url || null,
-        },
-      })
+      const row = await upsertUserFromClerkProfile(profile)
 
       if (process.env.NODE_ENV !== 'production') {
         console.log('[webhook] user.created synced', {
-          clerkId: u.id,
-          email,
-          onboardingCompleted: false,
-          membershipTier: 'EXPLORER_ACCESS',
+          clerkId: profile.clerkId,
+          email: profile.email,
+          onboardingCompleted: row.onboardingCompleted,
+          membershipTier: row.membershipTier,
         })
       }
 
-      await sendWelcomeEmail({ to: email, firstName: u.first_name || undefined }).catch((err) => {
-        console.warn('[webhook] welcome email failed:', err?.message || err)
-      })
+      await sendWelcomeEmail({ to: profile.email, firstName: profile.firstName || undefined }).catch(
+        (err) => {
+          console.warn('[webhook] welcome email failed:', err?.message || err)
+        },
+      )
     }
 
     if (type === 'user.updated') {
-      const u = evt.data
-      const email =
-        u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ||
-        u.email_addresses?.[0]?.email_address
-
-      const primary = u.email_addresses?.find((e) => e.id === u.primary_email_address_id)
-      const verified = primary?.verification?.status === 'verified'
-
-      if (!email) {
+      const profile = extractClerkProfileFromWebhookUser(evt.data)
+      if (!profile) {
         return res.status(200).json({ received: true })
       }
 
-      await prisma.user.upsert({
-        where: { clerkId: u.id },
-        create: {
-          clerkId: u.id,
-          email,
-          emailVerified: Boolean(verified),
-          firstName: u.first_name || null,
-          lastName: u.last_name || null,
-          imageUrl: u.image_url || null,
-          membershipTier: 'EXPLORER_ACCESS',
-          subscriptionStatus: 'NONE',
-          onboardingCompleted: false,
-          onboardingStep: 0,
-        },
-        update: {
-          email,
-          emailVerified: Boolean(verified),
-          firstName: u.first_name || null,
-          lastName: u.last_name || null,
-          imageUrl: u.image_url || null,
-        },
-      })
+      await upsertUserFromClerkProfile(profile)
 
-      if (verified && email) {
-        await sendEmailVerifiedNotice({ to: email }).catch(() => {})
+      if (profile.emailVerified && profile.email) {
+        await sendEmailVerifiedNotice({ to: profile.email }).catch(() => {})
       }
     }
 
