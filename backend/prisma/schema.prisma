@@ -24,6 +24,11 @@ enum SubscriptionStatus {
   TRIALING
 }
 
+enum WalletType {
+  EVM
+  SOLANA
+}
+
 model User {
   id            String  @id @default(cuid())
   clerkId       String  @unique
@@ -95,34 +100,39 @@ model FoundersPass {
   @@index([userId, status])
 }
 
-/// EIP-191 wallet verification challenge (DB-backed; survives API restarts / multiple instances).
+/// Wallet verification challenge (EIP-191 EVM or ed25519 Solana; DB-backed).
 model WalletChallenge {
-  id         String    @id @default(cuid())
-  clerkId    String
-  nonce      String    @unique
-  address    String
-  chainId    Int
-  message    String    @db.Text
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime  @default(now())
+  id          String     @id @default(cuid())
+  clerkId     String
+  nonce       String     @unique
+  address     String
+  walletType  WalletType @default(EVM)
+  walletChain String     @default("11155111")
+  chainId     Int
+  message     String     @db.Text
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime   @default(now())
 
   @@index([clerkId, expiresAt])
 }
 
 model Wallet {
-  id         String    @id @default(cuid())
-  userId     String
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  address    String
-  chainId    Int       @default(11155111)
-  verifiedAt DateTime?
-  label      String?
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     String
+  walletType  WalletType @default(EVM)
+  walletChain String     @default("11155111")
+  chainId     Int        @default(11155111)
+  verifiedAt  DateTime?
+  label       String?
 
   createdAt DateTime @default(now())
 
   @@unique([userId, address])
   @@index([address])
+  @@index([walletType, walletChain])
 }
 
 model WalletRiskSnapshot {

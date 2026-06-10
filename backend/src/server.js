@@ -18,6 +18,7 @@ import clerkWebhookRouter from './routes/clerkWebhook.js';
 import billingRouter from './routes/billing.js';
 import membershipRouter from './routes/membership.js';
 import walletRiskRouter from './routes/walletRisk.js';
+import solanaWalletAuthRouter from './routes/solanaWalletAuth.js';
 import primeIntelRouter from './routes/primeIntel.js';
 import contractIntelRouter from './routes/contractIntel.js';
 import solanaScannerRouter from './routes/solanaScanner.js';
@@ -131,6 +132,7 @@ app.use('/api/auth/wallet', walletAuthRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/membership', membershipRouter);
 app.use('/api/wallet', walletRiskRouter);
+app.use('/api/wallet', solanaWalletAuthRouter);
 app.use('/api/prime', primeIntelRouter);
 app.use('/api/prime/contracts', contractIntelRouter);
 app.use('/api/prime/solana', solanaScannerRouter);
@@ -152,6 +154,8 @@ app.get('/', (req, res) => {
       health: '/health',
       auth: '/api/auth/me',
       walletNonce: '/api/auth/wallet/nonce',
+      solanaWalletNonce: '/api/wallet/solana/nonce',
+      solanaWalletVerify: 'POST /api/wallet/verify-solana',
       webhook: '/api/webhooks/clerk',
       validators: '/api/validators',
       coverage: '/api/coverage',

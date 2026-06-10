@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 import { Web3Provider } from '@contexts/Web3Context'
+import { SolanaWalletProvider } from '@/contexts/SolanaWalletContext.jsx'
 import { SimulationProvider } from '@contexts/SimulationContext'
 import MainLayout from '@/layouts/MainLayout'
 import BusinessLayout from '@components/BusinessLayout'
@@ -286,13 +287,15 @@ function App() {
   return (
     <ErrorBoundary>
       <Web3Provider>
-        <SimulationProvider>
-          <Router>
-            <ParticleBackground />
-            <AppContent />
-            <Toaster position="bottom-right" />
-          </Router>
-        </SimulationProvider>
+        <SolanaWalletProvider>
+          <SimulationProvider>
+            <Router>
+              <ParticleBackground />
+              <AppContent />
+              <Toaster position="bottom-right" />
+            </Router>
+          </SimulationProvider>
+        </SolanaWalletProvider>
       </Web3Provider>
     </ErrorBoundary>
   )

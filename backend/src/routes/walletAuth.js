@@ -2,7 +2,11 @@ import { Router } from 'express'
 import { verifyMessage, getAddress } from 'ethers'
 import { prisma } from '../lib/prisma.js'
 import { requireClerkAuth } from '../middleware/clerkAuth.js'
-import { syncUserFromClerk } from '../services/clerkSync.js'
+import {
+  formatWalletResponse,
+  resolveUserForWalletLink,
+  upsertVerifiedWallet,
+} from '../services/wallet/walletPersistence.js'
 
 const router = Router()
 
@@ -39,7 +43,7 @@ function mapPrismaVerifyError(err) {
         'Database schema is behind the API. Apply pending Prisma migrations (prisma migrate deploy) and restart the backend.',
     }
   }
-  if (code === 'P2002') {
+  if (code === 'P2002' || code === 'WALLET_CONFLICT') {
     return {
       status: 409,
       error: 'wallet_conflict',
@@ -89,6 +93,8 @@ router.get('/nonce', requireClerkAuth, async (req, res) => {
         clerkId: req.clerkUserId,
         nonce,
         address: storageAddress(normalized),
+        walletType: 'EVM',
+        walletChain: String(chainId),
         chainId,
         message,
         expiresAt,
@@ -150,6 +156,7 @@ router.post('/verify', requireClerkAuth, async (req, res) => {
       where: {
         clerkId: req.clerkUserId,
         nonce: String(nonce),
+        walletType: 'EVM',
         consumedAt: null,
         expiresAt: { gt: new Date() },
       },
@@ -211,41 +218,19 @@ router.post('/verify', requireClerkAuth, async (req, res) => {
       })
     }
 
-    let user = await prisma.user.findUnique({ where: { clerkId: req.clerkUserId } })
-    if (!user) {
-      await syncUserFromClerk(req.clerkUserId)
-      user = await prisma.user.findUnique({ where: { clerkId: req.clerkUserId } })
-    }
+    const user = await resolveUserForWalletLink(req.clerkUserId)
     if (!user) {
       return res.status(404).json({ error: 'user_not_found', message: 'User profile not found for this Clerk account.' })
     }
 
-    const existing = await prisma.wallet.findFirst({
-      where: {
-        userId: user.id,
-        address: { equals: storedAddr, mode: 'insensitive' },
-      },
+    const wallet = await upsertVerifiedWallet({
+      userId: user.id,
+      address: storedAddr,
+      walletType: 'EVM',
+      walletChain: String(cid),
+      chainId: cid,
+      label: 'Primary',
     })
-
-    const verifiedAt = new Date()
-    const wallet = existing
-      ? await prisma.wallet.update({
-          where: { id: existing.id },
-          data: {
-            address: storedAddr,
-            chainId: cid,
-            verifiedAt,
-          },
-        })
-      : await prisma.wallet.create({
-          data: {
-            userId: user.id,
-            address: storedAddr,
-            chainId: cid,
-            verifiedAt,
-            label: 'Primary',
-          },
-        })
 
     await prisma.walletChallenge.update({
       where: { id: challenge.id },
@@ -258,6 +243,7 @@ router.post('/verify', requireClerkAuth, async (req, res) => {
       walletId: wallet.id,
       address: addressPrefix(wallet.address),
       chainId: wallet.chainId,
+      walletType: wallet.walletType,
     })
 
     prisma.analyticsUsage
@@ -265,7 +251,7 @@ router.post('/verify', requireClerkAuth, async (req, res) => {
         data: {
           userId: user.id,
           eventType: 'wallet_verified',
-          metadata: { address: storedAddr, chainId: cid },
+          metadata: { address: storedAddr, chainId: cid, walletType: 'EVM' },
         },
       })
       .catch((err) => {
@@ -277,12 +263,7 @@ router.post('/verify', requireClerkAuth, async (req, res) => {
 
     return res.json({
       ok: true,
-      wallet: {
-        id: wallet.id,
-        address: wallet.address,
-        chainId: wallet.chainId,
-        verifiedAt: wallet.verifiedAt,
-      },
+      wallet: formatWalletResponse(wallet),
     })
   } catch (e) {
     const mapped = mapPrismaVerifyError(e)

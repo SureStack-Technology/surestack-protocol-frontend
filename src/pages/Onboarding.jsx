@@ -7,6 +7,8 @@ import toast from 'react-hot-toast'
 import { useWeb3 } from '@/contexts/Web3Context.jsx'
 import { useAuthApi } from '@/hooks/useAuthApi'
 import { useOnboardingWalletVerify } from '@/hooks/useOnboardingWalletVerify'
+import { useOnboardingSolanaWalletVerify } from '@/hooks/useOnboardingSolanaWalletVerify'
+import DualWalletConnectPanel from '@/components/wallet/DualWalletConnectPanel.jsx'
 import { fetchAuthMeDeduped } from '@/lib/authMeClient.js'
 import PublicMarketingShell from '@/components/layout/PublicMarketingShell.jsx'
 import PublicMarketingHeader from '@/components/layout/PublicMarketingHeader.jsx'
@@ -67,7 +69,7 @@ export default function OnboardingPage() {
   const { api } = useAuthApi()
   const apiRef = useRef(api)
   apiRef.current = api
-  const { connectWallet, account, isConnected } = useWeb3()
+  const { connectWallet, account, isConnected, isConnecting: evmConnecting } = useWeb3()
 
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -159,6 +161,22 @@ export default function OnboardingPage() {
     verifyDisabled,
     verifyDisabledReason,
   } = useOnboardingWalletVerify({
+    onVerified: onWalletVerified,
+    scrollToWalletSection,
+  })
+
+  const {
+    handleSolanaVerify,
+    walletBusy: solanaBusy,
+    phaseLabel: solanaPhaseLabel,
+    lastError: solanaLastError,
+    verifyDisabled: solanaVerifyDisabled,
+    verifyDisabledReason: solanaVerifyDisabledReason,
+    publicKey: solanaPublicKey,
+    isConnected: solanaConnected,
+    isConnecting: solanaConnecting,
+    connectPhantom,
+  } = useOnboardingSolanaWalletVerify({
     onVerified: onWalletVerified,
     scrollToWalletSection,
   })
@@ -335,7 +353,7 @@ export default function OnboardingPage() {
             id="onboarding-wallet-verify"
             ref={walletSectionRef}
             className={`public-premium-card p-5 sm:p-6 rounded-xl space-y-4 scroll-mt-24 transition-colors duration-300 ${
-              walletVerifiedOnAccount && isConnected
+              walletVerifiedOnAccount
                 ? 'border border-emerald-500/35 bg-emerald-950/[0.08] ring-1 ring-emerald-500/20'
                 : 'border border-white/10'
             }`}
@@ -345,8 +363,8 @@ export default function OnboardingPage() {
               <h2 className="font-heading text-white text-base sm:text-lg">Wallet verification (recommended)</h2>
             </motion.div>
             <p className="text-sm text-slate-400">
-              Sign a one-time message to link an on-chain identity — continuity for your intelligence workspace, secure
-              environment attestation, and{' '}
+              Sign a one-time message to link an on-chain identity — EVM (MetaMask) or Solana (Phantom). Continuity for
+              your intelligence workspace, secure environment attestation, and{' '}
               <strong className="text-slate-200">Founders Pass eligibility</strong>. You can skip and verify later from
               the console; deeper intelligence features may prompt for a verified wallet.
             </p>
@@ -354,62 +372,30 @@ export default function OnboardingPage() {
               Not an investment, NFT sale, regulated coverage product, or guarantee of benefits. Founders Pass is a free
               community funnel with limited availability — not a paid subscription tier.
             </p>
-            {!isConnected ? (
-              <button type="button" onClick={() => connectWallet()} className="btn-cyber w-full sm:w-auto px-6 py-2">
-                Connect wallet
-              </button>
-            ) : (
-              <motion.div className="space-y-3" layout>
-                {!walletVerifiedOnAccount ? (
-                  <>
-                    <p className="text-xs font-mono text-slate-300 break-all">{account}</p>
-                    <button
-                      type="button"
-                      disabled={verifyDisabled || loading || Boolean(profileSyncError)}
-                      onClick={handleWalletVerify}
-                      title={verifyDisabledReason || undefined}
-                      className="btn-brand px-6 py-2 inline-flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {walletBusy ? <Loader2 className="animate-spin" size={18} /> : <ArrowRight size={18} />}
-                      Sign & verify
-                    </button>
-                    {verifyDisabledReason && !walletBusy ? (
-                      <p className="text-xs text-amber-200/90">{verifyDisabledReason}</p>
-                    ) : null}
-                    {walletBusy && phaseLabel ? (
-                      <p className="text-xs text-violet-200/90 flex items-center gap-2">
-                        <Loader2 className="animate-spin shrink-0" size={14} />
-                        {phaseLabel}
-                      </p>
-                    ) : null}
-                    {lastError && !walletBusy ? (
-                      <p className="text-xs text-rose-300/95" role="alert">
-                        {lastError}
-                      </p>
-                    ) : null}
-                  </>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="rounded-xl border border-emerald-500/30 bg-emerald-950/25 px-4 py-3.5 space-y-2.5"
-                  >
-                    <p className="text-sm font-semibold text-emerald-300 flex items-center gap-2">
-                      <CheckCircle2 size={18} className="shrink-0" aria-hidden />
-                      Wallet verified successfully
-                    </p>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                      Your on-chain identity is now linked to your SureStack intelligence workspace and Founders Pass
-                      eligibility.
-                    </p>
-                    <p className="text-xs font-mono text-slate-300/95 break-all pt-2 border-t border-emerald-500/15">
-                      {account}
-                    </p>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
+            <DualWalletConnectPanel
+              evmAccount={account}
+              evmConnected={isConnected}
+              evmConnecting={evmConnecting}
+              onConnectEvm={() => connectWallet()}
+              onVerifyEvm={handleWalletVerify}
+              evmVerifyDisabled={verifyDisabled || loading || Boolean(profileSyncError)}
+              evmVerifyDisabledReason={verifyDisabledReason}
+              evmBusy={walletBusy}
+              evmPhaseLabel={phaseLabel}
+              evmLastError={lastError}
+              solanaPublicKey={solanaPublicKey}
+              solanaConnected={solanaConnected}
+              solanaConnecting={solanaConnecting}
+              onConnectSolana={() => connectPhantom()}
+              onVerifySolana={handleSolanaVerify}
+              solanaVerifyDisabled={solanaVerifyDisabled || loading || Boolean(profileSyncError)}
+              solanaVerifyDisabledReason={solanaVerifyDisabledReason}
+              solanaBusy={solanaBusy}
+              solanaPhaseLabel={solanaPhaseLabel}
+              solanaLastError={solanaLastError}
+              verifiedWallet={verifiedWallet}
+              profileWallets={profile?.wallets || []}
+            />
           </div>
 
           <div
@@ -448,19 +434,27 @@ export default function OnboardingPage() {
                     </p>
                     <button
                       type="button"
-                      disabled={walletBusy || loading}
-                      onClick={handleFoundersPassVerifyClick}
-                      title={verifyDisabledReason || undefined}
+                      disabled={walletBusy || solanaBusy || loading}
+                      onClick={() => {
+                        scrollToWalletSection()
+                        if (walletVerifiedOnAccount) return
+                        if (solanaConnected && solanaPublicKey) {
+                          handleSolanaVerify()
+                          return
+                        }
+                        handleFoundersPassVerifyClick()
+                      }}
+                      title={verifyDisabledReason || solanaVerifyDisabledReason || undefined}
                       className="mt-2 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/40 bg-amber-500/15 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:bg-amber-500/25 transition-colors disabled:opacity-50"
                     >
-                      {walletBusy ? <Loader2 className="animate-spin shrink-0" size={16} /> : null}
+                      {(walletBusy || solanaBusy) ? <Loader2 className="animate-spin shrink-0" size={16} /> : null}
                       Verify wallet first
                       <ArrowRight size={16} />
                     </button>
-                    {walletBusy && phaseLabel ? (
+                    {(walletBusy || solanaBusy) && (phaseLabel || solanaPhaseLabel) ? (
                       <p className="text-xs text-violet-200/90 flex items-center gap-2">
                         <Loader2 className="animate-spin shrink-0" size={14} />
-                        {phaseLabel}
+                        {phaseLabel || solanaPhaseLabel}
                       </p>
                     ) : null}
                     <Link

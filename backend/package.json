@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "test": "node --test src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletExposure/walletExposureIntelligence.test.js src/services/walletExposure/walletExposureIntelligenceEngine.test.js src/services/executiveIntelligence/executiveIntelligenceEngine.test.js src/services/birdeyeService.test.js src/services/lunarCrushService.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
+    "test": "node --test src/services/clerkSync.test.js src/services/wallet/solanaWalletVerify.test.js src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletExposure/walletExposureIntelligence.test.js src/services/walletExposure/walletExposureIntelligenceEngine.test.js src/services/executiveIntelligence/executiveIntelligenceEngine.test.js src/services/birdeyeService.test.js src/services/lunarCrushService.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
   },
   "keywords": [
     "surestack-protocol",
@@ -33,12 +33,14 @@
   "dependencies": {
     "@clerk/backend": "^3.4.6",
     "@prisma/client": "5.22.0",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "ethers": "^6.12.0",
     "express": "^4.18.2",
     "resend": "^6.12.3",
-    "svix": "^1.93.0"
+    "svix": "^1.93.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
