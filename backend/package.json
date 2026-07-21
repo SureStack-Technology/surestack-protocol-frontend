@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "test": "node --test src/services/clerkSync.test.js src/services/wallet/solanaWalletVerify.test.js src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletExposure/walletExposureIntelligence.test.js src/services/walletExposure/walletExposureIntelligenceEngine.test.js src/services/executiveIntelligence/executiveIntelligenceEngine.test.js src/services/birdeyeService.test.js src/services/lunarCrushService.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
+    "test": "node --test src/services/clerkSync.test.js src/services/wallet/solanaWalletVerify.test.js src/services/billing/stripeEntitlements.test.js src/services/billing/stripeBilling.test.js src/services/walletExposure/walletExposureCanonical.test.js src/services/walletExposure/walletExposureResolve.test.js src/services/walletExposure/walletExposureIntelligence.test.js src/services/walletExposure/walletExposureIntelligenceEngine.test.js src/services/executiveIntelligence/executiveIntelligenceEngine.test.js src/services/birdeyeService.test.js src/services/lunarCrushService.test.js src/services/walletRisk/alchemyRateLimit.test.js src/services/walletRisk/alchemyChainResolver.test.js"
   },
   "keywords": [
     "surestack-protocol",
@@ -39,6 +39,7 @@
     "ethers": "^6.12.0",
     "express": "^4.18.2",
     "resend": "^6.12.3",
+    "stripe": "^17.7.0",
     "svix": "^1.93.0",
     "tweetnacl": "^1.0.3"
   },

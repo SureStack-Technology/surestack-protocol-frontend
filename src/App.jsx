@@ -31,6 +31,8 @@ import SignUpPage from '@/pages/SignUp.jsx'
 import AuthRedirectPage from '@/pages/AuthRedirect.jsx'
 import OnboardingPage from '@/pages/Onboarding.jsx'
 import PricingPage from '@/pages/Pricing.jsx'
+import PrimeCheckoutSuccessPage from '@/pages/billing/PrimeCheckoutSuccessPage.jsx'
+import PrimeCheckoutCancelPage from '@/pages/billing/PrimeCheckoutCancelPage.jsx'
 import EnterprisePage from '@/pages/Enterprise.jsx'
 import MembershipPage from '@/pages/Membership.jsx'
 import AboutPage from '@/pages/About.jsx'
@@ -217,6 +219,8 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/billing/prime/success" element={<PrimeCheckoutSuccessPage />} />
+        <Route path="/billing/prime/cancel" element={<PrimeCheckoutCancelPage />} />
         <Route path="/enterprise" element={<TEnterprisePublic />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/legal/terms" element={<TermsPage />} />

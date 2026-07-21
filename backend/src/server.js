@@ -16,6 +16,7 @@ import accountRouter from './routes/account.js';
 import walletAuthRouter from './routes/walletAuth.js';
 import clerkWebhookRouter from './routes/clerkWebhook.js';
 import billingRouter from './routes/billing.js';
+import stripeWebhookRouter from './routes/stripeWebhook.js';
 import membershipRouter from './routes/membership.js';
 import walletRiskRouter from './routes/walletRisk.js';
 import solanaWalletAuthRouter from './routes/solanaWalletAuth.js';
@@ -54,6 +55,14 @@ console.log('[env] loaded', {
   hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
   allowedOrigins: process.env.ALLOWED_ORIGINS || '(unset)',
   nodeEnv: process.env.NODE_ENV || '(unset)',
+  hasStripeSecretKey: Boolean(process.env.STRIPE_SECRET_KEY && String(process.env.STRIPE_SECRET_KEY).trim()),
+  hasStripeWebhookSecret: Boolean(
+    process.env.STRIPE_WEBHOOK_SECRET && String(process.env.STRIPE_WEBHOOK_SECRET).trim(),
+  ),
+  hasStripePrimePriceId: Boolean(
+    process.env.STRIPE_PRIME_PRICE_ID && String(process.env.STRIPE_PRIME_PRICE_ID).trim(),
+  ),
+  frontendUrl: process.env.FRONTEND_URL || '(unset — fallback localhost)',
   devForceMembershipTier:
     process.env.NODE_ENV === 'development' && process.env.DEV_FORCE_MEMBERSHIP_TIER
       ? process.env.DEV_FORCE_MEMBERSHIP_TIER
@@ -103,8 +112,9 @@ app.use(
   })
 );
 
-// Clerk webhooks require raw body for Svix verification — mount BEFORE express.json()
+// Webhooks require raw body for signature verification — mount BEFORE express.json()
 app.use('/api/webhooks/clerk', express.raw({ type: 'application/json' }), clerkWebhookRouter);
+app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -157,10 +167,12 @@ app.get('/', (req, res) => {
       solanaWalletNonce: '/api/wallet/solana/nonce',
       solanaWalletVerify: 'POST /api/wallet/verify-solana',
       webhook: '/api/webhooks/clerk',
+      stripeWebhook: '/api/webhooks/stripe',
       validators: '/api/validators',
       coverage: '/api/coverage',
       governance: '/api/governance',
       oracle: '/api/oracle',
+      billingPrimeCheckout: 'POST /api/billing/prime/checkout',
       billingFoundersStub: 'POST /api/billing/founders/checkout-stub (deprecated — returns 410)',
       membershipWaitlistPro: 'POST /api/membership/waitlist/pro',
       membershipRequestStrategic: 'POST /api/membership/request/strategic',

@@ -22,6 +22,7 @@ import {
 } from '@/constants/intelligenceTiers.js'
 import { PRIME_BETA_SECTION_ID } from '@/constants/primeBetaTelegram.js'
 import PrimeBetaTelegramOnboarding from '@/components/marketing/PrimeBetaTelegramOnboarding.jsx'
+import PrimeCheckoutButton from '@/components/billing/PrimeCheckoutButton.jsx'
 
 const tiers = [
   {
@@ -54,6 +55,7 @@ const tiers = [
     cta: 'Apply for Prime Beta',
     ctaTo: `#${PRIME_BETA_SECTION_ID}`,
     highlight: false,
+    showPrimeCheckout: true,
   },
   {
     name: 'Alpha Intelligence',
@@ -150,15 +152,35 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                to={tier.ctaTo}
-                className={`mt-8 inline-flex items-center justify-center gap-2 ${
-                  tier.highlight ? 'public-cta-primary' : 'public-cta-secondary'
-                }`}
-              >
-                {tier.cta}
-                <ArrowRight size={15} />
-              </Link>
+              {tier.showPrimeCheckout ? (
+                <div className="mt-8 space-y-3">
+                  <PrimeCheckoutButton
+                    label="Prime Early Access — Subscribe"
+                    className="public-cta-primary inline-flex items-center justify-center gap-2 w-full"
+                  />
+                  <Link
+                    to={tier.ctaTo}
+                    className="inline-flex items-center justify-center gap-2 public-cta-secondary w-full"
+                  >
+                    {tier.cta}
+                    <ArrowRight size={15} />
+                  </Link>
+                  <p className="text-[11px] text-slate-500 text-center leading-relaxed">
+                    Paid Early Access uses Stripe Checkout. Telegram beta remains available for approval-based access
+                    during testing.
+                  </p>
+                </div>
+              ) : (
+                <Link
+                  to={tier.ctaTo}
+                  className={`mt-8 inline-flex items-center justify-center gap-2 ${
+                    tier.highlight ? 'public-cta-primary' : 'public-cta-secondary'
+                  }`}
+                >
+                  {tier.cta}
+                  <ArrowRight size={15} />
+                </Link>
+              )}
             </motion.article>
           ))}
         </div>
